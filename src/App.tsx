@@ -1,10 +1,10 @@
 import useMeasure from "react-use-measure";
 
 import { EditorFAB } from "@/layout/fab";
+import { EditorFooter } from "@/layout/footer";
 import { EditorMenubar } from "@/layout/menubar";
 import { EditorSidebar } from "@/layout/sidebar";
 import { EditorToolbar } from "@/layout/toolbar";
-import { EditorTimeline } from "@/layout/timeline";
 
 import { EditorProvider } from "@/context/editor";
 import { EditorCanvas } from "@/components/editor";
@@ -26,7 +26,7 @@ export function App() {
               <EditorCanvas page={0} height={height} width={width} />
               <EditorFAB />
             </div>
-            <EditorTimeline />
+            <EditorFooter />
           </section>
         </main>
       </section>

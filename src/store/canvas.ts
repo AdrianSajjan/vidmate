@@ -1,4 +1,4 @@
-import { createInstance } from "@/lib/utils";
+import { createInstance, elementID } from "@/lib/utils";
 import { fabric } from "fabric";
 import { makeAutoObservable } from "mobx";
 
@@ -11,8 +11,14 @@ export class Canvas {
   instance?: fabric.Canvas;
   artboard?: fabric.Rect;
 
-  horizontalGuideline?: fabric.Line;
   verticalGuideline?: fabric.Line;
+  horizontalGuideline?: fabric.Line;
+
+  elements: fabric.Object[];
+  selected?: fabric.Object;
+
+  duration: number;
+  seek: number;
 
   zoom: number;
   fill: string;
@@ -22,33 +28,19 @@ export class Canvas {
 
   constructor() {
     this.zoom = 0.5;
+    this.fill = artboardFill;
+
+    this.duration = 30000;
+    this.seek = 0;
 
     this.width = artboardWidth;
     this.height = artboardHeight;
-    this.fill = artboardFill;
 
+    this.elements = [];
     makeAutoObservable(this);
   }
 
-  onInitialize(element: HTMLCanvasElement) {
-    this.instance = createInstance(fabric.Canvas, element, { stateful: true, selection: false, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
-    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, selectable: false, absolutePositioned: true });
-
-    this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
-    this.instance.selectionBorderColor = "rgba(98, 155, 255, 0.81)";
-    this.instance.selectionLineWidth = 1.5;
-    this.instance.meta = {};
-
-    this.instance.add(this.artboard);
-    this.instance.clipPath = this.artboard;
-
-    this.zoom = 0.5;
-    this.instance.setZoom(this.zoom);
-
-    this.instance.requestRenderAll();
-  }
-
-  onInitializeGuidelines() {
+  private onInitializeGuidelines() {
     if (!this.instance || !this.artboard) return;
 
     const hCenter = this.artboard.left! + this.artboard.width! / 2;
@@ -92,7 +84,7 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
-  onSnapToGuidelines(event: fabric.IEvent<MouseEvent>) {
+  private onSnapToGuidelines(event: fabric.IEvent<MouseEvent>) {
     if (!this.horizontalGuideline || !this.verticalGuideline || !this.instance) return;
 
     this.horizontalGuideline.opacity = 0;
@@ -148,7 +140,7 @@ export class Canvas {
     });
   }
 
-  checkHorizontalSnap(a: number, b: number, snapZone: number, event: fabric.IEvent<MouseEvent>, type: number) {
+  private checkHorizontalSnap(a: number, b: number, snapZone: number, event: fabric.IEvent<MouseEvent>, type: number) {
     if (!this.horizontalGuideline || !this.artboard || !this.instance) return;
 
     if (a > b - snapZone && a < b + snapZone) {
@@ -171,7 +163,7 @@ export class Canvas {
     }
   }
 
-  checkVerticalSnap(a: number, b: number, snapZone: number, event: fabric.IEvent<MouseEvent>, type: number) {
+  private checkVerticalSnap(a: number, b: number, snapZone: number, event: fabric.IEvent<MouseEvent>, type: number) {
     if (!this.verticalGuideline || !this.artboard || !this.instance) return;
 
     if (a > b - snapZone && a < b + snapZone) {
@@ -194,13 +186,13 @@ export class Canvas {
     }
   }
 
-  onResetGuidelines() {
+  private onResetGuidelines() {
     if (!this.horizontalGuideline || !this.verticalGuideline) return;
     this.horizontalGuideline.opacity = 0;
     this.verticalGuideline.opacity = 0;
   }
 
-  onDeleteGuidelines() {
+  private onDeleteGuidelines() {
     if (!this.instance) return;
 
     const centerH = this.instance.getItemByName("center_h");
@@ -214,6 +206,24 @@ export class Canvas {
 
     if (lineH) this.instance.remove(lineH);
     if (lineV) this.instance.remove(lineV);
+  }
+
+  onInitialize(element: HTMLCanvasElement) {
+    this.instance = createInstance(fabric.Canvas, element, { stateful: true, selection: false, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
+    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, selectable: false, absolutePositioned: true });
+
+    this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
+    this.instance.selectionBorderColor = "rgba(98, 155, 255, 0.81)";
+    this.instance.selectionLineWidth = 1.5;
+    this.instance.meta = {};
+
+    this.instance.add(this.artboard);
+    this.instance.clipPath = this.artboard;
+
+    this.zoom = 0.5;
+    this.instance.setZoom(this.zoom);
+
+    this.instance.requestRenderAll();
   }
 
   onInitializeEvents() {
@@ -329,7 +339,7 @@ export class Canvas {
     if (!this.artboard || !this.instance) return;
 
     const object = createInstance(fabric.Textbox, text, {
-      name: "text",
+      name: elementID("text"),
       originX: "center",
       originY: "center",
       left: this.artboard.left! + this.artboard.width! / 2,
@@ -340,6 +350,25 @@ export class Canvas {
     });
 
     this.instance.add(object);
+    this.elements.push(object);
+
+    this.instance.setActiveObject(object);
     this.instance.requestRenderAll();
+  }
+
+  /**
+   * @description Used to set the current frame time of the video
+   * @param seek Pass the seek time in seconds
+   */
+  onChangeSeekTime(seek: number) {
+    this.seek = seek * 1000;
+  }
+
+  /**
+   * @description Used to set the total duration of the video
+   * @param duration Pass the duration in seconds
+   */
+  onChangeDuration(duration: number) {
+    this.duration = duration * 1000;
   }
 }
