@@ -24,11 +24,11 @@ export function App() {
             <EditorToolbar />
             <div className="flex-1 relative" ref={ref}>
               <EditorCanvas page={0} height={height} width={width} />
+              <EditorFAB />
             </div>
-            <EditorFAB />
+            <EditorTimeline />
           </section>
         </main>
-        <EditorTimeline />
       </section>
     </EditorProvider>
   );

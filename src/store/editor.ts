@@ -4,21 +4,31 @@ import { createInstance } from "@/lib/utils";
 
 export class Editor {
   page: number;
-  sidebar: string | null;
   pages: Canvas[];
+
+  sidebar: string | null;
+  isTimelineOpen: boolean;
 
   constructor() {
     const canvas = createInstance(Canvas);
 
     this.page = 0;
-    this.sidebar = null;
     this.pages = [canvas];
+
+    this.sidebar = null;
+    this.isTimelineOpen = false;
 
     makeAutoObservable(this);
   }
 
   get canvas() {
     return this.pages[this.page];
+  }
+
+  onToggleTimeline(mode?: "open" | "close") {
+    if (mode === "open") this.isTimelineOpen = true;
+    else if (mode === "close") this.isTimelineOpen = false;
+    else this.isTimelineOpen = !this.isTimelineOpen;
   }
 
   onChangeActiveSidebar(sidebar: string | null) {
