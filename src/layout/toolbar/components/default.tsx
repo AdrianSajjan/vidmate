@@ -54,7 +54,7 @@ function _DefaultToolbar() {
         <div className="flex items-center gap-1.5">
           <Label className="text-xs">Width</Label>
           <div className="relative">
-            <Input className="h-8 w-24 text-xs pr-6" value={editor.canvas.width} onChange={(event) => editor.canvas.onUpdateDimensions({ width: +event.target.value })} />
+            <Input className="h-8 w-24 text-xs pr-6" type="number" value={editor.canvas.width} onChange={(event) => editor.canvas.onUpdateDimensions({ width: +event.target.value })} />
             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs">px</span>
           </div>
         </div>

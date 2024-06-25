@@ -214,9 +214,27 @@ export class Canvas {
     this.selected = this.instance?.getActiveObject();
   }
 
+  private onCenterArtboard() {
+    if (!this.instance || !this.artboard) return;
+
+    const center = this.instance.getCenter();
+
+    this.instance.setViewportTransform(fabric.iMatrix.concat());
+    this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
+
+    const artboardCenter = this.artboard.getCenterPoint();
+    const viewportTransform = this.instance.viewportTransform!;
+
+    viewportTransform[4] = this.instance.width! / 2 - artboardCenter.x * viewportTransform[0];
+    viewportTransform[5] = this.instance.height! / 2 - artboardCenter.y * viewportTransform[3];
+
+    this.instance.setViewportTransform(viewportTransform);
+    this.instance.requestRenderAll();
+  }
+
   onInitialize(element: HTMLCanvasElement) {
     this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
-    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, selectable: false, absolutePositioned: true });
+    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, hoverCursor: "default" });
 
     this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
     this.instance.selectionBorderColor = "rgba(98, 155, 255, 0.81)";
@@ -279,29 +297,13 @@ export class Canvas {
         this.zoom = this.instance.getZoom();
         this.zoom *= 0.999 ** event.e.deltaY;
 
-        this.instance.setZoom(this.zoom);
-        this.onDeleteGuidelines();
+        if (this.zoom > 20) this.zoom = 20;
+        if (this.zoom < 0.01) this.zoom = 0.01;
 
-        const group = createInstance(fabric.Group, this.instance.getObjects(), { originX: "center", originY: "center" });
-        this.instance.viewportCenterObject(group);
-        this.instance.calcOffset();
-        group.destroy();
+        const center = this.instance.getCenter();
+        this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
 
-        this.onInitializeGuidelines();
         this.instance.requestRenderAll();
-      } else {
-        if (!this.artboard || !this.instance || this.instance.height! > this.artboard.height! * this.zoom + canvasYPadding) return;
-
-        const evt = event.e as any;
-        evt.wheelY = event.e.deltaY * -1;
-
-        const pan = this.artboard.height! * this.zoom + canvasYPadding - this.instance.height!;
-        const vpt = this.instance.viewportTransform![5];
-
-        if ((vpt < -pan * 0.75 && evt.wheelY < 0) || (vpt > pan * 0.75 && evt.wheelY > 0)) return;
-
-        const delta = createInstance(fabric.Point, 0, evt.wheelY);
-        this.instance.relativePan(delta);
       }
     });
   }
@@ -312,13 +314,8 @@ export class Canvas {
     this.onDeleteGuidelines();
     this.instance.discardActiveObject();
 
-    this.instance.setDimensions({ height, width });
-    this.instance.requestRenderAll();
-
-    const group = createInstance(fabric.Group, this.instance.getObjects());
-    this.instance.viewportCenterObject(group);
-    this.instance.calcOffset();
-    group.destroy();
+    this.instance.setDimensions({ width, height });
+    this.onCenterArtboard();
 
     this.onInitializeGuidelines();
     this.instance.requestRenderAll();
@@ -337,19 +334,7 @@ export class Canvas {
       this.artboard.set("width", width);
     }
 
-    this.instance.requestRenderAll();
-    this.onDeleteGuidelines();
-
-    const group = createInstance(fabric.Group, this.instance.getObjects());
-    this.instance.viewportCenterObject(group);
-    this.instance.calcOffset();
-    group.destroy();
-
-    const vpt = this.instance.viewportTransform!;
-    vpt[5] = 0;
-    this.instance.setViewportTransform(vpt);
-
-    this.onInitializeGuidelines();
+    this.onCenterArtboard();
     this.instance.requestRenderAll();
   }
 
@@ -358,11 +343,8 @@ export class Canvas {
 
     const object = createInstance(fabric.Textbox, text, {
       name: elementID("text"),
-      originX: "center",
-      originY: "center",
       left: this.artboard.left! + this.artboard.width! / 2,
       top: this.artboard.top! + this.artboard.height! / 2,
-      absolutePositioned: true,
       objectCaching: false,
       textAlign: "center",
     });
