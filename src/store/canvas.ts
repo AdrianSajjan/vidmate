@@ -1,3 +1,4 @@
+import { isActiveSelection } from "@/fabric/utils";
 import { createInstance, elementID } from "@/lib/utils";
 import { fabric } from "fabric";
 import { makeAutoObservable } from "mobx";
@@ -15,7 +16,7 @@ export class Canvas {
   horizontalGuideline?: fabric.Line;
 
   elements: fabric.Object[];
-  selected?: fabric.Object;
+  selected?: fabric.Object | null;
 
   duration: number;
   seek: number;
@@ -208,8 +209,13 @@ export class Canvas {
     if (lineV) this.instance.remove(lineV);
   }
 
+  private onUpdateSelection() {
+    this.selected = null;
+    this.selected = this.instance?.getActiveObject();
+  }
+
   onInitialize(element: HTMLCanvasElement) {
-    this.instance = createInstance(fabric.Canvas, element, { stateful: true, selection: false, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
+    this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
     this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, selectable: false, absolutePositioned: true });
 
     this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
@@ -251,12 +257,24 @@ export class Canvas {
       this.onResetGuidelines();
     });
 
+    this.instance.on("selection:created", () => {
+      this.onUpdateSelection();
+    });
+
+    this.instance.on("selection:updated", () => {
+      this.onUpdateSelection();
+    });
+
+    this.instance.on("selection:cleared", () => {
+      this.onUpdateSelection();
+    });
+
     this.instance.on("mouse:wheel", (event) => {
       event.e.preventDefault();
       event.e.stopPropagation();
 
       if (event.e.ctrlKey) {
-        if (!this.instance) return;
+        if (!this.instance || !this.artboard) return;
 
         this.zoom = this.instance.getZoom();
         this.zoom *= 0.999 ** event.e.deltaY;
@@ -264,7 +282,7 @@ export class Canvas {
         this.instance.setZoom(this.zoom);
         this.onDeleteGuidelines();
 
-        const group = createInstance(fabric.Group, this.instance.getObjects());
+        const group = createInstance(fabric.Group, this.instance.getObjects(), { originX: "center", originY: "center" });
         this.instance.viewportCenterObject(group);
         this.instance.calcOffset();
         group.destroy();
@@ -350,24 +368,47 @@ export class Canvas {
     });
 
     this.instance.add(object);
-    this.elements.push(object);
-
     this.instance.setActiveObject(object);
+    this.instance.requestRenderAll();
+
+    this.elements.push(object);
+    this.selected = object;
+  }
+
+  onCreateSelection(object: fabric.Object, multiple?: boolean) {
+    if (!this.instance) return;
+
+    const selected = this.instance.getActiveObject();
+
+    if (!selected || !multiple) {
+      this.instance.setActiveObject(object);
+    } else {
+      if (isActiveSelection(selected)) {
+        if (object.group === selected) {
+          if (selected._objects.length === 1) {
+            this.instance.discardActiveObject();
+          } else {
+            selected.removeWithUpdate(object);
+            this.instance.fire("selection:updated");
+          }
+        } else {
+          selected.addWithUpdate(object);
+          this.instance.fire("selection:updated");
+        }
+      } else {
+        if (selected.name !== object.name) {
+          const activeSelection = createInstance(fabric.ActiveSelection, [selected, object], { canvas: this.instance });
+          this.instance.setActiveObject(activeSelection);
+        }
+      }
+    }
     this.instance.requestRenderAll();
   }
 
-  /**
-   * @description Used to set the current frame time of the video
-   * @param seek Pass the seek time in seconds
-   */
   onChangeSeekTime(seek: number) {
     this.seek = seek * 1000;
   }
 
-  /**
-   * @description Used to set the total duration of the video
-   * @param duration Pass the duration in seconds
-   */
   onChangeDuration(duration: number) {
     this.duration = duration * 1000;
   }

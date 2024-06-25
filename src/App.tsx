@@ -9,7 +9,7 @@ import { EditorToolbar } from "@/layout/toolbar";
 import { EditorProvider } from "@/context/editor";
 import { EditorCanvas } from "@/components/editor";
 
-import "@/lib/fabric";
+import "@/fabric/initialize";
 
 export function App() {
   const [ref, { height, width }] = useMeasure();
