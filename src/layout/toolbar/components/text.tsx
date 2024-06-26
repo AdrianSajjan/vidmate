@@ -1,32 +1,24 @@
-import { BoldIcon, BoxSelectIcon, ChevronDownIcon, EllipsisIcon, ItalicIcon, LigatureIcon, UnderlineIcon } from "lucide-react";
-import { Fragment } from "react";
+import { BoldIcon, BoxSelectIcon, ChevronDownIcon, EllipsisIcon, ItalicIcon, LayersIcon, LigatureIcon, UnderlineIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { observer } from "mobx-react";
 
-export function TextToolbar() {
+function _TextToolbar() {
   return (
-    <Fragment>
+    <div className="flex items-center h-full w-full overflow-x-scroll">
       <div className="flex items-center gap-4">
         <Popover>
           <PopoverTrigger asChild>
             <Button size="sm" variant="outline" className="gap-1.5">
-              <LigatureIcon size={16} />
+              <LigatureIcon size={15} />
               <span>Montserrat</span>
-              <ChevronDownIcon size={16} />
+              <ChevronDownIcon size={15} />
             </Button>
           </PopoverTrigger>
         </Popover>
@@ -56,7 +48,7 @@ export function TextToolbar() {
         </ToggleGroup>
       </div>
       <Separator orientation="vertical" className="h-8 mx-5" />
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 mr-5">
         <Button variant="outline" size="sm" className="gap-1.5 px-2.5">
           <div className="h-5 w-5 border rounded-full" style={{ backgroundColor: "#000000" }} />
           <span className="text-xs font-normal">Fill</span>
@@ -72,7 +64,24 @@ export function TextToolbar() {
         </Button>
       </div>
       <Separator orientation="vertical" className="h-8 ml-auto mr-5" />
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5">
+          <Label className="text-xs text-gray-700">Timeline</Label>
+          <div className="relative">
+            <Input className="h-8 w-24 text-xs pr-14" />
+            <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs">s</span>
+            <Button size="icon" className="h-5 w-5 absolute right-1.5 top-1/2 -translate-y-1/2 rounded-sm bg-card border shadow-none hover:bg-card">
+              <ChevronDownIcon size={14} className="text-foreground" />
+            </Button>
+          </div>
+        </div>
+      </div>
+      <Separator orientation="vertical" className="h-8 mx-5" />
       <div className="flex items-center gap-2.5">
+        <Button size="sm" variant="outline" className="gap-1.5">
+          <LayersIcon size={15} />
+          <span>Animations</span>
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1.5">
@@ -107,6 +116,8 @@ export function TextToolbar() {
           <EllipsisIcon size={16} strokeWidth={1.5} />
         </Button>
       </div>
-    </Fragment>
+    </div>
   );
 }
+
+export const TextToolbar = observer(_TextToolbar);

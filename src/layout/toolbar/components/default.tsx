@@ -1,5 +1,4 @@
 import { observer } from "mobx-react";
-import { Fragment } from "react";
 
 import { EllipsisIcon } from "lucide-react";
 
@@ -21,7 +20,7 @@ function _DefaultToolbar() {
   const editor = useEditorContext();
 
   return (
-    <Fragment>
+    <div className="flex items-center h-full w-full">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
           <DropdownMenu>
@@ -65,7 +64,7 @@ function _DefaultToolbar() {
           <EllipsisIcon size={16} strokeWidth={1.5} />
         </Button>
       </div>
-    </Fragment>
+    </div>
   );
 }
 

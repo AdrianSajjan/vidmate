@@ -34,7 +34,6 @@ export function useInitializeCanvas() {
         setInitialized(false);
       } else {
         canvas.onInitialize(element);
-        canvas.onInitializeEvents();
         setInitialized(true);
       }
     },

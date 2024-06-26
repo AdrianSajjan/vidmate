@@ -20,7 +20,7 @@ export function App() {
         <EditorMenubar />
         <main className="flex-1 flex w-full">
           <EditorSidebar />
-          <section className="flex-1 flex flex-col relative">
+          <section className="flex-1 flex flex-col relative w-0">
             <EditorToolbar />
             <div className="flex-1 relative" ref={ref}>
               <EditorCanvas page={0} height={height} width={width} />

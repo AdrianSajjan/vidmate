@@ -1,9 +1,9 @@
 import useMeasure from "react-use-measure";
 
 import { motion, useAnimationControls } from "framer-motion";
-import { TypeIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, TypeIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useEditorContext } from "@/context/editor";
 import { isActiveSelection } from "@/fabric/utils";
@@ -24,6 +24,10 @@ function _EditorTimeline() {
   const trackBackgroundWidth = width > (durationInSeconds + 6) * SEEK_TIME_WIDTH ? width : (durationInSeconds + 6) * SEEK_TIME_WIDTH;
   const timelineAmount = Math.floor(trackBackgroundWidth / SEEK_TIME_WIDTH);
 
+  useEffect(() => {
+    controls.set({ x: seekTimeInSeconds * SEEK_TIME_WIDTH });
+  }, [seekTimeInSeconds, controls]);
+
   const renderTimelineTime = useCallback((_: number, index: number) => {
     if (index === 0 || index % 5 === 0)
       return (
@@ -31,6 +35,7 @@ function _EditorTimeline() {
           {index}s
         </span>
       );
+
     return (
       <span key={index} className="text-xxs shrink-0 cursor-pointer text-gray-400" style={{ width: SEEK_TIME_WIDTH }}>
         •
@@ -42,10 +47,9 @@ function _EditorTimeline() {
     const x = event.clientX - event.currentTarget.getBoundingClientRect().left;
     const seek = x / SEEK_TIME_WIDTH;
     editor.canvas.onChangeSeekTime(seek);
-    controls.set({ x });
   };
 
-  const onSeekHandleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent) => {
+  const onSeekHandleDrag = (event: MouseEvent | TouchEvent | PointerEvent) => {
     const element = event.target;
     if (element instanceof Element) {
       const style = getComputedStyle(element);
@@ -57,7 +61,7 @@ function _EditorTimeline() {
   };
 
   return (
-    <div className="flex flex-1 shrink">
+    <div className={cn("flex flex-1 shrink select-none", editor.isTimelineOpen ? "h-auto" : "h-0 overflow-hidden appearance-none")}>
       <div className="bg-background shrink-0 w-2">
         <div className="h-8 w-full bg-card/40 dark:bg-gray-900/40 flex justify-center items-center"></div>
       </div>
@@ -66,18 +70,17 @@ function _EditorTimeline() {
         <div className="h-8 absolute bg-card dark:bg-gray-900 cursor-pointer" style={{ width: trackWidth }} onClick={onClickSeekTime} />
         <div className="h-8 absolute inset-0 flex items-center z-20 pointer-events-none">{Array.from({ length: timelineAmount }, renderTimelineTime)}</div>
         <motion.div
-          drag="x"
           animate={controls}
           dragElastic={false}
           dragMomentum={false}
-          onDragEnd={onSeekHandleDragEnd}
+          onDragEnd={onSeekHandleDrag}
+          drag={editor.canvas.playing ? false : "x"}
           dragConstraints={{ left: 0, right: trackWidth }}
-          initial={{ x: seekTimeInSeconds * SEEK_TIME_WIDTH }}
-          className="absolute h-full w-1 bg-blue-400 dark:bg-blue-600 cursor-ew-resize z-10"
+          className={cn("absolute h-full w-1 bg-blue-400 dark:bg-blue-600 z-10", editor.canvas.playing ? "cursor-not-allowed" : "cursor-ew-resize")}
         />
         <div className="absolute top-8 pt-2 bottom-0 overflow-y-scroll flex flex-col gap-1" style={{ width: trackBackgroundWidth }}>
           {editor.canvas.elements.map((element) => (
-            <TimelineItem key={element.name} element={element} />
+            <TimelineItem key={element.name} element={element} trackWidth={trackWidth} />
           ))}
         </div>
       </div>
@@ -85,38 +88,77 @@ function _EditorTimeline() {
   );
 }
 
-function _TimelineItem({ element }: { element: fabric.Object }) {
+function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackWidth: number }) {
+  const [backgroundURL, setBackgroundURL] = useState("");
+
   const editor = useEditorContext();
 
-  const width = 356;
-  const isSelected = editor.canvas.selected ? (isActiveSelection(editor.canvas.selected) ? editor.canvas.selected === element.group : editor.canvas.selected.name === element.name) : false;
+  useEffect(() => {
+    const object = editor.canvas.onFindObjectByName(element.name);
+    object?.clone((clone: fabric.Object) => {
+      clone.opacity = 1;
+      clone.visible = true;
+      setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
+    });
+  }, [element, editor.canvas.instance]);
 
-  const backgroundWidth = 32 * (element.width! / element.height!) + 10;
-  const backgroundURL = element.toDataURL({ withoutShadow: true, format: "jpeg", quality: 0.1 });
+  const isSelected = useMemo(() => {
+    if (!editor.canvas.selected) return false;
+    if (isActiveSelection(editor.canvas.selected)) return editor.canvas.selected.objects.some((object) => object.name === element.name);
+    return editor.canvas.selected.name === element.name;
+  }, [editor.canvas.selected, element]);
 
-  switch (element.type) {
-    case "textbox": {
-      return (
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={(event) => editor.canvas.onCreateSelection(element, event.shiftKey)}
-          className={cn("h-10 rounded-md bg-card border-2 overflow-hidden flex items-center justify-center relative bg-repeat-x bg-center", isSelected ? "border-blue-500" : "border-foreground/20")}
-          style={{
-            width,
-            backgroundImage: `url(${backgroundURL})`,
-            backgroundSize: `${backgroundWidth}px 32px`,
-          }}
-        >
-          <span className="absolute top-1 left-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1">
-            <TypeIcon size={12} />
-          </span>
-        </div>
-      );
+  const onDragEnd = (event: MouseEvent | TouchEvent | PointerEvent) => {
+    const target = event.target;
+    if (target instanceof Element) {
+      const style = getComputedStyle(target);
+      const matrix = createInstance(DOMMatrixReadOnly, style.transform);
+      const offset = Math.floor((matrix.m41 / SEEK_TIME_WIDTH) * 1000);
+      editor.canvas.onChangeObjectTimelineOffset(element.name!, offset);
     }
-    default:
-      return null;
-  }
+  };
+
+  const width = (element.meta!.duration / 1000) * SEEK_TIME_WIDTH;
+  const offset = (element.meta!.offset / 1000) * SEEK_TIME_WIDTH;
+  const backgroundWidth = 40 * (element.width! / element.height!) + 10;
+
+  return (
+    <motion.div
+      role="button"
+      tabIndex={0}
+      dragElastic={false}
+      dragMomentum={false}
+      onDragEnd={onDragEnd}
+      drag={editor.canvas.playing ? false : "x"}
+      dragConstraints={{ left: 0, right: trackWidth - width }}
+      onClick={(event) => editor.canvas.onCreateSelection(element.name, event.shiftKey)}
+      className={cn("h-10 rounded-lg bg-card border-[3px] overflow-visible flex items-stretch relative bg-repeat-x bg-center", isSelected ? "border-blue-500" : "border-foreground/20")}
+      initial={{
+        x: offset,
+      }}
+      style={{
+        width,
+        backgroundImage: `url(${backgroundURL})`,
+        backgroundSize: `${backgroundWidth}px 40px`,
+      }}
+    >
+      {isSelected ? (
+        <motion.div className="px-px flex items-center justify-center">
+          <ChevronLeftIcon className="text-blue-600" strokeWidth={2.5} />
+        </motion.div>
+      ) : null}
+      <div className="flex-1 relative">
+        <span className="absolute top-1 left-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1">
+          <TypeIcon size={12} />
+        </span>
+      </div>
+      {isSelected ? (
+        <motion.div className="px-px flex items-center justify-center">
+          <ChevronRightIcon className="text-blue-600" strokeWidth={2.5} />
+        </motion.div>
+      ) : null}
+    </motion.div>
+  );
 }
 
 const TimelineItem = observer(_TimelineItem);

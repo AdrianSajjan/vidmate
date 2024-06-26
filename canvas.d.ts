@@ -1971,11 +1971,6 @@ export class Canvas {
   initialize(element: HTMLCanvasElement | string | null, options?: ICanvasOptions): Canvas;
 
   /**
-   * Variable to store custom properties
-   */
-  meta: Record<string, any>;
-
-  /**
    * When true, target detection is skipped when hovering over canvas. This can be used to improve performance.
    * @default
    */
@@ -2678,8 +2673,37 @@ export class Line {
   calcLinePoints(): { x1: number; x2: number; y1: number; y2: number };
 }
 
+export type EntryAnimation = "none" | "fade-in";
+
+export type ExitAnimation = "none" | "fade-out";
+
+interface AnimationTimeline {
+  in: {
+    name: EntryAnimation;
+    duration: number;
+  };
+  out: {
+    name: ExitAnimation;
+    duration: number;
+  };
+  animate?: {
+    name: string;
+    duration: number;
+  };
+}
+
 interface IObjectOptions {
+  /**
+   * This property is meant to store user defined custom properties
+   * Add meta to the list of exported objects in order to store these later on
+   */
   meta?: Record<string, any>;
+
+  /**
+   * This property is meant to store user defined custom properties
+   * Add meta to the list of exported objects in order to store these later on
+   */
+  anim?: AnimationTimeline;
 
   /**
    * Type of an object (rect, circle, path, etc.).

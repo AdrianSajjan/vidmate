@@ -1,10 +1,14 @@
+import { fabric } from "fabric";
+import anime from "animejs";
+import { makeAutoObservable } from "mobx";
+
+import { elementsToExclude, propertiesToInclude } from "@/fabric/constants";
 import { isActiveSelection } from "@/fabric/utils";
 import { createInstance, elementID } from "@/lib/utils";
-import { fabric } from "fabric";
-import { makeAutoObservable } from "mobx";
 
 export const artboardHeight = 1080;
 export const artboardWidth = 1080;
+
 export const canvasYPadding = 100;
 export const artboardFill = "#FFFFFF";
 
@@ -18,27 +22,72 @@ export class Canvas {
   elements: fabric.Object[];
   selected?: fabric.Object | null;
 
-  duration: number;
   seek: number;
+  duration: number;
+
+  playing: boolean;
+  timeline: anime.AnimeTimelineInstance;
 
   zoom: number;
   fill: string;
 
   width: number;
   height: number;
+  hasControls: boolean;
 
   constructor() {
     this.zoom = 0.5;
+    this.elements = [];
     this.fill = artboardFill;
 
-    this.duration = 30000;
     this.seek = 0;
+    this.duration = 30000;
+
+    this.playing = false;
+    this.hasControls = true;
 
     this.width = artboardWidth;
     this.height = artboardHeight;
 
-    this.elements = [];
+    this.timeline = anime.timeline({
+      duration: this.duration,
+      autoplay: false,
+      complete: () => {
+        this.onUpdateTimelineStatus(false);
+      },
+      update: (anim) => {
+        this.onUpdateSeekTime(anim.currentTime);
+      },
+    });
+
     makeAutoObservable(this);
+  }
+
+  private onAddElement(object?: fabric.Object) {
+    if (!object || elementsToExclude.includes(object.name!)) return;
+    this.elements.push(object.toObject(propertiesToInclude));
+  }
+
+  private onUpdateElement(object?: fabric.Object) {
+    const index = this.elements.findIndex((element) => element.name === object?.name);
+    if (index === -1 || !object) return;
+    const element = object.toObject(propertiesToInclude);
+    if (object.name === this.selected?.name) this.selected = element;
+    this.elements[index] = element;
+  }
+
+  private onUpdateTimelineStatus(playing: boolean) {
+    this.playing = playing;
+  }
+
+  private onUpdateSeekTime(time: number) {
+    this.seek = time;
+    this.onToggleCanvasElements(this.seek);
+  }
+
+  private onToggleControls(object: fabric.Object, enabled: boolean) {
+    object.hasControls = enabled;
+    this.hasControls = enabled;
   }
 
   private onInitializeGuidelines() {
@@ -210,8 +259,7 @@ export class Canvas {
   }
 
   private onUpdateSelection() {
-    this.selected = null;
-    this.selected = this.instance?.getActiveObject();
+    this.selected = this.instance?.getActiveObject()?.toObject(propertiesToInclude);
   }
 
   private onCenterArtboard() {
@@ -232,47 +280,66 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
-  onInitialize(element: HTMLCanvasElement) {
-    this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
-    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, hoverCursor: "default" });
+  private onToggleCanvasElements(ms: number) {
+    if (!this.instance) return;
 
-    this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
-    this.instance.selectionBorderColor = "rgba(98, 155, 255, 0.81)";
-    this.instance.selectionLineWidth = 1.5;
-    this.instance.meta = {};
-
-    this.instance.add(this.artboard);
-    this.instance.clipPath = this.artboard;
-
-    this.zoom = 0.5;
-    this.instance.setZoom(this.zoom);
+    for (const object of this.instance._objects) {
+      if (elementsToExclude.includes(object.name!)) continue;
+      const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
+      object.visible = !hidden;
+    }
 
     this.instance.requestRenderAll();
   }
 
-  onInitializeEvents() {
+  private onInitializeElementMeta(object?: fabric.Object) {
+    if (!object) return;
+
+    object.meta = {
+      duration: 5000,
+      offset: 0,
+    };
+
+    object.anim = {
+      in: {
+        name: "none",
+        duration: 0,
+      },
+      out: {
+        name: "none",
+        duration: 0,
+      },
+    };
+  }
+
+  private onInitializeEvents() {
     if (!this.instance) return;
 
+    this.instance.on("object:added", (event) => {
+      this.onAddElement(event.target);
+    });
+
     this.instance.on("object:moving", (event) => {
-      event.target!.hasControls = false;
       this.onSnapToGuidelines(event);
+      this.onToggleControls(event.target!, false);
     });
 
     this.instance.on("object:scaling", (event) => {
-      event.target!.hasControls = false;
+      this.onToggleControls(event.target!, false);
     });
 
     this.instance.on("object:resizing", (event) => {
-      event.target!.hasControls = false;
+      this.onToggleControls(event.target!, false);
     });
 
     this.instance.on("object:rotating", (event) => {
-      event.target!.hasControls = false;
+      this.onToggleControls(event.target!, false);
     });
 
     this.instance.on("object:modified", (event) => {
-      event.target!.hasControls = true;
       this.onResetGuidelines();
+      this.onUpdateElement(event.target);
+      this.onToggleControls(event.target!, true);
     });
 
     this.instance.on("selection:created", () => {
@@ -294,18 +361,123 @@ export class Canvas {
       if (event.e.ctrlKey) {
         if (!this.instance || !this.artboard) return;
 
-        this.zoom = this.instance.getZoom();
-        this.zoom *= 0.999 ** event.e.deltaY;
+        let zoom = this.instance.getZoom();
+        zoom *= 0.999 ** (event.e.deltaY * 5);
 
-        if (this.zoom > 20) this.zoom = 20;
-        if (this.zoom < 0.01) this.zoom = 0.01;
+        if (zoom > 20) zoom = 20;
+        if (zoom < 0.01) zoom = 0.01;
 
         const center = this.instance.getCenter();
-        this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
+        this.onUpdateZoom(zoom);
 
+        this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
         this.instance.requestRenderAll();
       }
     });
+  }
+
+  private onInitializeAnimationTimeline() {
+    if (!this.instance || !this.artboard) return;
+
+    anime.remove(this.timeline);
+
+    this.timeline = anime.timeline({
+      duration: this.duration,
+      autoplay: false,
+      complete: () => {
+        this.onUpdateTimelineStatus(false);
+      },
+      update: (anim) => {
+        this.onUpdateSeekTime(anim.currentTime);
+      },
+    });
+
+    this.timeline.add({
+      targets: this.artboard,
+      duration: this.duration,
+    });
+
+    for (const object of this.instance._objects) {
+      if (elementsToExclude.includes(object.name!)) continue;
+
+      const entry = object.anim!.in;
+      const exit = object.anim!.out;
+
+      switch (entry.name) {
+        case "fade-in": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: [0, 1],
+              duration: entry.duration,
+              easing: "linear",
+              round: false,
+            },
+            object.meta!.offset
+          );
+          break;
+        }
+      }
+
+      switch (exit.name) {
+        case "fade-out": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: [1, 0],
+              duration: exit.duration,
+              easing: "linear",
+              round: false,
+            },
+            object.meta!.offset + object.meta!.duration - exit.duration
+          );
+          break;
+        }
+      }
+    }
+
+    this.timeline.seek(this.seek);
+  }
+
+  onInitialize(element: HTMLCanvasElement) {
+    this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
+    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, hoverCursor: "default" });
+    this.timeline.add({ targets: this.artboard, duration: this.duration });
+
+    this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
+    this.instance.selectionBorderColor = "rgba(98, 155, 255, 0.81)";
+    this.instance.selectionLineWidth = 1.5;
+
+    this.instance.add(this.artboard);
+    this.instance.clipPath = this.artboard;
+
+    this.zoom = 0.5;
+    this.instance.setZoom(this.zoom);
+
+    this.onInitializeEvents();
+    this.instance.requestRenderAll();
+  }
+
+  onToggleTimeline() {
+    if (this.playing) {
+      this.playing = false;
+      this.timeline.pause();
+    } else {
+      this.playing = true;
+      this.timeline.play();
+    }
+  }
+
+  onFindObjectByName(name?: string) {
+    return this.instance?._objects.find((object) => object.name === name);
+  }
+
+  onDeleteObjectByName(name?: string) {
+    const object = this.onFindObjectByName(name);
+    const index = this.elements.findIndex((element) => element.name === name);
+
+    if (object) this.instance?.remove(object);
+    if (index !== -1) this.elements.splice(index, 1);
   }
 
   onUpdateResponsiveCanvas({ height, width }: { height: number; width: number }) {
@@ -338,28 +510,31 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
+  onUpdateZoom(zoom: number) {
+    this.zoom = zoom;
+  }
+
   onAddText(text: string) {
     if (!this.artboard || !this.instance) return;
 
-    const object = createInstance(fabric.Textbox, text, {
-      name: elementID("text"),
-      left: this.artboard.left! + this.artboard.width! / 2,
-      top: this.artboard.top! + this.artboard.height! / 2,
-      objectCaching: false,
-      textAlign: "center",
-    });
+    const left = this.artboard.left! + this.artboard.width! / 2;
+    const top = this.artboard.top! + this.artboard.height! / 2;
 
-    this.instance.add(object);
-    this.instance.setActiveObject(object);
+    const options = { name: elementID("text"), originX: "center", originY: "center", left: left, top: top, objectCaching: false, textAlign: "center" };
+    const textbox = createInstance(fabric.Textbox, text, options);
+    this.onInitializeElementMeta(textbox);
+
+    this.instance.add(textbox);
+    this.instance.setActiveObject(textbox);
     this.instance.requestRenderAll();
 
-    this.elements.push(object);
-    this.selected = object;
+    this.onInitializeAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
   }
 
-  onCreateSelection(object: fabric.Object, multiple?: boolean) {
-    if (!this.instance) return;
-
+  onCreateSelection(name?: string, multiple?: boolean) {
+    const object = this.onFindObjectByName(name);
+    if (!this.instance || !object) return;
     const selected = this.instance.getActiveObject();
 
     if (!selected || !multiple) {
@@ -387,11 +562,29 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
+  onChangeObjectTimelineOffset(name: string, offset: number) {
+    const object = this.onFindObjectByName(name);
+
+    if (!object || !this.instance) return;
+
+    this.instance.setActiveObject(object);
+    object.meta!.offset = offset;
+
+    this.onInitializeAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
+
+    this.instance.fire("object:modified", { target: object });
+  }
+
   onChangeSeekTime(seek: number) {
     this.seek = seek * 1000;
+    this.timeline.seek(this.seek);
+    this.onToggleCanvasElements(this.seek);
   }
 
   onChangeDuration(duration: number) {
     this.duration = duration * 1000;
+    this.timeline.duration = this.duration;
+    this.onInitializeAnimationTimeline();
   }
 }
