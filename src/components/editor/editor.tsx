@@ -38,10 +38,9 @@ function _CanvasBase({ height, width }: EditorCanvasProps) {
   }, [canvas, height, width, isInitialized]);
 
   const style = useMemo(() => {
-    if (!canvas.selected || !canvas.instance) return undefined;
+    if (!canvas.selected) return undefined;
 
-    const viewport = canvas.instance.viewportTransform!;
-
+    const viewport = canvas.viewportTransform!;
     const offsetX = viewport[4];
     const offsetY = viewport[5];
 
@@ -49,7 +48,7 @@ function _CanvasBase({ height, width }: EditorCanvasProps) {
       top: offsetY + canvas.selected.top! * canvas.zoom - dimensions.height / 2 - ((canvas.selected.height! * canvas.selected.scaleY!) / 2) * canvas.zoom - MENU_OFFSET_Y,
       left: offsetX + canvas.selected.left! * canvas.zoom - dimensions.width / 2,
     };
-  }, [canvas.selected, canvas.instance, canvas.height, canvas.width, canvas.zoom, dimensions]);
+  }, [canvas.selected, canvas.viewportTransform, canvas.height, canvas.width, canvas.zoom, dimensions]);
 
   return (
     <Fragment>

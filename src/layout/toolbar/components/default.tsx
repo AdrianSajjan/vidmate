@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 
-import { EllipsisIcon } from "lucide-react";
+import { EllipsisIcon, ScalingIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -22,11 +22,12 @@ function _DefaultToolbar() {
   return (
     <div className="flex items-center h-full w-full">
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5">
-                <span className="text-xs">Format</span>
+                <ScalingIcon size={15} />
+                <span className="text-xs">Page Format</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-48" align="start">
@@ -61,7 +62,7 @@ function _DefaultToolbar() {
       <Separator orientation="vertical" className="h-8 ml-auto mr-5" />
       <div className="flex items-center gap-2.5">
         <Button variant="outline" size="icon" className="gap-1.5">
-          <EllipsisIcon size={16} strokeWidth={1.5} />
+          <EllipsisIcon size={15} strokeWidth={1.5} />
         </Button>
       </div>
     </div>

@@ -6,17 +6,19 @@ export class Editor {
   page: number;
   pages: Canvas[];
 
-  sidebar: string | null;
+  sidebarLeft: string | null;
+  sidebarRight: string | null;
   isTimelineOpen: boolean;
 
   constructor() {
     const canvas = createInstance(Canvas);
+    this.isTimelineOpen = false;
 
     this.page = 0;
     this.pages = [canvas];
 
-    this.sidebar = null;
-    this.isTimelineOpen = false;
+    this.sidebarLeft = null;
+    this.sidebarRight = null;
 
     makeAutoObservable(this);
   }
@@ -25,14 +27,18 @@ export class Editor {
     return this.pages[this.page];
   }
 
+  setActiveSidebarLeft(sidebar: string | null) {
+    this.sidebarLeft = sidebar;
+  }
+
+  setActiveSidebarRight(sidebar: string | null) {
+    this.sidebarRight = sidebar;
+  }
+
   onToggleTimeline(mode?: "open" | "close") {
     if (mode === "open") this.isTimelineOpen = true;
     else if (mode === "close") this.isTimelineOpen = false;
     else this.isTimelineOpen = !this.isTimelineOpen;
-  }
-
-  onChangeActiveSidebar(sidebar: string | null) {
-    this.sidebar = sidebar;
   }
 
   onAddPage() {

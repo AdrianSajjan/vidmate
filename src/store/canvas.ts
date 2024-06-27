@@ -33,19 +33,22 @@ export class Canvas {
 
   width: number;
   height: number;
+
   hasControls: boolean;
+  viewportTransform: number[];
 
   constructor() {
     this.zoom = 0.5;
     this.elements = [];
-    this.fill = artboardFill;
 
     this.seek = 0;
     this.duration = 30000;
-
     this.playing = false;
-    this.hasControls = true;
 
+    this.hasControls = true;
+    this.viewportTransform = [];
+
+    this.fill = artboardFill;
     this.width = artboardWidth;
     this.height = artboardHeight;
 
@@ -276,6 +279,7 @@ export class Canvas {
     viewportTransform[4] = this.instance.width! / 2 - artboardCenter.x * viewportTransform[0];
     viewportTransform[5] = this.instance.height! / 2 - artboardCenter.y * viewportTransform[3];
 
+    this.viewportTransform = [...viewportTransform];
     this.instance.setViewportTransform(viewportTransform);
     this.instance.requestRenderAll();
   }
@@ -482,12 +486,11 @@ export class Canvas {
     if (!this.instance || !this.artboard) return;
 
     this.onDeleteGuidelines();
-    this.instance.discardActiveObject();
-
     this.instance.setDimensions({ width, height });
-    this.onCenterArtboard();
 
+    this.onCenterArtboard();
     this.onInitializeGuidelines();
+
     this.instance.requestRenderAll();
   }
 
@@ -512,13 +515,13 @@ export class Canvas {
     this.zoom = zoom;
   }
 
-  onAddText(text: string) {
+  onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
     if (!this.artboard || !this.instance) return;
 
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: elementID("text"), originX: "center", originY: "center", left, top, objectCaching: false, textAlign: "center" };
+    const options = { name: elementID("text"), left, top, fontFamily, fontWeight, fontSize, paintFirst: "stroke", originX: "center", originY: "center", objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
     this.onInitializeElementMeta(textbox);
 
@@ -592,6 +595,22 @@ export class Canvas {
     this.onToggleCanvasElements(this.seek);
 
     this.instance.fire("object:modified", { target: object });
+  }
+
+  onChangeActiveObjectProperty(property: keyof fabric.Object, value: any) {
+    const selected = this.instance?.getActiveObject();
+    if (!this.instance || !selected) return;
+    selected.set(property, value);
+    this.instance.fire("object:modified", { target: selected });
+    this.instance.requestRenderAll();
+  }
+
+  onChangeActiveTextboxProperty(property: keyof fabric.Textbox, value: any) {
+    const selected = this.instance?.getActiveObject() as fabric.Textbox | null;
+    if (!this.instance || !selected || selected.type !== "textbox") return;
+    selected.set(property, value);
+    this.instance.fire("object:modified", { target: selected });
+    this.instance.requestRenderAll();
   }
 
   onChangeSeekTime(seek: number) {

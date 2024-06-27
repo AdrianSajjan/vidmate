@@ -6,6 +6,7 @@ import { Grid2X2Icon, ImageIcon, LayersIcon, TypeIcon, UploadIcon } from "lucide
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEditorContext } from "@/context/editor";
+import { leftSidebarWidth } from "@/constants/layout";
 
 import { TextSidebar } from "./components/text";
 import { ImageSidebar } from "./components/image";
@@ -21,7 +22,7 @@ const sidebarComponentMap: Record<string, () => JSX.Element> = {
   elements: ElementSidebar,
 };
 
-function _EditorSidebar() {
+function _EditorSidebarLeft() {
   const editor = useEditorContext();
 
   const items = useMemo(() => {
@@ -54,7 +55,7 @@ function _EditorSidebar() {
     ];
   }, []);
 
-  const Sidebar = editor.sidebar ? sidebarComponentMap[editor.sidebar] : null;
+  const Sidebar = editor.sidebarLeft ? sidebarComponentMap[editor.sidebarLeft] : null;
 
   return (
     <Fragment>
@@ -66,8 +67,8 @@ function _EditorSidebar() {
               key={value}
               variant="ghost"
               aria-label={value}
-              className={cn("w-16 h-16 flex flex-col gap-2", editor.sidebar === value && "bg-card shadow-sm border hover:bg-card")}
-              onClick={() => editor.onChangeActiveSidebar(editor.sidebar === value ? null : value)}
+              className={cn("w-16 h-16 flex flex-col gap-2", editor.sidebarLeft === value && "bg-card shadow-sm border hover:bg-card")}
+              onClick={() => editor.setActiveSidebarLeft(editor.sidebarLeft === value ? null : value)}
             >
               <Icon size={20} strokeWidth={1.5} />
               <span className="text-xxs leading-none">{label}</span>
@@ -77,8 +78,8 @@ function _EditorSidebar() {
       </aside>
       <AnimatePresence>
         {Sidebar ? (
-          <motion.aside initial={{ width: 0 }} animate={{ width: 280 }} exit={{ width: 0 }} className="overflow-hidden bg-card/60 border-r shrink-0">
-            <Sidebar key={editor.sidebar} />
+          <motion.aside initial={{ width: 0 }} animate={{ width: leftSidebarWidth }} exit={{ width: 0 }} className="overflow-hidden bg-card/60 border-r shrink-0">
+            <Sidebar key={editor.sidebarLeft} />
           </motion.aside>
         ) : null}
       </AnimatePresence>
@@ -86,4 +87,4 @@ function _EditorSidebar() {
   );
 }
 
-export const EditorSidebar = observer(_EditorSidebar);
+export const EditorSidebarLeft = observer(_EditorSidebarLeft);

@@ -1,5 +1,7 @@
 /* eslint-disable no-undef */
 
+const defaultTheme = require("tailwindcss/defaultTheme");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -14,6 +16,9 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['"Inter"', ...defaultTheme.fontFamily.sans],
+      },
       fontSize: {
         xxs: ["0.625rem", "0.75rem"],
       },

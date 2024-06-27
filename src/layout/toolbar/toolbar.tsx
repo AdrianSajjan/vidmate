@@ -8,7 +8,7 @@ function _EditorToolbar() {
   const editor = useEditorContext();
 
   return (
-    <div className="h-14 bg-card/50 border-b px-3.5 shrink-0 overflow-x-scroll">
+    <div className="h-14 bg-card/50 border-b px-4 shrink-0 overflow-x-scroll">
       {(() => {
         switch (editor.canvas.selected?.type) {
           case "textbox":
