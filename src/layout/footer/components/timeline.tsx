@@ -1,7 +1,7 @@
 import useMeasure from "react-use-measure";
 
 import { motion, useAnimationControls } from "framer-motion";
-import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, TypeIcon } from "lucide-react";
+import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, ImageIcon, TypeIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -163,6 +163,8 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
                     <span className="text-xxs">{element.name?.split("_").at(0) || "shape"}</span>
                   </Fragment>
                 );
+              case "image":
+                return <ImageIcon size={12} />;
               default:
                 return null;
             }

@@ -261,6 +261,37 @@ export class Canvas {
     if (lineV) this.instance.remove(lineV);
   }
 
+  private *onPrepareImageCrop(image: fabric.Image) {
+    if (!this.instance || !this.artboard) return;
+
+    const index = this.instance._objects.findIndex((object) => object === image);
+
+    if (index === -1) return;
+
+    const width = image.getScaledWidth();
+    const height = image.getScaledHeight();
+
+    const x = image.cropX! * image.scaleX!;
+    const y = image.cropY! * image.cropX!;
+
+    let clip = image.clipPath;
+
+    image.set({ clipPath: undefined, cropX: 0, cropY: 0, opacity: 0.5, dirty: false, lockRotation: true });
+    image.set({ left: image.left! - x, top: image.top! - y, width: image.getOriginalSize().width, height: image.getOriginalSize().height });
+
+    if (!clip) {
+      const options = { name: "crop", originX: "center", originY: "center", left: image.left! + x, top: image.top! + y, angle: image.angle, lockRotation: true, selectable: false };
+      clip = createInstance(fabric.Rect, { ...options, width: width, height: height });
+      const clone: fabric.Image = yield createInstance(Promise, (resolve) => image.clone(resolve));
+      clone.name = "crop";
+      // clone.clipPath = clip;
+      this.instance.add(clip);
+      this.instance.add(clone);
+    }
+
+    this.instance.requestRenderAll();
+  }
+
   private onUpdateSelection() {
     this.selected = this.instance?.getActiveObject()?.toObject(propertiesToInclude);
   }
@@ -384,6 +415,15 @@ export class Canvas {
         this.instance.requestRenderAll();
 
         this.onUpdateViewportTransform();
+      }
+    });
+
+    this.instance.on("mouse:dblclick", (event) => {
+      switch (event.target?.type) {
+        case "image":
+          const image = event.target as fabric.Image;
+          this.onPrepareImageCrop(image);
+          break;
       }
     });
   }
@@ -535,6 +575,30 @@ export class Canvas {
 
     this.instance.add(textbox);
     this.instance.setActiveObject(textbox);
+    this.instance.requestRenderAll();
+
+    this.onInitializeAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
+  }
+
+  *onAddImage(source: string, height = 500, width = 500) {
+    if (!this.instance || !this.artboard) return;
+
+    const left = this.artboard.left! + this.artboard.width! / 2;
+    const top = this.artboard.top! + this.artboard.height! / 2;
+
+    const image: fabric.Image = yield createInstance(Promise<fabric.Image>, (resolve) => {
+      const options = { name: elementID("image"), left, top, crossOrigin: "anonymous", originX: "center", originY: "center", objectCaching: true };
+      fabric.Image.fromURL(source, (image) => resolve(image), options);
+    });
+
+    image.scaleToHeight(height);
+    image.scaleToWidth(width);
+
+    this.onInitializeElementMeta(image);
+
+    this.instance.add(image);
+    this.instance.setActiveObject(image);
     this.instance.requestRenderAll();
 
     this.onInitializeAnimationTimeline();

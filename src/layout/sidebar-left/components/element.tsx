@@ -40,9 +40,9 @@ function _ElementSidebar() {
                 <button
                   key={name}
                   onClick={() => editor.canvas.onAddShapePath(path, name)}
-                  className="shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+                  className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
                 >
-                  <svg width="48" viewBox="0 0 48 48" aria-label={name} fill="currentColor" className="h-full w-full">
+                  <svg width="48" viewBox="0 0 48 48" aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
                     <path d={path} className="h-full" />
                   </svg>
                 </button>

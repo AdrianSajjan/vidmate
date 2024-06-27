@@ -8,6 +8,8 @@ import { useEditorContext } from "@/context/editor";
 import { Skeleton } from "@/components/ui/skeleton";
 import { leftSidebarWidth } from "@/constants/layout";
 
+import * as mock from "@/constants/mock";
+
 function _ImageSidebar() {
   const editor = useEditorContext();
 
@@ -42,12 +44,20 @@ function _ImageSidebar() {
               </Button>
             </div>
             <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
-              <Fragment>
-                {Array.from({ length: 3 }, (_, index) => (
-                  <Skeleton key={index} className="h-16 flex-1 rounded-md" />
-                ))}
-                <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Images</span>
-              </Fragment>
+              {mock.images.length ? (
+                mock.images.map((image) => (
+                  <button key={image} onClick={() => editor.canvas.onAddImage(image)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
+                    <img src={image + "?q=75&w=256&auto=format"} className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
+                  </button>
+                ))
+              ) : (
+                <Fragment>
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <Skeleton key={index} className="h-16 flex-1 rounded-md" />
+                  ))}
+                  <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Images</span>
+                </Fragment>
+              )}
             </div>
           </div>
           <div className="flex flex-col gap-2">
