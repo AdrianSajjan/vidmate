@@ -265,6 +265,11 @@ export class Canvas {
     this.selected = this.instance?.getActiveObject()?.toObject(propertiesToInclude);
   }
 
+  private onUpdateViewportTransform() {
+    if (!this.instance) return;
+    this.viewportTransform = [...this.instance.viewportTransform!];
+  }
+
   private onCenterArtboard() {
     if (!this.instance || !this.artboard) return;
 
@@ -373,6 +378,7 @@ export class Canvas {
 
         const center = this.instance.getCenter();
         this.onUpdateZoom(zoom);
+        this.onUpdateViewportTransform();
 
         this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
         this.instance.requestRenderAll();
@@ -595,6 +601,20 @@ export class Canvas {
     this.onToggleCanvasElements(this.seek);
 
     this.instance.fire("object:modified", { target: object });
+  }
+
+  onChangeActiveObjectTimelineProperty(property: string, value: any) {
+    const selected = this.instance?.getActiveObject();
+    if (!this.instance || !selected) return;
+
+    if (!selected.meta) selected.meta = {};
+    selected.meta[property] = value;
+
+    this.onInitializeAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
+
+    this.instance.fire("object:modified", { target: selected });
+    this.instance.requestRenderAll();
   }
 
   onChangeActiveObjectProperty(property: keyof fabric.Object, value: any) {

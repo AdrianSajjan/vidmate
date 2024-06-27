@@ -5,9 +5,11 @@ import { useEditorContext } from "@/context/editor";
 import { rightSidebarWidth } from "@/constants/layout";
 
 import { FillSidebar } from "./components/fill";
+import { StrokeSidebar } from "./components/stroke";
 
 const sidebarComponentMap: Record<string, () => JSX.Element> = {
   fill: FillSidebar,
+  stroke: StrokeSidebar,
 };
 
 function _EditorSidebarRight() {

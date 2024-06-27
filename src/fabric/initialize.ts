@@ -69,6 +69,7 @@ fabric.Object.prototype.set({
   cornerStyle: "circle",
   cornerStrokeColor: "#0E98FC",
   borderOpacityWhenMoving: 1,
+  strokeUniform: true,
 });
 
 fabric.Object.prototype.controls.ml = new fabric.Control({

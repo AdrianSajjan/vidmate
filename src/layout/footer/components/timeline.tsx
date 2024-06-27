@@ -89,9 +89,10 @@ function _EditorTimeline() {
 }
 
 function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackWidth: number }) {
+  const editor = useEditorContext();
   const [backgroundURL, setBackgroundURL] = useState("");
 
-  const editor = useEditorContext();
+  const controls = useAnimationControls();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -102,6 +103,11 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
       setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
     });
   }, [element, editor.canvas.instance]);
+
+  useEffect(() => {
+    const offset = (element.meta!.offset / 1000) * SEEK_TIME_WIDTH;
+    controls.set({ x: offset });
+  }, [element.meta!.offset]);
 
   const isSelected = useMemo(() => {
     if (!editor.canvas.selected) return false;
@@ -118,7 +124,6 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
   }
 
   const width = (element.meta!.duration / 1000) * SEEK_TIME_WIDTH;
-  const offset = (element.meta!.offset / 1000) * SEEK_TIME_WIDTH;
   const backgroundWidth = 40 * (element.width! / element.height!) + 10;
 
   return (
@@ -126,6 +131,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
       ref={ref}
       role="button"
       tabIndex={0}
+      animate={controls}
       dragElastic={false}
       dragMomentum={false}
       onDragEnd={onDragEnd}
@@ -133,9 +139,6 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
       dragConstraints={{ left: 0, right: trackWidth - width }}
       onClick={(event) => editor.canvas.onCreateSelection(element.name, event.shiftKey)}
       className={cn("h-10 rounded-lg bg-card border-[3px] overflow-visible flex items-stretch relative bg-repeat-x bg-center", isSelected ? "border-blue-500" : "border-foreground/20")}
-      initial={{
-        x: offset,
-      }}
       style={{
         width,
         backgroundImage: `url(${backgroundURL})`,
