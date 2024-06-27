@@ -16,21 +16,20 @@ export class Canvas {
   instance?: fabric.Canvas;
   artboard?: fabric.Rect;
 
+  elements: fabric.Object[];
+  selected?: fabric.Object | null;
+  crop?: fabric.Object | null;
+
   verticalGuideline?: fabric.Line;
   horizontalGuideline?: fabric.Line;
 
-  elements: fabric.Object[];
-  selected?: fabric.Object | null;
-
   seek: number;
   duration: number;
-
   playing: boolean;
   timeline: anime.AnimeTimelineInstance;
 
   zoom: number;
   fill: string;
-
   width: number;
   height: number;
 
@@ -67,7 +66,7 @@ export class Canvas {
   }
 
   private onAddElement(object?: fabric.Object) {
-    if (!object || elementsToExclude.includes(object.name!)) return;
+    if (!object || elementsToExclude.includes(object.name!) || object.name!.startsWith("crop_") || object.name?.startsWith("clone_")) return;
     this.elements.push(object.toObject(propertiesToInclude));
   }
 
@@ -261,34 +260,89 @@ export class Canvas {
     if (lineV) this.instance.remove(lineV);
   }
 
-  private *onPrepareImageCrop(image: fabric.Image) {
+  private *onImageCropStart(image: fabric.Image) {
     if (!this.instance || !this.artboard) return;
 
     const index = this.instance._objects.findIndex((object) => object === image);
 
-    if (index === -1) return;
+    this.crop = image;
+    let clipPath = image.clipPath;
 
     const width = image.getScaledWidth();
     const height = image.getScaledHeight();
 
+    const left = image.left!;
+    const top = image.top!;
+
     const x = image.cropX! * image.scaleX!;
-    const y = image.cropY! * image.cropX!;
+    const y = image.cropY! * image.scaleY!;
 
-    let clip = image.clipPath;
+    image.set({ width: image.getOriginalSize().width, height: image.getOriginalSize().height, clipPath: undefined, cropX: 0, cropY: 0, opacity: 0.5, dirty: false, lockRotation: true });
+    const offsetX = (image.getScaledWidth() - width) / 2;
+    const offsetY = (image.getScaledHeight() - height) / 2;
+    image.set({ left: left - x + offsetX, top: top - y + offsetY });
 
-    image.set({ clipPath: undefined, cropX: 0, cropY: 0, opacity: 0.5, dirty: false, lockRotation: true });
-    image.set({ left: image.left! - x, top: image.top! - y, width: image.getOriginalSize().width, height: image.getOriginalSize().height });
-
-    if (!clip) {
-      const options = { name: "crop", originX: "center", originY: "center", left: image.left! + x, top: image.top! + y, angle: image.angle, lockRotation: true, selectable: false };
-      clip = createInstance(fabric.Rect, { ...options, width: width, height: height });
-      const clone: fabric.Image = yield createInstance(Promise, (resolve) => image.clone(resolve));
-      clone.name = "crop";
-      // clone.clipPath = clip;
-      this.instance.add(clip);
-      this.instance.add(clone);
+    if (!clipPath) {
+      const options = { name: "crop_" + image.name, fill: "#000000", originX: "center", originY: "center", lockRotation: true, selectable: false };
+      clipPath = createInstance(fabric.Rect, { ...options, width: width, height: height, left: left, top: top, angle: image.angle });
+      this.instance.insertAt(clipPath, index, false);
     }
 
+    const clone: fabric.Image = yield createInstance(Promise, (resolve) =>
+      image.clone((clone: fabric.Image) => {
+        clone.set({ name: "clone_" + image.name, selectable: false, scaleX: image.scaleX, scaleY: image.scaleY, clipPath: clipPath, opacity: 1 });
+        this.instance!.insertAt(clone, index + 1, false);
+        resolve(clone);
+      })
+    );
+
+    image.on("moving", () => {
+      const offsetX = (image.getScaledWidth() - clipPath.getScaledWidth()) / 2;
+      const offsetY = (image.getScaledHeight() - clipPath.getScaledHeight()) / 2;
+
+      if (image.left! > clipPath.left! + offsetX) {
+        image.left = clipPath.left! + offsetX;
+      }
+
+      if (image.top! > clipPath.top! + offsetY) {
+        image.top = clipPath.top! + offsetY;
+      }
+
+      if (image.left! + image.getScaledWidth() < clipPath.left! + clipPath.getScaledWidth() + offsetX) {
+        image.left = clipPath.left! - (image.getScaledWidth() - clipPath.getScaledWidth()) + offsetX;
+      }
+
+      if (image.top! + image.getScaledHeight() < clipPath.top! + clipPath.getScaledHeight() + offsetY) {
+        image.top = clipPath.top! - (image.getScaledHeight() - clipPath.getScaledHeight()) + offsetY;
+      }
+    });
+
+    image.on("deselected", () => {
+      this.onImageCropEnd(image, clipPath, clone);
+    });
+
+    this.instance.requestRenderAll();
+  }
+
+  private onImageCropEnd(image: fabric.Image, clipPath: fabric.Object, clone: fabric.Image) {
+    if (!this.instance || !this.artboard) return;
+
+    const offsetX = (image.getScaledWidth() - clipPath.getScaledWidth()) / 2;
+    const offsetY = (image.getScaledHeight() - clipPath.getScaledHeight()) / 2;
+
+    const cropX = (clipPath.left! - image.left! + offsetX) / image.scaleX!;
+    const cropY = (clipPath.top! - image.top! + offsetY) / image.scaleY!;
+    const width = (clipPath.width! * clipPath.scaleX!) / image.scaleX!;
+    const height = (clipPath.height! * clipPath.scaleY!) / image.scaleY!;
+
+    image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: clipPath.top!, left: clipPath.left!, selectable: true, lockRotation: false, opacity: 1 });
+    image.off("scaling");
+    image.off("deselected");
+    image.off("moving");
+
+    this.crop = null;
+    this.instance.remove(clipPath);
+    this.instance.remove(clone);
     this.instance.requestRenderAll();
   }
 
@@ -422,7 +476,7 @@ export class Canvas {
       switch (event.target?.type) {
         case "image":
           const image = event.target as fabric.Image;
-          this.onPrepareImageCrop(image);
+          if (this.crop !== image) this.onImageCropStart(image);
           break;
       }
     });
