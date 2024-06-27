@@ -268,6 +268,7 @@ export class Canvas {
   private onUpdateViewportTransform() {
     if (!this.instance) return;
     this.viewportTransform = [...this.instance.viewportTransform!];
+    this.instance.requestRenderAll();
   }
 
   private onCenterArtboard() {
@@ -378,10 +379,11 @@ export class Canvas {
 
         const center = this.instance.getCenter();
         this.onUpdateZoom(zoom);
-        this.onUpdateViewportTransform();
 
         this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
         this.instance.requestRenderAll();
+
+        this.onUpdateViewportTransform();
       }
     });
   }
