@@ -161,8 +161,14 @@ textBoxControls.tr = fabric.Object.prototype.controls.tr;
 textBoxControls.br = fabric.Object.prototype.controls.br;
 textBoxControls.tl = fabric.Object.prototype.controls.tl;
 textBoxControls.bl = fabric.Object.prototype.controls.bl;
-textBoxControls.mt = fabric.Object.prototype.controls.mt;
-textBoxControls.mb = fabric.Object.prototype.controls.mb;
+
+textBoxControls.mt = new fabric.Control({
+  visible: false,
+});
+
+textBoxControls.mb = new fabric.Control({
+  visible: false,
+});
 
 textBoxControls.ml = new fabric.Control({
   x: -0.5,

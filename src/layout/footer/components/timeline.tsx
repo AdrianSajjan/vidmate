@@ -1,9 +1,9 @@
 import useMeasure from "react-use-measure";
 
 import { motion, useAnimationControls } from "framer-motion";
-import { ChevronLeftIcon, ChevronRightIcon, TypeIcon } from "lucide-react";
+import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, TypeIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useEditorContext } from "@/context/editor";
 import { isActiveSelection } from "@/fabric/utils";
@@ -92,9 +92,10 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
   const [backgroundURL, setBackgroundURL] = useState("");
 
   const editor = useEditorContext();
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const object = editor.canvas.onFindObjectByName(element.name);
+    const object = editor.canvas.instance?.getItemByName(element.name);
     object?.clone((clone: fabric.Object) => {
       clone.opacity = 1;
       clone.visible = true;
@@ -108,15 +109,13 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
     return editor.canvas.selected.name === element.name;
   }, [editor.canvas.selected, element]);
 
-  const onDragEnd = (event: MouseEvent | TouchEvent | PointerEvent) => {
-    const target = event.target;
-    if (target instanceof Element) {
-      const style = getComputedStyle(target);
-      const matrix = createInstance(DOMMatrixReadOnly, style.transform);
-      const offset = Math.floor((matrix.m41 / SEEK_TIME_WIDTH) * 1000);
-      editor.canvas.onChangeObjectTimelineOffset(element.name!, offset);
-    }
-  };
+  function onDragEnd() {
+    if (!ref.current) return;
+    const style = getComputedStyle(ref.current);
+    const matrix = createInstance(DOMMatrixReadOnly, style.transform);
+    const offset = Math.floor((matrix.m41 / SEEK_TIME_WIDTH) * 1000);
+    editor.canvas.onChangeObjectTimelineOffset(element.name!, offset);
+  }
 
   const width = (element.meta!.duration / 1000) * SEEK_TIME_WIDTH;
   const offset = (element.meta!.offset / 1000) * SEEK_TIME_WIDTH;
@@ -124,6 +123,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
 
   return (
     <motion.div
+      ref={ref}
       role="button"
       tabIndex={0}
       dragElastic={false}
@@ -148,8 +148,22 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
         </motion.div>
       ) : null}
       <div className="flex-1 relative">
-        <span className="absolute top-1 left-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1">
-          <TypeIcon size={12} />
+        <span className="absolute top-1 left-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-1.5 capitalize">
+          {(() => {
+            switch (element.type) {
+              case "textbox":
+                return <TypeIcon size={12} />;
+              case "path":
+                return (
+                  <Fragment>
+                    <BoxIcon size={12} />
+                    <span className="text-xxs">{element.name?.split("_").at(0) || "shape"}</span>
+                  </Fragment>
+                );
+              default:
+                return null;
+            }
+          })()}
         </span>
       </div>
       {isSelected ? (

@@ -1,3 +1,5 @@
+import useMeasure from "react-use-measure";
+
 import { Fragment, useEffect, useMemo } from "react";
 import { observer } from "mobx-react";
 import { CopyPlusIcon, Trash2Icon } from "lucide-react";
@@ -5,7 +7,6 @@ import { CopyPlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CanvasProvider, useCanvasContext, useInitializeCanvas } from "@/context/canvas";
 import { cn } from "@/lib/utils";
-import useMeasure from "react-use-measure";
 
 const MENU_OFFSET_Y = 35;
 
@@ -45,7 +46,7 @@ function _CanvasBase({ height, width }: EditorCanvasProps) {
     const offsetY = viewport[5];
 
     return {
-      top: offsetY + canvas.selected.top! * canvas.zoom - dimensions.height / 2 - (canvas.selected.height! / 2) * canvas.zoom - MENU_OFFSET_Y,
+      top: offsetY + canvas.selected.top! * canvas.zoom - dimensions.height / 2 - ((canvas.selected.height! * canvas.selected.scaleY!) / 2) * canvas.zoom - MENU_OFFSET_Y,
       left: offsetX + canvas.selected.left! * canvas.zoom - dimensions.width / 2,
     };
   }, [canvas.selected, canvas.instance, canvas.height, canvas.width, canvas.zoom, dimensions]);

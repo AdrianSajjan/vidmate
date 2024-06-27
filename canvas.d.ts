@@ -2085,7 +2085,7 @@ export class Canvas {
    * Returns the fabric object with the provided name
    * @return {fabric.Object | null} active object
    */
-  getItemByName(name: string): Object | null;
+  getItemByName(name?: string): Object | null;
   /**
    * Sets given object as the only active object on canvas
    * @param {fabric.Object} object Object to set as an active one

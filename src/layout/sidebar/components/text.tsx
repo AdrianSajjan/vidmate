@@ -16,25 +16,38 @@ function _TextSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <div className="px-3 py-4">
+      <div className="px-3 pt-4 pb-6">
         <div className="relative">
           <Input placeholder="Search..." className="text-xs pl-8" />
           <SearchIcon size={15} className="absolute top-1/2 -translate-y-1/2 left-2.5 text-foreground/60" />
         </div>
       </div>
-      <div className="px-3 flex flex-col gap-3">
-        <button
-          onClick={() => editor.canvas.onAddText("Your title goes here")}
-          className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-2xl font-semibold text-center transition-colors shadow-sm hover:bg-card"
-        >
-          <span className="line-clamp-1 ">Add a Title</span>
-        </button>
-        <button className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-lg font-medium text-center transition-colors shadow-sm hover:bg-card">
-          <span className="line-clamp-1 ">Add a Heading</span>
-        </button>
-        <button className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-sm font-normal text-center transition-colors shadow-sm hover:bg-card">
-          <span className="line-clamp-1 ">Add a Paragraph</span>
-        </button>
+      <div className="px-3 flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
+          <h4 className="text-xs font-semibold line-clamp-1">Basic Texts</h4>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => editor.canvas.onAddText("Your title goes here")}
+              className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-2xl font-semibold text-center transition-colors shadow-sm hover:bg-card"
+            >
+              <span className="line-clamp-1">Add a Title</span>
+            </button>
+            <button className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-lg font-medium text-center transition-colors shadow-sm hover:bg-card">
+              <span className="line-clamp-1">Add a Heading</span>
+            </button>
+            <button className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-sm font-normal text-center transition-colors shadow-sm hover:bg-card">
+              <span className="line-clamp-1">Add a Paragraph</span>
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-col gap-4">
+          <h4 className="text-xs font-semibold line-clamp-1">Styled Texts</h4>
+          <div className="flex flex-col gap-3">
+            <button className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 font-medium text-center shadow-sm pointer-events-none opacity-50">
+              <span className="line-clamp-1">Coming Soon</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

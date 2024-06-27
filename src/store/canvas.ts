@@ -468,15 +468,13 @@ export class Canvas {
     }
   }
 
-  onFindObjectByName(name?: string) {
-    return this.instance?._objects.find((object) => object.name === name);
-  }
-
   onDeleteObjectByName(name?: string) {
-    const object = this.onFindObjectByName(name);
+    if (!this.instance) return;
+
+    const object = this.instance.getItemByName(name);
     const index = this.elements.findIndex((element) => element.name === name);
 
-    if (object) this.instance?.remove(object);
+    if (object) this.instance.remove(object);
     if (index !== -1) this.elements.splice(index, 1);
   }
 
@@ -520,7 +518,7 @@ export class Canvas {
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: elementID("text"), originX: "center", originY: "center", left: left, top: top, objectCaching: false, textAlign: "center" };
+    const options = { name: elementID("text"), originX: "center", originY: "center", left, top, objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
     this.onInitializeElementMeta(textbox);
 
@@ -532,9 +530,29 @@ export class Canvas {
     this.onToggleCanvasElements(this.seek);
   }
 
+  onAddShapePath(path: string, name?: string) {
+    if (!this.artboard || !this.instance) return;
+
+    const left = this.artboard.left! + this.artboard.width! / 2;
+    const top = this.artboard.top! + this.artboard.height! / 2;
+
+    const options = { name: elementID(name || "shape"), originX: "center", originY: "center", left, top, objectCaching: true, fill: "#000000" };
+    const shape = createInstance(fabric.Path, path, options);
+    this.onInitializeElementMeta(shape);
+
+    this.instance.add(shape);
+    this.instance.setActiveObject(shape);
+    this.instance.requestRenderAll();
+
+    this.onInitializeAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
+  }
+
   onCreateSelection(name?: string, multiple?: boolean) {
-    const object = this.onFindObjectByName(name);
+    const object = this.instance?.getItemByName(name);
+
     if (!this.instance || !object) return;
+
     const selected = this.instance.getActiveObject();
 
     if (!selected || !multiple) {
@@ -563,7 +581,7 @@ export class Canvas {
   }
 
   onChangeObjectTimelineOffset(name: string, offset: number) {
-    const object = this.onFindObjectByName(name);
+    const object = this.instance?.getItemByName(name);
 
     if (!object || !this.instance) return;
 
