@@ -4129,6 +4129,8 @@ export class Rect extends Object {
   static fromObject(object: any): Rect;
 }
 
+export class Cropper extends Rect {}
+
 interface TextOptions extends IObjectOptions {
   type?: string | undefined;
   /**

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CanvasProvider, useCanvasContext, useInitializeCanvas } from "@/context/canvas";
 import { cn } from "@/lib/utils";
 
-const MENU_OFFSET_Y = 35;
+const MENU_OFFSET_Y = 50;
 
 interface EditorCanvasProps {
   page: number;

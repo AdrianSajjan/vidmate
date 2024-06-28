@@ -5,6 +5,8 @@ import RotationControl from "@/assets/editor/controls/rotate-icon.svg";
 import MiddleControl from "@/assets/editor/controls/middle-control.svg";
 import MiddleControlHoz from "@/assets/editor/controls/middle-control-hoz.svg";
 
+import CropTopRightControl from "@/assets/editor/controls/crop-top-right.svg";
+
 const middleControl = document.createElement("img");
 middleControl.src = MiddleControl;
 
@@ -17,10 +19,12 @@ edgeControl.src = EdgeControl;
 const rotationControl = document.createElement("img");
 rotationControl.src = RotationControl;
 
+const cropTopRightControl = document.createElement("img");
+cropTopRightControl.src = CropTopRightControl;
+
 function renderIcon(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
   const wsize = 20;
   const hsize = 25;
-
   ctx.save();
   ctx.translate(left, top);
   ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle!));
@@ -31,7 +35,6 @@ function renderIcon(ctx: CanvasRenderingContext2D, left: number, top: number, _:
 function renderIconHoz(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
   const wsize = 25;
   const hsize = 20;
-
   ctx.save();
   ctx.translate(left, top);
   ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle!));
@@ -42,7 +45,6 @@ function renderIconHoz(ctx: CanvasRenderingContext2D, left: number, top: number,
 function renderIconEdge(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
   const wsize = 25;
   const hsize = 25;
-
   ctx.save();
   ctx.translate(left, top);
   ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle!));
@@ -50,29 +52,27 @@ function renderIconEdge(ctx: CanvasRenderingContext2D, left: number, top: number
   ctx.restore();
 }
 
+function renderIconCrop(rotate: number) {
+  return (ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, _fabricObject: fabric.Object) => {
+    const wsize = 25;
+    const hsize = 25;
+    ctx.save();
+    ctx.translate(left, top);
+    ctx.rotate(fabric.util.degreesToRadians(rotate));
+    ctx.drawImage(cropTopRightControl, -wsize / 2, -hsize / 2, wsize, hsize);
+    ctx.restore();
+  };
+}
+
 function renderIconRotate(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
   const wsize = 40;
   const hsize = 40;
-
   ctx.save();
   ctx.translate(left, top);
   ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle!));
   ctx.drawImage(rotationControl, -wsize / 2, -hsize / 2, wsize, hsize);
   ctx.restore();
 }
-
-fabric.Object.NUM_FRACTION_DIGITS = 5;
-
-fabric.Object.prototype.set({
-  transparentCorners: false,
-  borderColor: "#51B9F9",
-  cornerColor: "#FFF",
-  borderScaleFactor: 2.5,
-  cornerStyle: "circle",
-  cornerStrokeColor: "#0E98FC",
-  borderOpacityWhenMoving: 1,
-  strokeUniform: true,
-});
 
 fabric.Object.prototype.controls.ml = new fabric.Control({
   x: -0.5,
@@ -157,23 +157,21 @@ fabric.Object.prototype.controls.mtr = new fabric.Control({
   render: renderIconRotate,
 });
 
-const textBoxControls = fabric.Textbox.prototype.controls;
+fabric.Textbox.prototype.controls.mtr = fabric.Object.prototype.controls.mtr;
+fabric.Textbox.prototype.controls.tr = fabric.Object.prototype.controls.tr;
+fabric.Textbox.prototype.controls.br = fabric.Object.prototype.controls.br;
+fabric.Textbox.prototype.controls.tl = fabric.Object.prototype.controls.tl;
+fabric.Textbox.prototype.controls.bl = fabric.Object.prototype.controls.bl;
 
-textBoxControls.mtr = fabric.Object.prototype.controls.mtr;
-textBoxControls.tr = fabric.Object.prototype.controls.tr;
-textBoxControls.br = fabric.Object.prototype.controls.br;
-textBoxControls.tl = fabric.Object.prototype.controls.tl;
-textBoxControls.bl = fabric.Object.prototype.controls.bl;
-
-textBoxControls.mt = new fabric.Control({
+fabric.Textbox.prototype.controls.mt = new fabric.Control({
   visible: false,
 });
 
-textBoxControls.mb = new fabric.Control({
+fabric.Textbox.prototype.controls.mb = new fabric.Control({
   visible: false,
 });
 
-textBoxControls.ml = new fabric.Control({
+fabric.Textbox.prototype.controls.ml = new fabric.Control({
   x: -0.5,
   y: 0,
   offsetX: -1,
@@ -183,7 +181,7 @@ textBoxControls.ml = new fabric.Control({
   render: renderIcon,
 });
 
-textBoxControls.mr = new fabric.Control({
+fabric.Textbox.prototype.controls.mr = new fabric.Control({
   x: 0.5,
   y: 0,
   offsetX: 1,
@@ -191,6 +189,44 @@ textBoxControls.mr = new fabric.Control({
   actionHandler: fabric.controlsUtils.changeWidth,
   actionName: "resizing",
   render: renderIcon,
+});
+
+fabric.Cropper = fabric.util.createClass(fabric.Rect, {
+  lockRotation: true,
+  controls: {
+    ml: fabric.Object.prototype.controls.ml,
+    mr: fabric.Object.prototype.controls.mr,
+    mb: fabric.Object.prototype.controls.mb,
+    mt: fabric.Object.prototype.controls.mt,
+    tl: new fabric.Control({
+      x: -0.5,
+      y: -0.5,
+      cursorStyleHandler: fabric.controlsUtils.scaleCursorStyleHandler,
+      actionHandler: fabric.controlsUtils.scalingEqually,
+      render: renderIconCrop(0),
+    }),
+    tr: new fabric.Control({
+      x: 0.5,
+      y: -0.5,
+      cursorStyleHandler: fabric.controlsUtils.scaleCursorStyleHandler,
+      actionHandler: fabric.controlsUtils.scalingEqually,
+      render: renderIconCrop(90),
+    }),
+    bl: new fabric.Control({
+      x: -0.5,
+      y: 0.5,
+      cursorStyleHandler: fabric.controlsUtils.scaleCursorStyleHandler,
+      actionHandler: fabric.controlsUtils.scalingEqually,
+      render: renderIconCrop(270),
+    }),
+    br: new fabric.Control({
+      x: 0.5,
+      y: 0.5,
+      cursorStyleHandler: fabric.controlsUtils.scaleCursorStyleHandler,
+      actionHandler: fabric.controlsUtils.scalingEqually,
+      render: renderIconCrop(180),
+    }),
+  },
 });
 
 fabric.Canvas.prototype.getItemByName = function (name) {
@@ -216,3 +252,16 @@ fabric.Canvas.prototype.getItemByName = function (name) {
   }
   return object;
 };
+
+fabric.Object.NUM_FRACTION_DIGITS = 5;
+
+fabric.Object.prototype.set({
+  transparentCorners: false,
+  borderColor: "#51B9F9",
+  cornerColor: "#FFF",
+  borderScaleFactor: 2.5,
+  cornerStyle: "circle",
+  cornerStrokeColor: "#0E98FC",
+  borderOpacityWhenMoving: 1,
+  strokeUniform: true,
+});
