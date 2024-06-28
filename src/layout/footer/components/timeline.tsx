@@ -100,6 +100,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
     object?.clone((clone: fabric.Object) => {
       clone.opacity = 1;
       clone.visible = true;
+      clone.clipPath = undefined;
       setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
     });
   }, [element, editor.canvas.instance]);

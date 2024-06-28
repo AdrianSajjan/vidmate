@@ -65,8 +65,12 @@ export class Canvas {
     makeAutoObservable(this);
   }
 
+  private isElementExcluded(object: fabric.Object) {
+    return elementsToExclude.includes(object.name!) || object.name!.startsWith("crop_") || object.name!.startsWith("clone_") || object.name!.startsWith("clip_");
+  }
+
   private onAddElement(object?: fabric.Object) {
-    if (!object || elementsToExclude.includes(object.name!) || object.name!.startsWith("crop_") || object.name?.startsWith("clone_")) return;
+    if (!object || this.isElementExcluded(object)) return;
     this.elements.push(object.toObject(propertiesToInclude));
   }
 
@@ -260,16 +264,143 @@ export class Canvas {
     if (lineV) this.instance.remove(lineV);
   }
 
-  private *onImageCropStart(image: fabric.Image) {
+  private onCropImageStart(image: fabric.Image) {
+    if (!this.instance || !this.artboard) return;
+
+    const crop = new fabric.Rect({
+      name: "crop_" + image.name,
+      top: image.top,
+      left: image.left,
+      angle: image.angle,
+      width: image.getScaledWidth(),
+      height: image.getScaledHeight(),
+
+      fill: "rgba(255, 255, 255, 1)",
+      globalCompositeOperation: "overlay",
+      lockRotation: true,
+      meta: {},
+    });
+
+    const overlay = new fabric.Rect({
+      name: "clip_" + image.name,
+      top: image.top,
+      left: image.left,
+      angle: image.angle,
+      width: image.getScaledWidth(),
+      height: image.getScaledHeight(),
+      selectable: false,
+
+      fill: "rgba(0, 0, 0, 0.5)",
+      lockRotation: true,
+      meta: {},
+    });
+
+    const element = image.getElement() as HTMLImageElement;
+    const width = image.width!;
+    const height = image.height!;
+
+    const cropX = image.cropX!;
+    const cropY = image.cropY!;
+
+    image.set({
+      cropX: 0,
+      cropY: 0,
+      dirty: false,
+      selectable: false,
+      left: image.left! - cropX * image.scaleX!,
+      top: image.top! - cropY * image.scaleY!,
+      width: element.naturalWidth,
+      height: element.naturalHeight,
+    });
+
+    crop.set({
+      left: image.left! + cropX * image.scaleX!,
+      top: image.top! + cropY * image.scaleY!,
+      width: width * image.scaleX!,
+      height: height * image.scaleY!,
+      dirty: false,
+    });
+
+    overlay.set({
+      left: image.left,
+      top: image.top,
+      width: image.width! * image.scaleX!,
+      height: image.height! * image.scaleY!,
+      dirty: false,
+    });
+
+    crop.meta!.oldScaleX = crop.scaleX;
+    crop.meta!.oldScaleY = crop.scaleY;
+
+    this.instance.add(overlay);
+    this.instance.add(crop);
+
+    this.instance.discardActiveObject();
+    this.instance.setActiveObject(crop);
+    this.instance.renderAll();
+
+    crop.on("moving", () => {
+      const imageHeight = image.getScaledHeight();
+      const imageWidth = image.getScaledWidth();
+
+      const cropHeight = crop.getScaledHeight();
+      const cropWidth = crop.getScaledWidth();
+
+      if (crop.top! < image.top!) {
+        crop.top = image.top!;
+      }
+
+      if (crop.left! < image.left!) {
+        crop.left = image.left!;
+      }
+
+      if (crop.top! + cropHeight > image.top! + imageHeight) {
+        crop.top = image.top! + imageHeight - cropHeight;
+      }
+
+      if (crop.left! + cropWidth > image.left! + imageWidth) {
+        crop.left = image.left! + imageWidth - cropWidth;
+      }
+    });
+
+    crop.on("deselected", () => {
+      this.onCropImageEnd(crop, image);
+      this.instance!.remove(overlay);
+    });
+  }
+
+  private onCropImageEnd(crop: fabric.Rect, image: fabric.Image) {
+    if (!this.instance || !this.artboard) return;
+
+    const cropX = (crop.left! - image.left!) / image.scaleX!;
+    const cropY = (crop.top! - image.top!) / image.scaleY!;
+
+    const width = (crop.width! * crop.scaleX!) / image.scaleX!;
+    const height = (crop.height! * crop.scaleY!) / image.scaleY!;
+
+    image.set({
+      cropX: cropX,
+      cropY: cropY,
+      width: width,
+      height: height,
+      top: image.top! + cropY * image.scaleY!,
+      left: image.left! + cropX * image.scaleX!,
+      selectable: true,
+    });
+    image.setCoords();
+
+    this.instance.remove(crop);
+    this.instance.renderAll();
+  }
+
+  private *onEditImageClippingMaskStart(image: fabric.Image) {
     if (!this.instance || !this.artboard) return;
 
     const index = this.instance._objects.findIndex((object) => object === image);
-
     this.crop = image;
-    let clipPath = image.clipPath;
 
-    const width = image.getScaledWidth();
-    const height = image.getScaledHeight();
+    const clipPath = image.clipPath!;
+    const element = image.getElement() as HTMLImageElement;
 
     const left = image.left!;
     const top = image.top!;
@@ -277,16 +408,7 @@ export class Canvas {
     const x = image.cropX! * image.scaleX!;
     const y = image.cropY! * image.scaleY!;
 
-    image.set({ width: image.getOriginalSize().width, height: image.getOriginalSize().height, clipPath: undefined, cropX: 0, cropY: 0, opacity: 0.5, dirty: false, lockRotation: true });
-    const offsetX = (image.getScaledWidth() - width) / 2;
-    const offsetY = (image.getScaledHeight() - height) / 2;
-    image.set({ left: left - x + offsetX, top: top - y + offsetY });
-
-    if (!clipPath) {
-      const options = { name: "crop_" + image.name, fill: "#000000", originX: "center", originY: "center", lockRotation: true, selectable: false };
-      clipPath = createInstance(fabric.Rect, { ...options, width: width, height: height, left: left, top: top, angle: image.angle });
-      this.instance.insertAt(clipPath, index, false);
-    }
+    image.set({ left: left - x, top: top - y, width: element.naturalWidth, height: element.naturalHeight, clipPath: undefined, cropX: 0, cropY: 0, opacity: 0.5, dirty: false, lockRotation: true });
 
     const clone: fabric.Image = yield createInstance(Promise, (resolve) =>
       image.clone((clone: fabric.Image) => {
@@ -297,51 +419,72 @@ export class Canvas {
     );
 
     image.on("moving", () => {
-      const offsetX = (image.getScaledWidth() - clipPath.getScaledWidth()) / 2;
-      const offsetY = (image.getScaledHeight() - clipPath.getScaledHeight()) / 2;
+      const imageHeight = image.getScaledHeight();
+      const imageWidth = image.getScaledWidth();
 
-      if (image.left! > clipPath.left! + offsetX) {
-        image.left = clipPath.left! + offsetX;
+      const clipPathHeight = clipPath.getScaledHeight();
+      const clipPathWidth = clipPath.getScaledWidth();
+
+      if (image.left! >= clipPath.left!) {
+        image.left = clipPath.left!;
       }
 
-      if (image.top! > clipPath.top! + offsetY) {
-        image.top = clipPath.top! + offsetY;
+      if (image.top! >= clipPath.top!) {
+        image.top = clipPath.top!;
       }
 
-      if (image.left! + image.getScaledWidth() < clipPath.left! + clipPath.getScaledWidth() + offsetX) {
-        image.left = clipPath.left! - (image.getScaledWidth() - clipPath.getScaledWidth()) + offsetX;
+      if (image.left! + imageWidth <= clipPath.left! + clipPathWidth) {
+        image.left = clipPath.left! - (imageWidth - clipPathWidth);
       }
 
-      if (image.top! + image.getScaledHeight() < clipPath.top! + clipPath.getScaledHeight() + offsetY) {
-        image.top = clipPath.top! - (image.getScaledHeight() - clipPath.getScaledHeight()) + offsetY;
+      if (image.top! + imageHeight <= clipPath.top! + clipPathHeight) {
+        image.top = clipPath.top! - (imageHeight - clipPathHeight);
       }
+
+      clone.left = image.left;
+      clone.top = image.top;
+    });
+
+    image.on("scaling", () => {
+      clone.scaleX = image.scaleX;
+      clone.scaleY = image.scaleY;
+      clone.left = image.left;
+      clone.top = image.top;
     });
 
     image.on("deselected", () => {
-      this.onImageCropEnd(image, clipPath, clone);
+      this.onEditImageClippingMaskEnd(image, clipPath, clone);
     });
 
     this.instance.requestRenderAll();
   }
 
-  private onImageCropEnd(image: fabric.Image, clipPath: fabric.Object, clone: fabric.Image) {
+  private onEditImageClippingMaskEnd(image: fabric.Image, clipPath: fabric.Object, clone: fabric.Image) {
     if (!this.instance || !this.artboard) return;
 
-    const offsetX = (image.getScaledWidth() - clipPath.getScaledWidth()) / 2;
-    const offsetY = (image.getScaledHeight() - clipPath.getScaledHeight()) / 2;
-
-    const cropX = (clipPath.left! - image.left! + offsetX) / image.scaleX!;
-    const cropY = (clipPath.top! - image.top! + offsetY) / image.scaleY!;
+    const cropX = (clipPath.left! - image.left!) / image.scaleX!;
+    const cropY = (clipPath.top! - image.top!) / image.scaleY!;
     const width = (clipPath.width! * clipPath.scaleX!) / image.scaleX!;
     const height = (clipPath.height! * clipPath.scaleY!) / image.scaleY!;
 
-    image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: clipPath.top!, left: clipPath.left!, selectable: true, lockRotation: false, opacity: 1 });
+    image.set({
+      cropX: cropX,
+      cropY: cropY,
+      width: width,
+      height: height,
+      top: clipPath.top!,
+      left: clipPath.left!,
+      clipPath: clipPath,
+      selectable: true,
+      lockRotation: false,
+      opacity: 1,
+    });
+
     image.off("scaling");
     image.off("deselected");
     image.off("moving");
 
     this.crop = null;
-    this.instance.remove(clipPath);
     this.instance.remove(clone);
     this.instance.requestRenderAll();
   }
@@ -379,7 +522,7 @@ export class Canvas {
     if (!this.instance) return;
 
     for (const object of this.instance._objects) {
-      if (elementsToExclude.includes(object.name!)) continue;
+      if (this.isElementExcluded(object)) continue;
       const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
       object.visible = !hidden;
     }
@@ -401,8 +544,8 @@ export class Canvas {
         duration: 0,
       },
       out: {
-        name: "none",
-        duration: 0,
+        name: "fade-out",
+        duration: 500,
       },
     };
   }
@@ -475,8 +618,12 @@ export class Canvas {
     this.instance.on("mouse:dblclick", (event) => {
       switch (event.target?.type) {
         case "image":
-          const image = event.target as fabric.Image;
-          if (this.crop !== image) this.onImageCropStart(image);
+          if (this.crop === event.target) return;
+          if (event.target.clipPath) {
+            this.onEditImageClippingMaskStart(event.target as fabric.Image);
+          } else {
+            this.onCropImageStart(event.target as fabric.Image);
+          }
           break;
       }
     });
@@ -504,7 +651,7 @@ export class Canvas {
     });
 
     for (const object of this.instance._objects) {
-      if (elementsToExclude.includes(object.name!)) continue;
+      if (this.isElementExcluded(object)) continue;
 
       const entry = object.anim!.in;
       const exit = object.anim!.out;
@@ -623,7 +770,7 @@ export class Canvas {
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: elementID("text"), left, top, fontFamily, fontWeight, fontSize, paintFirst: "stroke", originX: "center", originY: "center", objectCaching: false, textAlign: "center" };
+    const options = { name: elementID("text"), left, top, fontFamily, fontWeight, fontSize, paintFirst: "stroke", objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
     this.onInitializeElementMeta(textbox);
 
@@ -635,28 +782,30 @@ export class Canvas {
     this.onToggleCanvasElements(this.seek);
   }
 
-  *onAddImage(source: string, height = 500, width = 500) {
+  onAddImage(source: string, height = 500, width = 500) {
     if (!this.instance || !this.artboard) return;
 
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const image: fabric.Image = yield createInstance(Promise<fabric.Image>, (resolve) => {
-      const options = { name: elementID("image"), left, top, crossOrigin: "anonymous", originX: "center", originY: "center", objectCaching: true };
-      fabric.Image.fromURL(source, (image) => resolve(image), options);
-    });
+    const options = { name: elementID("image"), left, top: top, crossOrigin: "anonymous", objectCaching: true };
+    fabric.Image.fromURL(
+      source,
+      (image) => {
+        image.scaleToHeight(height);
+        image.scaleToWidth(width);
 
-    image.scaleToHeight(height);
-    image.scaleToWidth(width);
+        this.onInitializeElementMeta(image);
+        this.instance!.add(image);
 
-    this.onInitializeElementMeta(image);
+        this.instance!.setActiveObject(image);
+        this.instance!.requestRenderAll();
 
-    this.instance.add(image);
-    this.instance.setActiveObject(image);
-    this.instance.requestRenderAll();
-
-    this.onInitializeAnimationTimeline();
-    this.onToggleCanvasElements(this.seek);
+        this.onInitializeAnimationTimeline();
+        this.onToggleCanvasElements(this.seek);
+      },
+      options
+    );
   }
 
   onAddShapePath(path: string, name?: string) {
@@ -665,7 +814,7 @@ export class Canvas {
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: elementID(name || "shape"), originX: "center", originY: "center", left, top, objectCaching: true, fill: "#000000" };
+    const options = { name: elementID(name || "shape"), left, top, objectCaching: true, fill: "#000000" };
     const shape = createInstance(fabric.Path, path, options);
     this.onInitializeElementMeta(shape);
 

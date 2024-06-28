@@ -61,6 +61,8 @@ function renderIconRotate(ctx: CanvasRenderingContext2D, left: number, top: numb
   ctx.restore();
 }
 
+fabric.Object.NUM_FRACTION_DIGITS = 5;
+
 fabric.Object.prototype.set({
   transparentCorners: false,
   borderColor: "#51B9F9",
