@@ -274,7 +274,6 @@ export class Canvas {
       angle: image.angle,
       width: image.getScaledWidth(),
       height: image.getScaledHeight(),
-
       fill: "rgba(255, 255, 255, 1)",
       globalCompositeOperation: "overlay",
       lockRotation: true,
@@ -770,9 +769,11 @@ export class Canvas {
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: elementID("text"), left, top, fontFamily, fontWeight, fontSize, paintFirst: "stroke", objectCaching: false, textAlign: "center" };
+    const options = { name: elementID("text"), fontFamily, fontWeight, fontSize, paintFirst: "stroke", objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
+
     this.onInitializeElementMeta(textbox);
+    textbox.set({ left: left - textbox.width! / 2, top: top - textbox.height! / 2 });
 
     this.instance.add(textbox);
     this.instance.setActiveObject(textbox);
@@ -788,12 +789,13 @@ export class Canvas {
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: elementID("image"), left, top: top, crossOrigin: "anonymous", objectCaching: true };
+    const options = { name: elementID("image"), crossOrigin: "anonymous", objectCaching: true };
     fabric.Image.fromURL(
       source,
       (image) => {
         image.scaleToHeight(height);
         image.scaleToWidth(width);
+        image.set({ left: left - image.getScaledWidth() / 2, top: top - image.getScaledHeight() / 2 });
 
         this.onInitializeElementMeta(image);
         this.instance!.add(image);
@@ -814,9 +816,11 @@ export class Canvas {
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: elementID(name || "shape"), left, top, objectCaching: true, fill: "#000000" };
+    const options = { name: elementID(name || "shape"), objectCaching: true, fill: "#000000" };
     const shape = createInstance(fabric.Path, path, options);
+
     this.onInitializeElementMeta(shape);
+    shape.set({ left: left - shape.width! / 2, top: top - shape.height! / 2 });
 
     this.instance.add(shape);
     this.instance.setActiveObject(shape);

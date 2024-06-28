@@ -45,8 +45,8 @@ function _CanvasBase({ height, width }: EditorCanvasProps) {
     const offsetY = viewport[5];
 
     return {
-      top: offsetY + canvas.selected.top! * canvas.zoom - dimensions.height / 2 - ((canvas.selected.height! * canvas.selected.scaleY!) / 2) * canvas.zoom - MENU_OFFSET_Y,
-      left: offsetX + canvas.selected.left! * canvas.zoom - dimensions.width / 2,
+      top: offsetY + canvas.selected.top! * canvas.zoom - (dimensions.height / 2) * canvas.zoom - MENU_OFFSET_Y,
+      left: offsetX + canvas.selected.left! * canvas.zoom - dimensions.width / 2 + ((canvas.selected.width! * canvas.selected.scaleX!) / 2) * canvas.zoom,
     };
   }, [canvas.selected, canvas.viewportTransform, canvas.height, canvas.width, canvas.zoom, dimensions]);
 
