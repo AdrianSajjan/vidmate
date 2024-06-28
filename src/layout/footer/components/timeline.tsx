@@ -157,15 +157,20 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
             switch (element.type) {
               case "textbox":
                 return <TypeIcon size={12} />;
+              case "image":
+                return <ImageIcon size={12} />;
               case "path":
+              case "rect":
+              case "line":
+              case "circle":
+              case "polygon":
+              case "triangle":
                 return (
                   <Fragment>
                     <BoxIcon size={12} />
                     <span className="text-xxs">{element.name?.split("_").at(0) || "shape"}</span>
                   </Fragment>
                 );
-              case "image":
-                return <ImageIcon size={12} />;
               default:
                 return null;
             }

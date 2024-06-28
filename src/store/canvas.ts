@@ -648,7 +648,7 @@ export class Canvas {
 
   onInitialize(element: HTMLCanvasElement) {
     this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
-    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, hoverCursor: "default" });
+    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
     this.timeline.add({ targets: this.artboard, duration: this.duration });
 
     this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
@@ -738,7 +738,7 @@ export class Canvas {
     this.onToggleCanvasElements(this.seek);
   }
 
-  onAddImage(source: string, height = 500, width = 500) {
+  onAddImage(source: string) {
     if (!this.instance || !this.artboard) return;
 
     const left = this.artboard.left! + this.artboard.width! / 2;
@@ -748,8 +748,7 @@ export class Canvas {
     fabric.Image.fromURL(
       source,
       (image) => {
-        image.scaleToHeight(height);
-        image.scaleToWidth(width);
+        image.scaleToHeight(500);
         image.set({ left: left - image.getScaledWidth() / 2, top: top - image.getScaledHeight() / 2 });
 
         this.onInitializeElementMeta(image);
@@ -773,9 +772,10 @@ export class Canvas {
 
     const options = { name: elementID(name || "shape"), objectCaching: true, fill: "#000000" };
     const shape = createInstance(fabric.Path, path, options);
-
     this.onInitializeElementMeta(shape);
-    shape.set({ left: left - shape.width! / 2, top: top - shape.height! / 2 });
+
+    shape.scaleToHeight(500);
+    shape.set({ left: left - shape.getScaledWidth()! / 2, top: top - shape.getScaledHeight()! / 2 });
 
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
