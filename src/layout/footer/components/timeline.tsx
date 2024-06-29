@@ -1,7 +1,7 @@
 import useMeasure from "react-use-measure";
 
 import { motion, useAnimationControls } from "framer-motion";
-import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, ImageIcon, TypeIcon } from "lucide-react";
+import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -139,7 +139,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
       drag={editor.canvas.playing ? false : "x"}
       dragConstraints={{ left: 0, right: trackWidth - width }}
       onClick={(event) => editor.canvas.onCreateSelection(element.name, event.shiftKey)}
-      className={cn("h-10 rounded-lg bg-card border-[3px] overflow-visible flex items-stretch relative bg-repeat-x bg-center", isSelected ? "border-blue-500" : "border-foreground/20")}
+      className={cn("h-10 rounded-lg bg-card border-[3px] overflow-visible flex items-stretch relative bg-repeat-x bg-center", isSelected ? "border-blue-600" : "border-foreground/20")}
       style={{
         width,
         backgroundImage: `url(${backgroundURL})`,
@@ -147,43 +147,82 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
       }}
     >
       {isSelected ? (
-        <motion.div className="px-px flex items-center justify-center">
-          <ChevronLeftIcon className="text-blue-600" strokeWidth={2.5} />
+        <motion.div className="pr-0.5 flex items-center justify-center bg-blue-600">
+          <ChevronLeftIcon size={16} className="text-white" strokeWidth={2.5} />
         </motion.div>
       ) : null}
       <div className="flex-1 relative">
         <span className="absolute top-1 left-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-1.5 capitalize">
-          {(() => {
-            switch (element.type) {
-              case "textbox":
-                return <TypeIcon size={12} />;
-              case "image":
-                return <ImageIcon size={12} />;
-              case "path":
-              case "rect":
-              case "line":
-              case "circle":
-              case "polygon":
-              case "triangle":
-                return (
-                  <Fragment>
-                    <BoxIcon size={12} />
-                    <span className="text-xxs">{element.name?.split("_").at(0) || "shape"}</span>
-                  </Fragment>
-                );
-              default:
-                return null;
-            }
-          })()}
+          <ElementDescription name={element.name} type={element.type} />
         </span>
       </div>
       {isSelected ? (
-        <motion.div className="px-px flex items-center justify-center">
-          <ChevronRightIcon className="text-blue-600" strokeWidth={2.5} />
+        <motion.div className="pl-0.5 flex items-center justify-center bg-blue-600">
+          <ChevronRightIcon size={16} className="text-white" strokeWidth={2.5} />
         </motion.div>
       ) : null}
     </motion.div>
   );
+}
+
+function ElementDescription({ name, type }: { type?: string; name?: string }) {
+  switch (type) {
+    case "text":
+    case "textbox":
+      return (
+        <Fragment>
+          <TypeIcon size={12} />
+          <span className="text-xxs">Text</span>
+        </Fragment>
+      );
+
+    case "image":
+      return (
+        <Fragment>
+          <ImageIcon size={12} />
+          <span className="text-xxs">Image</span>
+        </Fragment>
+      );
+
+    case "triangle":
+      return (
+        <Fragment>
+          <TriangleIcon size={12} />
+          <span className="text-xxs">Triangle</span>
+        </Fragment>
+      );
+
+    case "rect":
+      return (
+        <Fragment>
+          <RectangleHorizontalIcon size={12} />
+          <span className="text-xxs">Rectangle</span>
+        </Fragment>
+      );
+
+    case "ellipse":
+    case "circle":
+      return (
+        <Fragment>
+          <CircleIcon size={12} />
+          <span className="text-xxs">Ellipse</span>
+        </Fragment>
+      );
+
+    case "path":
+    case "line":
+    case "polygon":
+    case "polyline":
+      return (
+        <Fragment>
+          <BoxIcon size={12} />
+          <span className="text-xxs">{name?.split("_").at(0) || "Shape"}</span>
+        </Fragment>
+      );
+
+    default:
+      return null;
+  }
 }
 
 const TimelineItem = observer(_TimelineItem);

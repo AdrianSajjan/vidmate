@@ -38,15 +38,19 @@ function _CanvasBase({ height, width }: EditorCanvasProps) {
   }, [canvas, height, width, isInitialized]);
 
   const style = useMemo(() => {
-    if (!canvas.selected) return undefined;
+    if (!canvas.selected || !canvas.instance) return undefined;
 
     const viewport = canvas.viewportTransform!;
     const offsetX = viewport[4];
     const offsetY = viewport[5];
 
+    const selected = canvas.instance.getItemByName(canvas.selected.name);
+
+    if (!selected) return undefined;
+
     return {
-      top: offsetY + canvas.selected.top! * canvas.zoom - (dimensions.height / 2) * canvas.zoom - MENU_OFFSET_Y,
-      left: offsetX + canvas.selected.left! * canvas.zoom - dimensions.width / 2 + ((canvas.selected.width! * canvas.selected.scaleX!) / 2) * canvas.zoom,
+      top: offsetY + selected.getBoundingRect(true).top! * canvas.zoom - (dimensions.height / 2) * canvas.zoom - MENU_OFFSET_Y,
+      left: offsetX + selected.getBoundingRect(true).left! * canvas.zoom - dimensions.width / 2 + ((selected.width! * selected.scaleX!) / 2) * canvas.zoom,
     };
   }, [canvas.selected, canvas.viewportTransform, canvas.height, canvas.width, canvas.zoom, dimensions]);
 

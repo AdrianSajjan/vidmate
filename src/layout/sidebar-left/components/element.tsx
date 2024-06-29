@@ -1,16 +1,22 @@
-import { Fragment } from "react";
-import { SearchIcon, XIcon } from "lucide-react";
+import { useState } from "react";
 import { observer } from "mobx-react";
+
+import { SearchIcon, XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+
 import { useEditorContext } from "@/context/editor";
-import { basicShapes } from "@/constants/elements";
-import { Skeleton } from "@/components/ui/skeleton";
+
+import { advancedShapes, basicShapes } from "@/constants/elements";
 import { leftSidebarWidth } from "@/constants/layout";
+import { cn } from "@/lib/utils";
 
 function _ElementSidebar() {
   const editor = useEditorContext();
+
+  const [expanded, setExpanded] = useState<false | string>(false);
 
   return (
     <div className="h-full" style={{ width: leftSidebarWidth }}>
@@ -21,54 +27,117 @@ function _ElementSidebar() {
         </Button>
       </div>
       <section className="sidebar-container">
-        <div className="px-3 pt-4 pb-6">
+        <div className={cn("px-3 pt-4 flex flex-col gap-2.5 border-b", expanded ? "border-b pb-2.5" : "pb-6 border-b-0")}>
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />
             <SearchIcon size={15} className="absolute top-1/2 -translate-y-1/2 left-2.5 text-foreground/60" />
           </div>
+          {expanded ? (
+            <Breadcrumb>
+              <BreadcrumbList className="sm:gap-1 gap-1">
+                <BreadcrumbItem>
+                  <Button variant="ghost" size="sm" className="text-xs h-6 px-2 text-foreground/30 hover:text-foreground/40" onClick={() => setExpanded(false)}>
+                    Shapes
+                  </Button>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <Button disabled variant="ghost" size="sm" className="text-xs h-6 px-2 capitalize disabled:opacity-100">
+                    {expanded}
+                  </Button>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          ) : null}
         </div>
-        <div className="px-3 flex flex-col gap-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-4">
-              <h4 className="text-xs font-semibold line-clamp-1">Basic Shapes</h4>
-              <Button size="sm" variant="link" className="text-blue-600 font-medium line-clamp-1">
-                See All
-              </Button>
-            </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden">
-              {basicShapes.map(({ name, path }) => (
-                <button
-                  key={name}
-                  onClick={() => editor.canvas.onAddShapePath(path, name)}
-                  className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
-                >
-                  <svg width="48" viewBox="0 0 48 48" aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
-                    <path d={path} className="h-full" />
-                  </svg>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-4">
-              <h4 className="text-xs font-semibold line-clamp-1">Abstract Shapes</h4>
-              <Button size="sm" variant="link" className="text-blue-600 font-medium line-clamp-1">
-                See All
-              </Button>
-            </div>
-            <div className="flex gap-2.5 items-center overflow-scroll relative scrollbar-hidden">
-              <Fragment>
-                {Array.from({ length: 3 }, (_, index) => (
-                  <Skeleton key={index} className="h-16 flex-1 rounded-md" />
+        {!expanded ? (
+          <div className="px-3 flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-4">
+                <h4 className="text-xs font-semibold line-clamp-1">Basic Shapes</h4>
+                <Button size="sm" variant="link" className="text-blue-600 font-medium line-clamp-1" onClick={() => setExpanded("basic")}>
+                  See All
+                </Button>
+              </div>
+              <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden">
+                {basicShapes.map(({ name, path, klass, params }) => (
+                  <button
+                    key={name}
+                    onClick={() => editor.canvas.onAddBasicShape(klass, params)}
+                    className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+                  >
+                    <svg viewBox="0 0 48 48" aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+                      <path d={path} className="h-full" />
+                    </svg>
+                  </button>
                 ))}
-                <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">Coming soon</span>
-              </Fragment>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-4">
+                <h4 className="text-xs font-semibold line-clamp-1">Abstract Shapes</h4>
+                <Button size="sm" variant="link" className="text-blue-600 font-medium line-clamp-1" onClick={() => setExpanded("advanced")}>
+                  See All
+                </Button>
+              </div>
+              <div className="flex gap-2.5 items-center overflow-scroll relative scrollbar-hidden">
+                {advancedShapes.map(({ name, path, viewbox = "0 0 48 48" }) => (
+                  <button
+                    key={name}
+                    onClick={() => editor.canvas.onAddAbstractShape(path, name)}
+                    className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+                  >
+                    <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+                      <path d={path} className="h-full" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="px-3 grid grid-cols-3 gap-2.5 pt-4">
+            <ExpandedGridView match={expanded} />
+          </div>
+        )}
       </section>
     </div>
   );
+}
+
+function ExpandedGridView({ match }: { match: string }) {
+  const editor = useEditorContext();
+
+  switch (match) {
+    case "basic":
+      return basicShapes.map(({ name, path, klass, params }) => (
+        <button
+          key={name}
+          onClick={() => editor.canvas.onAddBasicShape(klass, params)}
+          className="group shrink-0 w-full aspect-square border flex items-center justify-center overflow-hidden rounded-lg p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+        >
+          <svg viewBox="0 0 48 48" aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+            <path d={path} className="h-full" />
+          </svg>
+        </button>
+      ));
+
+    case "advanced":
+      return advancedShapes.map(({ name, path, viewbox = "0 0 48 48" }) => (
+        <button
+          key={name}
+          onClick={() => editor.canvas.onAddAbstractShape(path, name)}
+          className="group shrink-0 w-full aspect-square border flex items-center justify-center overflow-hidden rounded-lg p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+        >
+          <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+            <path d={path} className="h-full" />
+          </svg>
+        </button>
+      ));
+
+    default:
+      return null;
+  }
 }
 
 export const ElementSidebar = observer(_ElementSidebar);

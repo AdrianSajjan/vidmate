@@ -3,8 +3,8 @@ import anime from "animejs";
 import { makeAutoObservable } from "mobx";
 
 import { elementsToExclude, propertiesToInclude } from "@/fabric/constants";
-import { isActiveSelection } from "@/fabric/utils";
-import { createInstance, elementID } from "@/lib/utils";
+import { isActiveSelection, elementID } from "@/fabric/utils";
+import { createInstance } from "@/lib/utils";
 
 export const artboardHeight = 1080;
 export const artboardWidth = 1080;
@@ -764,18 +764,38 @@ export class Canvas {
     );
   }
 
-  onAddShapePath(path: string, name?: string) {
+  onAddBasicShape(klass: string, params: any) {
+    if (!this.instance || !this.artboard) return;
+
+    const left = this.artboard.left! + this.artboard.width! / 2;
+    const top = this.artboard.top! + this.artboard.height! / 2;
+
+    const options = { name: elementID(klass), objectCaching: true, ...params };
+    const shape: fabric.Object = createInstance((fabric as any)[klass], options);
+
+    this.onInitializeElementMeta(shape);
+    shape.set({ left: left - shape.getScaledWidth() / 2, top: top - shape.getScaledHeight() / 2 });
+
+    this.instance.add(shape);
+    this.instance.setActiveObject(shape);
+    this.instance.requestRenderAll();
+
+    this.onInitializeAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
+  }
+
+  onAddAbstractShape(path: string, name = "shape") {
     if (!this.artboard || !this.instance) return;
 
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: elementID(name || "shape"), objectCaching: true, fill: "#000000" };
+    const options = { name: elementID(name), objectCaching: true, fill: "#000000" };
     const shape = createInstance(fabric.Path, path, options);
     this.onInitializeElementMeta(shape);
 
     shape.scaleToHeight(500);
-    shape.set({ left: left - shape.getScaledWidth()! / 2, top: top - shape.getScaledHeight()! / 2 });
+    shape.set({ left: left - shape.getScaledWidth() / 2, top: top - shape.getScaledHeight() / 2 });
 
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
