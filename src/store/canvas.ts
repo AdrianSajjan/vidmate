@@ -154,7 +154,7 @@ export class Canvas {
     const targetHeight = event.target!.height! * event.target!.scaleY!;
 
     this.instance.forEachObject((obj) => {
-      if (obj != event.target && obj != this.horizontalGuideline && obj != this.verticalGuideline) {
+      if (obj != event.target && obj != this.horizontalGuideline && obj != this.verticalGuideline && obj.evented) {
         if (obj.get("name") == "center_h" || obj.get("name") == "center_v") {
           const check1 = [[targetLeft, obj.left!, 1]];
           const check2 = [[targetTop, obj.top!, 1]];
@@ -482,14 +482,19 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
-  private onInitializeElementMeta(object?: fabric.Object) {
-    if (!object) return;
-
+  private onInitializeElementMeta(object: fabric.Object, props?: Record<string, any>) {
     object.meta = {
       duration: 5000,
       offset: 0,
+      ...(object.meta || {}),
     };
+    if (!props) return;
+    for (const key in props) {
+      object.meta[key] = props[key];
+    }
+  }
 
+  private onInitializeElementAnimation(object: fabric.Object) {
     object.anim = {
       in: {
         name: "none",
@@ -570,7 +575,7 @@ export class Canvas {
     this.instance.on("mouse:dblclick", (event) => {
       switch (event.target?.type) {
         case "image":
-          if (this.crop === event.target) return;
+          if (this.crop === event.target || event.target.meta?.placeholder) return;
           if (event.target.clipPath) {
             this.onEditImageClippingMaskStart(event.target as fabric.Image);
           } else {
@@ -726,6 +731,7 @@ export class Canvas {
     const textbox = createInstance(fabric.Textbox, text, options);
 
     this.onInitializeElementMeta(textbox);
+    this.onInitializeElementAnimation(textbox);
     textbox.set({ left: left - textbox.width! / 2, top: top - textbox.height! / 2 });
 
     this.instance.add(textbox);
@@ -750,6 +756,7 @@ export class Canvas {
         image.set({ left: left - image.getScaledWidth() / 2, top: top - image.getScaledHeight() / 2 });
 
         this.onInitializeElementMeta(image);
+        this.onInitializeElementAnimation(image);
         this.instance!.add(image);
 
         this.instance!.setActiveObject(image);
@@ -765,44 +772,44 @@ export class Canvas {
   onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement) {
     if (!this.instance || !this.artboard) return;
 
-    const left = this.artboard.left! + this.artboard.width! / 2;
-    const top = this.artboard.top! + this.artboard.height! / 2;
+    const id = elementID("image");
 
-    const options = { name: elementID("image"), crossOrigin: "anonymous", objectCaching: true };
+    const thumbnail = createInstance(fabric.Image, _thumbnail, { name: id, crossOrigin: "anonymous", objectCaching: true });
+    thumbnail.scaleToWidth(500).setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
-    const thumbnail = createInstance(fabric.Image, _thumbnail, { ...options });
-    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + options.name, fill: "", selectable: false, evented: false, stroke: "#000000", strokeWidth: 4, objectCaching: true });
+    this.onInitializeElementMeta(thumbnail, { placeholder: true });
+    this.onInitializeElementAnimation(thumbnail);
 
-    this.onInitializeElementMeta(thumbnail);
-    thumbnail.scaleToWidth(500).set({ left: left - thumbnail.getScaledWidth() / 2, top: top - thumbnail.getScaledHeight() / 2 });
+    const overlay = createInstance(fabric.Rect, { name: "overlay_" + id, height: thumbnail.getScaledHeight(), width: thumbnail.getScaledWidth(), fill: "#ffffff", opacity: 0.4, evented: false, selectable: false });
+    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + id, fill: "", stroke: "#000000", strokeWidth: 4, evented: false, selectable: false, originX: "center", originY: "center" });
+    overlay.setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+    spinner.setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
 
-    this.instance.add(thumbnail).add(spinner);
+    this.instance.add(thumbnail).add(overlay).add(spinner);
     this.instance.setActiveObject(thumbnail);
     this.instance.requestRenderAll();
 
     this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
 
-    thumbnail.set({ opacity: 0.5 });
-    this.instance.requestRenderAll();
+    FabricUtils.objectSpinningAnimation(spinner);
 
-    FabricUtils.bindObjectTransformToParent(thumbnail, spinner).updateObjectTransformToParent(thumbnail, spinner);
-    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, spinner));
-    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, spinner));
-    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, spinner));
+    FabricUtils.bindObjectTransformToParent(thumbnail, overlay, spinner);
+    FabricUtils.updateObjectTransformToParent(thumbnail, overlay, spinner);
+
+    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, overlay, spinner));
+    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, overlay, spinner));
+    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, overlay, spinner));
   }
 
   onAddBasicShape(klass: string, params: any) {
     if (!this.instance || !this.artboard) return;
 
-    const left = this.artboard.left! + this.artboard.width! / 2;
-    const top = this.artboard.top! + this.artboard.height! / 2;
-
-    const options = { name: elementID(klass), objectCaching: true, ...params };
-    const shape: fabric.Object = createInstance((fabric as any)[klass], options);
+    const shape: fabric.Object = createInstance((fabric as any)[klass], { name: elementID(klass), objectCaching: true, ...params });
+    shape.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
     this.onInitializeElementMeta(shape);
-    shape.set({ left: left - shape.getScaledWidth() / 2, top: top - shape.getScaledHeight() / 2 });
+    this.onInitializeElementAnimation(shape);
 
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
@@ -815,15 +822,14 @@ export class Canvas {
   onAddAbstractShape(path: string, name = "shape") {
     if (!this.artboard || !this.instance) return;
 
-    const left = this.artboard.left! + this.artboard.width! / 2;
-    const top = this.artboard.top! + this.artboard.height! / 2;
-
     const options = { name: elementID(name), objectCaching: true, fill: "#000000" };
     const shape = createInstance(fabric.Path, path, options);
-    this.onInitializeElementMeta(shape);
 
     shape.scaleToHeight(500);
-    shape.set({ left: left - shape.getScaledWidth() / 2, top: top - shape.getScaledHeight() / 2 });
+    shape.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
+
+    this.onInitializeElementMeta(shape);
+    this.onInitializeElementAnimation(shape);
 
     this.instance.add(shape);
     this.instance.setActiveObject(shape);

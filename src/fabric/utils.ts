@@ -21,25 +21,39 @@ export abstract class FabricUtils {
     return prefix.toLowerCase() + "_" + nanoid(4);
   }
 
-  static bindObjectTransformToParent(parent: fabric.Object, child: fabric.Object) {
+  static bindObjectTransformToParent(parent: fabric.Object, ...children: fabric.Object[]) {
     const invertedTransform = fabric.util.invertTransform(parent.calcTransformMatrix());
-    if (!child.meta) child.meta = {};
-    child.meta.relationship = fabric.util.multiplyTransformMatrices(invertedTransform, parent.calcTransformMatrix());
-    return this;
+    for (const child of children) {
+      if (!child.meta) child.meta = {};
+      child.meta.relationship = fabric.util.multiplyTransformMatrices(invertedTransform, parent.calcTransformMatrix());
+    }
   }
 
-  static updateObjectTransformToParent(parent: fabric.Object, child: fabric.Object) {
-    if (!child.meta?.relationship || !Array.isArray(child.meta?.relationship)) return;
+  static updateObjectTransformToParent(parent: fabric.Object, ...children: fabric.Object[]) {
+    for (const child of children) {
+      if (!child.meta?.relationship || !Array.isArray(child.meta?.relationship)) return;
 
-    const transform = fabric.util.multiplyTransformMatrices(parent.calcTransformMatrix(), child.meta.relationship);
-    const option = fabric.util.qrDecompose(transform);
+      const transform = fabric.util.multiplyTransformMatrices(parent.calcTransformMatrix(), child.meta.relationship);
+      const option = fabric.util.qrDecompose(transform);
 
-    child.set({ flipX: false, flipY: false });
-    child.setPositionByOrigin(createInstance(fabric.Point, option.translateX, option.translateY), "center", "center");
+      child.set({ flipX: false, flipY: false });
+      child.setPositionByOrigin(createInstance(fabric.Point, option.translateX, option.translateY), "center", "center");
 
-    child.set(option);
-    child.setCoords();
+      child.set(option);
+      child.setCoords();
+    }
+  }
 
-    return this;
+  static objectSpinningAnimation(object: fabric.Object, duration = 750, loop = true) {
+    object.animate("angle", object.angle! + 360, {
+      duration: duration,
+      onChange: () => object.canvas?.requestRenderAll(),
+      onComplete: () => (loop ? this.objectSpinningAnimation(object) : null),
+      easing: this.linearEasing,
+    });
+  }
+
+  static linearEasing(t: number, b: number, c: number, d: number) {
+    return b + (t / d) * c;
   }
 }
