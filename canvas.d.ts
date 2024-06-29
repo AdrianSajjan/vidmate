@@ -2706,6 +2706,11 @@ interface IObjectOptions {
   anim?: AnimationTimeline;
 
   /**
+   * State properies that are available on calling save state
+   */
+  _stateProperties?: any;
+
+  /**
    * Type of an object (rect, circle, path, etc.).
    * Note that this property is meant to be read-only and not meant to be modified.
    * If you modify, certain parts of Fabric (such as JSON loading) won't work correctly.

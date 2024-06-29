@@ -1,11 +1,11 @@
 import { fabric } from "fabric";
 
 import EdgeControl from "@/assets/editor/controls/edge-control.svg";
-import RotationControl from "@/assets/editor/controls/rotate-icon.svg";
 import MiddleControl from "@/assets/editor/controls/middle-control.svg";
 import MiddleControlHoz from "@/assets/editor/controls/middle-control-hoz.svg";
 
-import CropTopRightControl from "@/assets/editor/controls/crop-top-right.svg";
+import RotationControl from "@/assets/editor/controls/rotate-icon.svg";
+import CropControl from "@/assets/editor/controls/crop-icon.svg";
 
 const middleControl = document.createElement("img");
 middleControl.src = MiddleControl;
@@ -19,8 +19,8 @@ edgeControl.src = EdgeControl;
 const rotationControl = document.createElement("img");
 rotationControl.src = RotationControl;
 
-const cropTopRightControl = document.createElement("img");
-cropTopRightControl.src = CropTopRightControl;
+const cropControl = document.createElement("img");
+cropControl.src = CropControl;
 
 function renderIcon(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
   const wsize = 20;
@@ -59,7 +59,7 @@ function renderIconCrop(rotate: number) {
     ctx.save();
     ctx.translate(left, top);
     ctx.rotate(fabric.util.degreesToRadians(rotate));
-    ctx.drawImage(cropTopRightControl, -wsize / 2, -hsize / 2, wsize, hsize);
+    ctx.drawImage(cropControl, -wsize / 2, -hsize / 2, wsize, hsize);
     ctx.restore();
   };
 }
@@ -194,10 +194,10 @@ fabric.Textbox.prototype.controls.mr = new fabric.Control({
 fabric.Cropper = fabric.util.createClass(fabric.Rect, {
   lockRotation: true,
   controls: {
+    mt: fabric.Object.prototype.controls.mt,
+    mb: fabric.Object.prototype.controls.mb,
     ml: fabric.Object.prototype.controls.ml,
     mr: fabric.Object.prototype.controls.mr,
-    mb: fabric.Object.prototype.controls.mb,
-    mt: fabric.Object.prototype.controls.mt,
     tl: new fabric.Control({
       x: -0.5,
       y: -0.5,
@@ -257,11 +257,11 @@ fabric.Object.NUM_FRACTION_DIGITS = 5;
 
 fabric.Object.prototype.set({
   transparentCorners: false,
-  borderColor: "#51B9F9",
-  cornerColor: "#FFF",
+  borderColor: "#2563EB",
+  cornerColor: "#FFFFFF",
   borderScaleFactor: 2.5,
   cornerStyle: "circle",
-  cornerStrokeColor: "#0E98FC",
+  cornerStrokeColor: "#2563EB",
   borderOpacityWhenMoving: 1,
   strokeUniform: true,
 });

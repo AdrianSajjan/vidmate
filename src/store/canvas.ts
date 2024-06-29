@@ -324,11 +324,11 @@ export class Canvas {
     this.instance.requestRenderAll();
 
     crop.on("moving", () => {
-      if (crop.top! < image.top!) crop.top = image.top!;
-      if (crop.left! < image.left!) crop.left = image.left!;
+      if (crop.top! <= image.top!) crop.set({ top: image.top! });
+      if (crop.left! <= image.left!) crop.set({ left: image.left! });
 
-      if (crop.top! + crop.getScaledHeight() > image.top! + image.getScaledHeight()) crop.top = image.top! + image.getScaledHeight() - crop.getScaledHeight();
-      if (crop.left! + crop.getScaledWidth() > image.left! + image.getScaledWidth()) crop.left = image.left! + image.getScaledWidth() - crop.getScaledWidth();
+      if (crop.top! + crop.getScaledHeight() >= image.top! + image.getScaledHeight()) crop.set({ top: image.top! + image.getScaledHeight() - crop.getScaledHeight() });
+      if (crop.left! + crop.getScaledWidth() >= image.left! + image.getScaledWidth()) crop.set({ left: image.left! + image.getScaledWidth() - crop.getScaledWidth() });
 
       verticals.map((vertical, index) => vertical.set({ x1: crop.left! + crop.width! * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.width! * 0.25 * (index + 1), y2: crop.top! + crop.height! }));
       horizontals.map((vertical, index) => vertical.set({ x1: crop.left!, y1: crop.top! + crop.height! * 0.25 * (index + 1), x2: crop.left! + crop.width!, y2: crop.top! + crop.height! * 0.25 * (index + 1) }));
@@ -337,13 +337,11 @@ export class Canvas {
     });
 
     crop.on("scaling", () => {
-      verticals.map((vertical, index) =>
-        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() })
-      );
-      horizontals.map((vertical, index) =>
-        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) })
-      );
+      verticals.map((vertical, index) => vertical.set({ x1: crop.left! + crop.width! * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.width! * 0.25 * (index + 1), y2: crop.top! + crop.height! }));
+      horizontals.map((vertical, index) => vertical.set({ x1: crop.left!, y1: crop.top! + crop.height! * 0.25 * (index + 1), x2: crop.left! + crop.width!, y2: crop.top! + crop.height! * 0.25 * (index + 1) }));
     });
+
+    crop.on("mouseup", () => {});
 
     crop.on("deselected", () => {
       this.onCropImageEnd(crop, image);
