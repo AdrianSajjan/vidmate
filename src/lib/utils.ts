@@ -8,3 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 export function createInstance<T, R extends any[]>(_class: new (...args: R) => T, ...args: R): T {
   return new _class(...args);
 }
+
+export function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

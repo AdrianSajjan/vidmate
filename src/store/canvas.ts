@@ -2,8 +2,8 @@ import { fabric } from "fabric";
 import anime from "animejs";
 import { makeAutoObservable } from "mobx";
 
-import { elementsToExclude, propertiesToInclude } from "@/fabric/constants";
-import { isActiveSelection, elementID } from "@/fabric/utils";
+import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
+import { isActiveSelection, elementID, FabricUtils } from "@/fabric/utils";
 import { createInstance } from "@/lib/utils";
 
 export const artboardHeight = 1080;
@@ -496,8 +496,8 @@ export class Canvas {
         duration: 0,
       },
       out: {
-        name: "fade-out",
-        duration: 500,
+        name: "none",
+        duration: 0,
       },
     };
   }
@@ -736,7 +736,7 @@ export class Canvas {
     this.onToggleCanvasElements(this.seek);
   }
 
-  onAddImage(source: string) {
+  onAddImageFromSource(source: string) {
     if (!this.instance || !this.artboard) return;
 
     const left = this.artboard.left! + this.artboard.width! / 2;
@@ -760,6 +760,36 @@ export class Canvas {
       },
       options
     );
+  }
+
+  onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement) {
+    if (!this.instance || !this.artboard) return;
+
+    const left = this.artboard.left! + this.artboard.width! / 2;
+    const top = this.artboard.top! + this.artboard.height! / 2;
+
+    const options = { name: elementID("image"), crossOrigin: "anonymous", objectCaching: true };
+
+    const thumbnail = createInstance(fabric.Image, _thumbnail, { ...options });
+    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + options.name, fill: "", selectable: false, evented: false, stroke: "#000000", strokeWidth: 4, objectCaching: true });
+
+    this.onInitializeElementMeta(thumbnail);
+    thumbnail.scaleToWidth(500).set({ left: left - thumbnail.getScaledWidth() / 2, top: top - thumbnail.getScaledHeight() / 2 });
+
+    this.instance.add(thumbnail).add(spinner);
+    this.instance.setActiveObject(thumbnail);
+    this.instance.requestRenderAll();
+
+    this.onInitializeAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
+
+    thumbnail.set({ opacity: 0.5 });
+    this.instance.requestRenderAll();
+
+    FabricUtils.bindObjectTransformToParent(thumbnail, spinner).updateObjectTransformToParent(thumbnail, spinner);
+    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, spinner));
+    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, spinner));
+    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, spinner));
   }
 
   onAddBasicShape(klass: string, params: any) {

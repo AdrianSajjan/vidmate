@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, MouseEventHandler } from "react";
 import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 
@@ -12,6 +12,17 @@ import * as mock from "@/constants/mock";
 
 function _ImageSidebar() {
   const editor = useEditorContext();
+
+  const handleClick =
+    (source: string): MouseEventHandler<HTMLButtonElement> =>
+    (event) => {
+      const image = event.currentTarget.querySelector("img");
+      if (!image) {
+        editor.canvas.onAddImageFromSource(source);
+      } else {
+        editor.canvas.onAddImageWithThumbail(source, image);
+      }
+    };
 
   return (
     <div className="h-full" style={{ width: leftSidebarWidth }}>
@@ -46,8 +57,8 @@ function _ImageSidebar() {
             <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
               {mock.images.length ? (
                 mock.images.map((image) => (
-                  <button key={image} onClick={() => editor.canvas.onAddImage(image)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
-                    <img src={image + "?q=75&w=256&auto=format"} className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
+                  <button key={image} onClick={handleClick(image)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
+                    <img src={image + "?q=75&w=256&auto=format"} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
                   </button>
                 ))
               ) : (
