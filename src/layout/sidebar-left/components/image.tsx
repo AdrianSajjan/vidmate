@@ -18,9 +18,9 @@ function _ImageSidebar() {
     (event) => {
       const image = event.currentTarget.querySelector("img");
       if (!image) {
-        editor.canvas.onAddImageFromSource(source);
+        editor.canvas.onAddImageFromSource(source + "?q=100&w=1080&auto=format");
       } else {
-        editor.canvas.onAddImageWithThumbail(source, image);
+        editor.canvas.onAddImageWithThumbail(source + "?q=100&w=1080&auto=format", image);
       }
     };
 

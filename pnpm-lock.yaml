@@ -74,6 +74,9 @@ importers:
       framer-motion:
         specifier: ^11.2.11
         version: 11.2.11(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       lucide-react:
         specifier: ^0.395.0
         version: 0.395.0(react@18.3.1)
@@ -117,6 +120,9 @@ importers:
       '@types/animejs':
         specifier: ^3.1.12
         version: 3.1.12
+      '@types/lodash':
+        specifier: ^4.17.6
+        version: 4.17.6
       '@types/npm':
         specifier: ^7.19.3
         version: 7.19.3
@@ -1055,6 +1061,9 @@ packages:
 
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
+
+  '@types/lodash@4.17.6':
+    resolution: {integrity: sha512-OpXEVoCKSS3lQqjx9GGGOapBeuW5eUboYHRlHP9urXPX25IKZ6AnP5ZRxtVf63iieUbsHxLn8NQ5Nlftc6yzAA==}
 
   '@types/node@20.14.6':
     resolution: {integrity: sha512-JbA0XIJPL1IiNnU7PFxDXyfAwcwVVrOoqyzzyQTyMeVhBzkJVMSkC1LlVsRQ2lpqiY4n6Bb9oCS6lzDKVQxbZw==}
@@ -3312,6 +3321,8 @@ snapshots:
   '@types/animejs@3.1.12': {}
 
   '@types/estree@1.0.5': {}
+
+  '@types/lodash@4.17.6': {}
 
   '@types/node@20.14.6':
     dependencies:

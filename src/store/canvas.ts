@@ -3,7 +3,7 @@ import anime from "animejs";
 import { makeAutoObservable } from "mobx";
 
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
-import { isActiveSelection, elementID, FabricUtils } from "@/fabric/utils";
+import { FabricUtils } from "@/fabric/utils";
 import { createInstance } from "@/lib/utils";
 
 export const artboardHeight = 1080;
@@ -67,6 +67,11 @@ export class Canvas {
 
   private isElementExcluded(object: fabric.Object) {
     return elementsToExclude.includes(object.name!) || object.name!.startsWith("crop") || object.name!.startsWith("clone") || object.name!.startsWith("clip") || object.name!.startsWith("overlay");
+  }
+
+  private onRefreshElements() {
+    if (!this.instance) return;
+    this.elements = this.instance._objects.filter((object) => !this.isElementExcluded(object)).map((object) => object.toObject(propertiesToInclude));
   }
 
   private onAddElement(object?: fabric.Object) {
@@ -330,18 +335,57 @@ export class Canvas {
       if (crop.top! + crop.getScaledHeight() >= image.top! + image.getScaledHeight()) crop.set({ top: image.top! + image.getScaledHeight() - crop.getScaledHeight() });
       if (crop.left! + crop.getScaledWidth() >= image.left! + image.getScaledWidth()) crop.set({ left: image.left! + image.getScaledWidth() - crop.getScaledWidth() });
 
-      verticals.map((vertical, index) => vertical.set({ x1: crop.left! + crop.width! * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.width! * 0.25 * (index + 1), y2: crop.top! + crop.height! }));
-      horizontals.map((vertical, index) => vertical.set({ x1: crop.left!, y1: crop.top! + crop.height! * 0.25 * (index + 1), x2: crop.left! + crop.width!, y2: crop.top! + crop.height! * 0.25 * (index + 1) }));
+      verticals.map((vertical, index) =>
+        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() })
+      );
+      horizontals.map((vertical, index) =>
+        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) })
+      );
 
       this.instance!.requestRenderAll();
     });
 
     crop.on("scaling", () => {
-      verticals.map((vertical, index) => vertical.set({ x1: crop.left! + crop.width! * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.width! * 0.25 * (index + 1), y2: crop.top! + crop.height! }));
-      horizontals.map((vertical, index) => vertical.set({ x1: crop.left!, y1: crop.top! + crop.height! * 0.25 * (index + 1), x2: crop.left! + crop.width!, y2: crop.top! + crop.height! * 0.25 * (index + 1) }));
+      verticals.map((vertical, index) =>
+        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() })
+      );
+      horizontals.map((vertical, index) =>
+        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) })
+      );
     });
 
-    crop.on("mouseup", () => {});
+    crop.on("mouseup", () => {
+      if (crop.left! < image.left!) {
+        const offsetX = image.left! - crop.left!;
+        const scaleX = offsetX / crop.width!;
+        crop.set({ left: image.left, scaleX: crop.scaleX! - scaleX });
+      }
+
+      if (crop.top! < image.top!) {
+        const offsetY = image.top! - crop.top!;
+        const scaleY = offsetY / crop.height!;
+        crop.set({ top: image.top, scaleY: crop.scaleY! - scaleY });
+      }
+
+      if (crop.left! + crop.getScaledWidth() > image.left! + image.getScaledWidth()) {
+        const offsetX = crop.left! + crop.getScaledWidth() - (image.left! + image.getScaledWidth());
+        const scaleX = offsetX / crop.width!;
+        crop.set({ scaleX: Math.abs(crop.scaleX! - scaleX) });
+      }
+
+      if (crop.top! + crop.getScaledHeight() > image.top! + image.getScaledHeight()) {
+        const offsetY = crop.top! + crop.getScaledHeight() - (image.top! + image.getScaledHeight());
+        const scaleY = offsetY / crop.height!;
+        crop.set({ scaleY: Math.abs(crop.scaleY! - scaleY) });
+      }
+
+      verticals.map((vertical, index) =>
+        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() })
+      );
+      horizontals.map((vertical, index) =>
+        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) })
+      );
+    });
 
     crop.on("deselected", () => {
       this.onCropImageEnd(crop, image);
@@ -537,6 +581,10 @@ export class Canvas {
       this.onToggleControls(event.target!, true);
     });
 
+    this.instance.on("object:removed", () => {
+      this.onRefreshElements();
+    });
+
     this.instance.on("selection:created", () => {
       this.onUpdateSelection();
     });
@@ -680,12 +728,8 @@ export class Canvas {
 
   onDeleteObjectByName(name?: string) {
     if (!this.instance) return;
-
     const object = this.instance.getItemByName(name);
-    const index = this.elements.findIndex((element) => element.name === name);
-
     if (object) this.instance.remove(object);
-    if (index !== -1) this.elements.splice(index, 1);
   }
 
   onUpdateResponsiveCanvas({ height, width }: { height: number; width: number }) {
@@ -693,7 +737,6 @@ export class Canvas {
 
     this.onDeleteGuidelines();
     this.instance.setDimensions({ width, height });
-
     this.onCenterArtboard();
     this.onInitializeGuidelines();
 
@@ -727,7 +770,7 @@ export class Canvas {
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: elementID("text"), fontFamily, fontWeight, fontSize, paintFirst: "stroke", objectCaching: false, textAlign: "center" };
+    const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, paintFirst: "stroke", objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
 
     this.onInitializeElementMeta(textbox);
@@ -745,15 +788,12 @@ export class Canvas {
   onAddImageFromSource(source: string) {
     if (!this.instance || !this.artboard) return;
 
-    const left = this.artboard.left! + this.artboard.width! / 2;
-    const top = this.artboard.top! + this.artboard.height! / 2;
-
-    const options = { name: elementID("image"), crossOrigin: "anonymous", objectCaching: true };
+    const options = { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true };
     fabric.Image.fromURL(
       source,
       (image) => {
         image.scaleToHeight(500);
-        image.set({ left: left - image.getScaledWidth() / 2, top: top - image.getScaledHeight() / 2 });
+        image.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
 
         this.onInitializeElementMeta(image);
         this.onInitializeElementAnimation(image);
@@ -772,9 +812,9 @@ export class Canvas {
   onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement) {
     if (!this.instance || !this.artboard) return;
 
-    const id = elementID("image");
+    const id = FabricUtils.elementID("image");
 
-    const thumbnail = createInstance(fabric.Image, _thumbnail, { name: id, crossOrigin: "anonymous", objectCaching: true });
+    const thumbnail = createInstance(fabric.Image, _thumbnail, { name: id, crossOrigin: "anonymous", lockRotation: true });
     thumbnail.scaleToWidth(500).setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
     this.onInitializeElementMeta(thumbnail, { placeholder: true });
@@ -794,18 +834,37 @@ export class Canvas {
 
     FabricUtils.objectSpinningAnimation(spinner);
 
-    FabricUtils.bindObjectTransformToParent(thumbnail, overlay, spinner);
-    FabricUtils.updateObjectTransformToParent(thumbnail, overlay, spinner);
+    FabricUtils.bindObjectTransformToParent(thumbnail, [overlay, spinner]);
+    FabricUtils.updateObjectTransformToParent(thumbnail, [overlay, spinner], ["angle"]);
 
-    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, overlay, spinner));
-    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, overlay, spinner));
-    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, overlay, spinner));
+    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, [overlay, spinner], ["angle", "scaleX", "scaleY"]));
+    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, [overlay, spinner], ["angle", "scaleX", "scaleY"]));
+    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, [overlay, spinner], ["angle", "scaleX", "scaleY"]));
+
+    fabric.Image.fromURL(
+      source,
+      (image) => {
+        const scaleX = thumbnail.getScaledWidth() / image.getScaledWidth();
+        const scaleY = thumbnail.getScaledHeight() / image.getScaledHeight();
+
+        image.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+        this.onInitializeElementMeta(image);
+        this.onInitializeElementAnimation(image);
+
+        this.instance!.add(image).remove(thumbnail, overlay, spinner);
+        this.instance!.setActiveObject(image).requestRenderAll();
+
+        this.onInitializeAnimationTimeline();
+        this.onToggleCanvasElements(this.seek);
+      },
+      { name: id, crossOrigin: "anonymous", objectCaching: true }
+    );
   }
 
   onAddBasicShape(klass: string, params: any) {
     if (!this.instance || !this.artboard) return;
 
-    const shape: fabric.Object = createInstance((fabric as any)[klass], { name: elementID(klass), objectCaching: true, ...params });
+    const shape: fabric.Object = createInstance((fabric as any)[klass], { name: FabricUtils.elementID(klass), objectCaching: true, ...params });
     shape.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
     this.onInitializeElementMeta(shape);
@@ -822,7 +881,7 @@ export class Canvas {
   onAddAbstractShape(path: string, name = "shape") {
     if (!this.artboard || !this.instance) return;
 
-    const options = { name: elementID(name), objectCaching: true, fill: "#000000" };
+    const options = { name: FabricUtils.elementID(name), objectCaching: true, fill: "#000000" };
     const shape = createInstance(fabric.Path, path, options);
 
     shape.scaleToHeight(500);
@@ -849,7 +908,7 @@ export class Canvas {
     if (!selected || !multiple) {
       this.instance.setActiveObject(object);
     } else {
-      if (isActiveSelection(selected)) {
+      if (FabricUtils.isActiveSelection(selected)) {
         if (object.group === selected) {
           if (selected._objects.length === 1) {
             this.instance.discardActiveObject();

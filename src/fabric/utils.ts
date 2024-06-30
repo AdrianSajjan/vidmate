@@ -1,16 +1,9 @@
 import { customAlphabet } from "nanoid";
 import { fabric } from "fabric";
 import { createInstance } from "@/lib/utils";
+import _ from "lodash";
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
-
-export function isActiveSelection(object?: fabric.Object | null): object is fabric.ActiveSelection {
-  return object?.type === "activeSelection";
-}
-
-export function elementID(prefix: string) {
-  return prefix.toLowerCase() + "_" + nanoid(4);
-}
 
 export abstract class FabricUtils {
   static isActiveSelection(object?: fabric.Object | null): object is fabric.ActiveSelection {
@@ -21,7 +14,7 @@ export abstract class FabricUtils {
     return prefix.toLowerCase() + "_" + nanoid(4);
   }
 
-  static bindObjectTransformToParent(parent: fabric.Object, ...children: fabric.Object[]) {
+  static bindObjectTransformToParent(parent: fabric.Object, children: fabric.Object[]) {
     const invertedTransform = fabric.util.invertTransform(parent.calcTransformMatrix());
     for (const child of children) {
       if (!child.meta) child.meta = {};
@@ -29,17 +22,18 @@ export abstract class FabricUtils {
     }
   }
 
-  static updateObjectTransformToParent(parent: fabric.Object, ...children: fabric.Object[]) {
+  static updateObjectTransformToParent(parent: fabric.Object, children: fabric.Object[], skip?: string[]) {
     for (const child of children) {
       if (!child.meta?.relationship || !Array.isArray(child.meta?.relationship)) return;
 
       const transform = fabric.util.multiplyTransformMatrices(parent.calcTransformMatrix(), child.meta.relationship);
-      const option = fabric.util.qrDecompose(transform);
+      let decompose: Record<string, number> = fabric.util.qrDecompose(transform);
+      if (skip) decompose = _.omit(decompose, skip);
 
       child.set({ flipX: false, flipY: false });
-      child.setPositionByOrigin(createInstance(fabric.Point, option.translateX, option.translateY), "center", "center");
+      child.setPositionByOrigin(createInstance(fabric.Point, decompose.translateX, decompose.translateY), "center", "center");
 
-      child.set(option);
+      child.set(decompose);
       child.setCoords();
     }
   }

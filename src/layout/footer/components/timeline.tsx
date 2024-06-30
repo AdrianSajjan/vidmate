@@ -6,7 +6,7 @@ import { observer } from "mobx-react";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useEditorContext } from "@/context/editor";
-import { isActiveSelection } from "@/fabric/utils";
+import { FabricUtils } from "@/fabric/utils";
 import { cn, createInstance } from "@/lib/utils";
 
 const SEEK_TIME_WIDTH = 42;
@@ -112,7 +112,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
 
   const isSelected = useMemo(() => {
     if (!editor.canvas.selected) return false;
-    if (isActiveSelection(editor.canvas.selected)) return editor.canvas.selected.objects.some((object) => object.name === element.name);
+    if (FabricUtils.isActiveSelection(editor.canvas.selected)) return editor.canvas.selected.objects.some((object) => object.name === element.name);
     return editor.canvas.selected.name === element.name;
   }, [editor.canvas.selected, element]);
 
