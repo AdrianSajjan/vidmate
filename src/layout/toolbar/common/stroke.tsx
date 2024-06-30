@@ -7,8 +7,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 import { useEditorContext } from "@/context/editor";
 import { cn } from "@/lib/utils";
+import { observer } from "mobx-react";
 
-export function ToolbarStrokeOption() {
+function _ToolbarStrokeOption() {
   const editor = useEditorContext();
   const selected = editor.canvas.selected as fabric.Object;
 
@@ -51,7 +52,7 @@ export function ToolbarStrokeOption() {
                   className="h-8 w-24 text-xs pr-7"
                   type="number"
                   value={selected.strokeWidth}
-                  onChange={(event) => !isNaN(+event.target.value) && editor.canvas.onChangeActiveObjectProperty("strokeWidth", +event.target.value)}
+                  onChange={(event) => !isNaN(+event.target.value) && +event.target.value > 0 && editor.canvas.onChangeActiveObjectProperty("strokeWidth", +event.target.value)}
                 />
                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs">px</span>
               </div>
@@ -62,3 +63,5 @@ export function ToolbarStrokeOption() {
     </div>
   );
 }
+
+export const ToolbarStrokeOption = observer(_ToolbarStrokeOption);

@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { BoxSelectIcon, EllipsisIcon } from "lucide-react";
+import { BoxSelectIcon } from "lucide-react";
+import { observer } from "mobx-react";
 
-export function ToolbarPositionOption() {
+function _ToolbarPositionOption() {
   return (
     <div className="flex items-center gap-2.5">
       <DropdownMenu>
@@ -31,9 +32,8 @@ export function ToolbarPositionOption() {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button variant="outline" size="icon" className="gap-1.5">
-        <EllipsisIcon size={15} strokeWidth={1.5} />
-      </Button>
     </div>
   );
 }
+
+export const ToolbarPositionOption = observer(_ToolbarPositionOption);

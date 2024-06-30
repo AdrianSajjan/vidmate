@@ -11,7 +11,7 @@ export function EditorMenubar() {
         <div className="flex gap-px">
           <Button variant="secondary" size="sm" className="gap-1.5 rounded-r-none">
             <UndoIcon size={16} />
-            <span>Undo</span>
+            <span className="font-medium">Undo</span>
           </Button>
           <Button variant="secondary" size="icon" className="rounded-l-none">
             <RedoIcon size={16} />
@@ -26,7 +26,7 @@ export function EditorMenubar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm" className="rounded-none gap-1.5 justify-between w-32">
-                <span>Auto</span>
+                <span className="font-medium">Auto</span>
                 <ChevronDownIcon size={16} />
               </Button>
             </DropdownMenuTrigger>
@@ -54,7 +54,7 @@ export function EditorMenubar() {
         <div className="flex gap-px">
           <Button size="sm" className="gap-1.5 rounded-r-none bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90">
             <ImageIcon size={16} />
-            <span>Export Template</span>
+            <span className="font-medium">Export Template</span>
           </Button>
           <Button size="icon" className="rounded-l-none bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90">
             <ChevronDownIcon size={16} />

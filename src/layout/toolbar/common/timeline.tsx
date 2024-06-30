@@ -1,8 +1,9 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEditorContext } from "@/context/editor";
+import { observer } from "mobx-react";
 
-export function ToolbarTimelineOption() {
+function _ToolbarTimelineOption() {
   const editor = useEditorContext();
   const selected = editor.canvas.selected as fabric.Object;
 
@@ -35,3 +36,5 @@ export function ToolbarTimelineOption() {
     </div>
   );
 }
+
+export const ToolbarTimelineOption = observer(_ToolbarTimelineOption);

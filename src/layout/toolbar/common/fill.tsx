@@ -1,13 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { useEditorContext } from "@/context/editor";
 import { cn } from "@/lib/utils";
+import { observer } from "mobx-react";
 
-export function ToolbarFillOption() {
+function _ToolbarFillOption() {
   const editor = useEditorContext();
   const selected = editor.canvas.selected as fabric.Object;
 
   return (
-    <div className="flex items-center gap-2.5 ">
+    <div className="flex items-center gap-2.5">
       <Button
         onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "fill" ? null : "fill")}
         variant="outline"
@@ -23,3 +24,5 @@ export function ToolbarFillOption() {
     </div>
   );
 }
+
+export const ToolbarFillOption = observer(_ToolbarFillOption);

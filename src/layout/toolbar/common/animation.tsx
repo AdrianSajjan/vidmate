@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { LayersIcon, SparklesIcon } from "lucide-react";
+import { observer } from "mobx-react";
 
-export function ToolbarAnimationOption() {
+function _ToolbarAnimationOption() {
   return (
     <div className="flex items-center gap-4">
       <Button size="sm" variant="outline" className="gap-1.5">
@@ -15,3 +16,5 @@ export function ToolbarAnimationOption() {
     </div>
   );
 }
+
+export const ToolbarAnimationOption = observer(_ToolbarAnimationOption);

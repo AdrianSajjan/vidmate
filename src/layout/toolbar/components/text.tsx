@@ -19,7 +19,6 @@ import { ToolbarPositionOption } from "../common/position";
 
 function _TextToolbar() {
   const editor = useEditorContext();
-
   const selected = editor.canvas.selected as fabric.Textbox;
 
   return (
