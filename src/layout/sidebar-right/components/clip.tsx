@@ -71,7 +71,7 @@ function _SceneElement({ element }: { element: fabric.Object }) {
   const handleAddClipPath = () => {
     const object = editor.canvas.instance?.getItemByName(element.name);
     if (!object) return;
-    editor.canvas.onAddClipMaskToActiveImage(object);
+    editor.canvas.onAddClipPathToActiveImage(object);
   };
 
   return (

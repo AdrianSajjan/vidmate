@@ -85,6 +85,12 @@ export class Canvas {
     this.elements[index] = element;
   }
 
+  private onRemoveElement(object?: fabric.Object) {
+    if (!object) return;
+    const index = this.elements.findIndex((element) => element.name === object.name);
+    if (index !== -1) this.elements.splice(index, 1);
+  }
+
   private onUpdateTimelineStatus(playing: boolean) {
     this.playing = playing;
   }
@@ -576,13 +582,14 @@ export class Canvas {
 
     this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
+
+    return textbox;
   }
 
   onAddImageFromSource(source: string) {
     if (!this.instance || !this.artboard) return;
 
-    const options = { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true };
-    fabric.Image.fromURL(
+    return fabric.Image.fromURL(
       source,
       (image) => {
         image.scaleToHeight(500);
@@ -598,7 +605,7 @@ export class Canvas {
         this.onInitializeAnimationTimeline();
         this.onToggleCanvasElements(this.seek);
       },
-      options
+      { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true }
     );
   }
 
@@ -637,7 +644,7 @@ export class Canvas {
     thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
     thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
 
-    fabric.Image.fromURL(
+    return fabric.Image.fromURL(
       source,
       (image) => {
         const scaleX = thumbnail.getScaledWidth() / image.getScaledWidth();
@@ -672,6 +679,8 @@ export class Canvas {
 
     this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
+
+    return shape;
   }
 
   onAddAbstractShape(path: string, name = "shape") {
@@ -692,6 +701,8 @@ export class Canvas {
 
     this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
+
+    return shape;
   }
 
   onCreateSelection(name?: string, multiple?: boolean) {
@@ -945,18 +956,36 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
-  onAddClipMaskToImage(image: fabric.Image, clipPath: fabric.Object) {
+  onAddClipPathToImage(image: fabric.Image, clipPath: fabric.Object) {
     if (!this.instance || !this.artboard) return;
-    image.clipPath = clipPath;
 
-    this.instance.fire("object:modified", { target: image });
+    this.onRemoveElement(clipPath);
+
+    const height = image.getScaledHeight();
+    const width = image.getScaledWidth();
+
+    if (height > width) clipPath.scaleToWidth(width / 2.05);
+    else clipPath.scaleToHeight(height / 2.05);
+
+    console.log(height, width, clipPath.getScaledHeight(), clipPath.getScaledWidth());
+
+    clipPath.set({ absolutePositioned: true, name: "clip_" + image.name, selectable: false, evented: false }).setPositionByOrigin(image.getCenterPoint(), "center", "center");
+    image.set({ clipPath: clipPath });
+
+    FabricUtils.bindObjectTransformToParent(image, [clipPath]);
+    FabricUtils.updateObjectTransformToParent(image, [{ object: clipPath }]);
+
+    image.on("moving", () => FabricUtils.updateObjectTransformToParent(image, [{ object: clipPath }]));
+    image.on("scaling", () => FabricUtils.updateObjectTransformToParent(image, [{ object: clipPath }]));
+    image.on("rotating", () => FabricUtils.updateObjectTransformToParent(image, [{ object: clipPath }]));
+
     this.instance.requestRenderAll();
   }
 
-  onAddClipMaskToActiveImage(clipPath: fabric.Object) {
+  onAddClipPathToActiveImage(clipPath: fabric.Object) {
     const image = this.instance?.getActiveObject() as fabric.Image;
     if (!image || image.type !== "image") return;
-    this.onAddClipMaskToImage(image, clipPath);
+    this.onAddClipPathToImage(image, clipPath);
   }
 
   onChangeObjectTimelineOffset(name: string, offset: number) {
