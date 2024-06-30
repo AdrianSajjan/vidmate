@@ -1,5 +1,6 @@
-import { fabric } from "fabric";
 import anime from "animejs";
+
+import { fabric } from "fabric";
 import { makeAutoObservable } from "mobx";
 
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
@@ -809,7 +810,7 @@ export class Canvas {
     );
   }
 
-  onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement) {
+  *onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement) {
     if (!this.instance || !this.artboard) return;
 
     const id = FabricUtils.elementID("image");
@@ -820,10 +821,12 @@ export class Canvas {
     this.onInitializeElementMeta(thumbnail, { placeholder: true });
     this.onInitializeElementAnimation(thumbnail);
 
-    const overlay = createInstance(fabric.Rect, { name: "overlay_" + id, height: thumbnail.getScaledHeight(), width: thumbnail.getScaledWidth(), fill: "#ffffff", opacity: 0.4, evented: false, selectable: false });
-    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + id, fill: "", stroke: "#000000", strokeWidth: 4, evented: false, selectable: false, originX: "center", originY: "center" });
+    const props = { evented: false, selectable: false, originX: "center", originY: "center" };
+    const overlay = createInstance(fabric.Rect, { name: "overlay_" + id, height: thumbnail.height, width: thumbnail.width, scaleX: thumbnail.scaleX, scaleY: thumbnail.scaleY, fill: "#000000", opacity: 0.25, ...props });
+    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + id, fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
+
     overlay.setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
-    spinner.setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+    spinner.scaleToWidth(48).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
 
     this.instance.add(thumbnail).add(overlay).add(spinner);
     this.instance.setActiveObject(thumbnail);
@@ -833,13 +836,14 @@ export class Canvas {
     this.onToggleCanvasElements(this.seek);
 
     FabricUtils.objectSpinningAnimation(spinner);
-
     FabricUtils.bindObjectTransformToParent(thumbnail, [overlay, spinner]);
-    FabricUtils.updateObjectTransformToParent(thumbnail, [overlay, spinner], ["angle"]);
 
-    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, [overlay, spinner], ["angle", "scaleX", "scaleY"]));
-    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, [overlay, spinner], ["angle", "scaleX", "scaleY"]));
-    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, [overlay, spinner], ["angle", "scaleX", "scaleY"]));
+    const children = [{ object: overlay }, { object: spinner, skip: ["angle", "scaleX", "scaleY"] }];
+    FabricUtils.updateObjectTransformToParent(thumbnail, children);
+
+    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
+    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
+    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
 
     fabric.Image.fromURL(
       source,

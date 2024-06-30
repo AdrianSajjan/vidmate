@@ -22,19 +22,19 @@ export abstract class FabricUtils {
     }
   }
 
-  static updateObjectTransformToParent(parent: fabric.Object, children: fabric.Object[], skip?: string[]) {
+  static updateObjectTransformToParent(parent: fabric.Object, children: Array<{ object: fabric.Object; skip?: string[] }>) {
     for (const child of children) {
-      if (!child.meta?.relationship || !Array.isArray(child.meta?.relationship)) return;
+      if (!child.object.meta?.relationship || !Array.isArray(child.object.meta?.relationship)) return;
 
-      const transform = fabric.util.multiplyTransformMatrices(parent.calcTransformMatrix(), child.meta.relationship);
+      const transform = fabric.util.multiplyTransformMatrices(parent.calcTransformMatrix(), child.object.meta.relationship);
       let decompose: Record<string, number> = fabric.util.qrDecompose(transform);
-      if (skip) decompose = _.omit(decompose, skip);
+      if (child.skip) decompose = _.omit(decompose, child.skip);
 
-      child.set({ flipX: false, flipY: false });
-      child.setPositionByOrigin(createInstance(fabric.Point, decompose.translateX, decompose.translateY), "center", "center");
+      child.object.set({ flipX: false, flipY: false });
+      child.object.setPositionByOrigin(createInstance(fabric.Point, decompose.translateX, decompose.translateY), "center", "center");
 
-      child.set(decompose);
-      child.setCoords();
+      child.object.set(decompose);
+      child.object.setCoords();
     }
   }
 
