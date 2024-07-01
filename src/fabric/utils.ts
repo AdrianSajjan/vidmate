@@ -14,6 +14,10 @@ export abstract class FabricUtils {
     return prefix.toLowerCase() + "_" + nanoid(4);
   }
 
+  static linearEasing(t: number, b: number, c: number, d: number) {
+    return b + (t / d) * c;
+  }
+
   static bindObjectTransformToParent(parent: fabric.Object, children: fabric.Object[]) {
     const invertedTransform = fabric.util.invertTransform(parent.calcTransformMatrix());
     for (const child of children) {
@@ -47,7 +51,45 @@ export abstract class FabricUtils {
     });
   }
 
-  static linearEasing(t: number, b: number, c: number, d: number) {
-    return b + (t / d) * c;
+  static checkHorizontalSnap(canvas: fabric.Canvas, artboard: fabric.Object, lineH: fabric.Line, a: number, b: number, snapZone: number, event: fabric.IEvent<MouseEvent>, type: number) {
+    if (a > b - snapZone && a < b + snapZone) {
+      lineH.opacity = 1;
+      lineH.bringToFront();
+
+      let value = b;
+
+      if (type == 1) {
+        value = b;
+      } else if (type == 2) {
+        value = b - (event.target!.width! * event.target!.scaleX!) / 2;
+      } else if (type == 3) {
+        value = b + (event.target!.width! * event.target!.scaleX!) / 2;
+      }
+
+      event.target!.set({ left: value }).setCoords();
+      lineH.set({ x1: b, y1: artboard.top!, x2: b, y2: artboard.height! + artboard.top! }).setCoords();
+      canvas.requestRenderAll();
+    }
+  }
+
+  static checkVerticalSnap(canvas: fabric.Canvas, artboard: fabric.Object, lineV: fabric.Line, a: number, b: number, snapZone: number, event: fabric.IEvent<MouseEvent>, type: number) {
+    if (a > b - snapZone && a < b + snapZone) {
+      lineV.opacity = 1;
+      lineV.bringToFront();
+
+      let value = b;
+
+      if (type == 1) {
+        value = b;
+      } else if (type == 2) {
+        value = b - (event.target!.height! * event.target!.scaleY!) / 2;
+      } else if (type == 3) {
+        value = b + (event.target!.height! * event.target!.scaleY!) / 2;
+      }
+
+      event.target!.set({ top: value }).setCoords();
+      lineV.set({ y1: b, x1: artboard.left!, y2: b, x2: artboard.width! + artboard.left! }).setCoords();
+      canvas.requestRenderAll();
+    }
   }
 }

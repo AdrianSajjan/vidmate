@@ -91,6 +91,10 @@ export class Canvas {
     if (index !== -1) this.elements.splice(index, 1);
   }
 
+  private onUpdateCrop(image?: fabric.Image | null) {
+    this.crop = image ? image.toObject(propertiesToInclude) : null;
+  }
+
   private onUpdateTimelineStatus(playing: boolean) {
     this.playing = playing;
   }
@@ -150,10 +154,10 @@ export class Canvas {
   }
 
   private onSnapToGuidelines(event: fabric.IEvent<MouseEvent>) {
-    const lineH = this.instance?.getItemByName("line_h");
-    const lineV = this.instance?.getItemByName("line_v");
+    const lineH = this.instance?.getItemByName("line_h") as fabric.Line | null;
+    const lineV = this.instance?.getItemByName("line_v") as fabric.Line | null;
 
-    if (!this.instance || !lineH || !lineV) return;
+    if (!this.instance || !this.artboard || !lineH || !lineV) return;
 
     lineH.opacity = 0;
     lineV.opacity = 0;
@@ -172,8 +176,8 @@ export class Canvas {
           const check2 = [[targetTop, obj.top!, 1]];
 
           for (let i = 0; i < check1.length; i++) {
-            this.checkHorizontalSnap(check1[i][0], check1[i][1], snapZone, event, check1[i][2]);
-            this.checkVerticalSnap(check2[i][0], check2[i][1], snapZone, event, check2[i][2]);
+            FabricUtils.checkHorizontalSnap(this.instance!, this.artboard!, lineH!, check1[i][0], check1[i][1], snapZone, event, check1[i][2]);
+            FabricUtils.checkVerticalSnap(this.instance!, this.artboard!, lineV!, check2[i][0], check2[i][1], snapZone, event, check2[i][2]);
           }
         } else {
           const check1 = [
@@ -200,88 +204,34 @@ export class Canvas {
           ];
 
           for (let i = 0; i < check1.length; i++) {
-            this.checkHorizontalSnap(check1[i][0], check1[i][1], snapZone, event, check1[i][2]);
-            this.checkVerticalSnap(check2[i][0], check2[i][1], snapZone, event, check2[i][2]);
+            FabricUtils.checkHorizontalSnap(this.instance!, this.artboard!, lineH!, check1[i][0], check1[i][1], snapZone, event, check1[i][2]);
+            FabricUtils.checkVerticalSnap(this.instance!, this.artboard!, lineV!, check2[i][0], check2[i][1], snapZone, event, check2[i][2]);
           }
         }
       }
     });
   }
 
-  private checkHorizontalSnap(a: number, b: number, snapZone: number, event: fabric.IEvent<MouseEvent>, type: number) {
-    const lineH = this.instance?.getItemByName("line_h") as fabric.Line;
-
-    if (!lineH || !this.artboard || !this.instance) return;
-
-    if (a > b - snapZone && a < b + snapZone) {
-      lineH.opacity = 1;
-      lineH.bringToFront();
-
-      let value = b;
-
-      if (type == 1) {
-        value = b;
-      } else if (type == 2) {
-        value = b - (event.target!.width! * event.target!.scaleX!) / 2;
-      } else if (type == 3) {
-        value = b + (event.target!.width! * event.target!.scaleX!) / 2;
-      }
-
-      event.target!.set({ left: value }).setCoords();
-      lineH.set({ x1: b, y1: this.artboard.top!, x2: b, y2: this.artboard.height! + this.artboard.top! }).setCoords();
-      this.instance.requestRenderAll();
-    }
-  }
-
-  private checkVerticalSnap(a: number, b: number, snapZone: number, event: fabric.IEvent<MouseEvent>, type: number) {
-    const lineV = this.instance?.getItemByName("line_v") as fabric.Line;
-
-    if (!lineV || !this.artboard || !this.instance) return;
-
-    if (a > b - snapZone && a < b + snapZone) {
-      lineV.opacity = 1;
-      lineV.bringToFront();
-
-      let value = b;
-
-      if (type == 1) {
-        value = b;
-      } else if (type == 2) {
-        value = b - (event.target!.height! * event.target!.scaleY!) / 2;
-      } else if (type == 3) {
-        value = b + (event.target!.height! * event.target!.scaleY!) / 2;
-      }
-
-      event.target!.set({ top: value }).setCoords();
-      lineV.set({ y1: b, x1: this.artboard.left!, y2: b, x2: this.artboard.width! + this.artboard.left! }).setCoords();
-      this.instance.requestRenderAll();
-    }
-  }
-
   private onResetGuidelines() {
     const lineV = this.instance?.getItemByName("line_v");
     const lineH = this.instance?.getItemByName("line_h");
-
     if (!lineH || !lineV) return;
-
     lineH.opacity = 0;
     lineV.opacity = 0;
   }
 
   private onDeleteGuidelines() {
-    if (!this.instance) return;
+    const centerH = this.instance?.getItemByName("center_h");
+    const centerV = this.instance?.getItemByName("center_v");
 
-    const centerH = this.instance.getItemByName("center_h");
-    const centerV = this.instance.getItemByName("center_v");
+    const lineH = this.instance?.getItemByName("line_h");
+    const lineV = this.instance?.getItemByName("line_v");
 
-    const lineH = this.instance.getItemByName("line_h");
-    const lineV = this.instance.getItemByName("line_v");
+    if (centerH) this.instance?.remove(centerH);
+    if (centerV) this.instance?.remove(centerV);
 
-    if (centerH) this.instance.remove(centerH);
-    if (centerV) this.instance.remove(centerV);
-
-    if (lineH) this.instance.remove(lineH);
-    if (lineV) this.instance.remove(lineV);
+    if (lineH) this.instance?.remove(lineH);
+    if (lineV) this.instance?.remove(lineV);
   }
 
   private onUpdateSelection() {
@@ -739,31 +689,12 @@ export class Canvas {
   onCropImageStart(image: fabric.Image) {
     if (!this.instance || !this.artboard) return;
 
-    this.crop = image.toObject(propertiesToInclude);
+    this.onUpdateCrop(image);
+    const element = image.getElement() as HTMLImageElement;
 
-    const crop = createInstance(fabric.Cropper, {
-      name: "crop_" + image.name,
-      top: image.top,
-      left: image.left,
-      angle: image.angle,
-      width: image.getScaledWidth(),
-      height: image.getScaledHeight(),
-      fill: "rgba(255, 255, 255, 1)",
-      globalCompositeOperation: "overlay",
-      lockRotation: true,
-    });
-
-    const overlay = createInstance(fabric.Rect, {
-      name: "overlay_" + image.name,
-      top: image.top,
-      left: image.left,
-      angle: image.angle,
-      width: image.getScaledWidth(),
-      height: image.getScaledHeight(),
-      selectable: false,
-      fill: "rgba(0, 0, 0, 0.5)",
-      lockRotation: true,
-    });
+    const props = { top: image.top, left: image.left, angle: image.angle, width: image.getScaledWidth(), height: image.getScaledHeight(), lockRotation: true };
+    const crop = createInstance(fabric.Cropper, { name: "crop_" + image.name, fill: "#ffffff", globalCompositeOperation: "overlay", ...props });
+    const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, selectable: false, fill: "#00000080", ...props });
 
     const verticals = Array.from({ length: 3 }, (_, index) => {
       const x = crop.left! + crop.width! * 0.25 * (index + 1);
@@ -779,10 +710,9 @@ export class Canvas {
       return line;
     });
 
-    const element = image.getElement() as HTMLImageElement;
-
     const width = image.width!;
     const height = image.height!;
+
     const cropX = image.cropX!;
     const cropY = image.cropY!;
 
@@ -858,10 +788,8 @@ export class Canvas {
 
     crop.on("deselected", () => {
       this.onCropImageEnd(crop, image);
-      this.crop = null;
-      this.instance!.remove(overlay);
-      this.instance!.remove(...verticals, ...horizontals);
-      this.instance!.requestRenderAll();
+      this.onUpdateCrop(null);
+      this.instance!.remove(overlay, ...verticals, ...horizontals).requestRenderAll();
     });
   }
 
@@ -899,11 +827,13 @@ export class Canvas {
     image.set({ clipPath: clipPath });
 
     if (!clipPath.meta) clipPath.meta = {};
+
     clipPath.meta.offsetX = clipPath.left! - image.left!;
     clipPath.meta.offsetY = clipPath.top! - image.top!;
-    clipPath.meta.andleOffset = clipPath.angle! - image.angle!;
-    clipPath.meta.scaleOffsetX = clipPath.scaleX! - image.scaleX!;
-    clipPath.meta.scaleOffsetY = clipPath.scaleY! - image.scaleY!;
+    clipPath.meta.angleOffset = clipPath.angle! - image.angle!;
+
+    clipPath.meta.widthOffset = clipPath.getScaledWidth() - image.getScaledWidth();
+    clipPath.meta.heightOffset = clipPath.getScaledHeight() - image.getScaledHeight();
 
     image.on("moving", () => {
       clipPath.set({ left: image.left! + clipPath.meta!.offsetX, top: image.top! + clipPath.meta!.offsetY });
@@ -911,11 +841,16 @@ export class Canvas {
     });
 
     image.on("scaling", () => {
-      clipPath.set({ scaleX: image.scaleX! + clipPath.meta!.scaleOffsetX, scaleY: image.scaleY! + clipPath.meta!.scaleOffsetY });
+      const scaleY = (image.getScaledHeight() + clipPath.meta!.heightOffset) / clipPath.height!;
+      const scaleX = (image.getScaledWidth() + clipPath.meta!.widthOffset) / clipPath.width!;
+      clipPath.set({ scaleX, scaleY });
       clipPath.setCoords();
     });
 
-    image.on("rotating", () => {});
+    image.on("rotating", () => {
+      clipPath.rotate(image.angle! + clipPath.meta!.angleOffset);
+      clipPath.setCoords();
+    });
 
     this.instance.requestRenderAll();
   }
