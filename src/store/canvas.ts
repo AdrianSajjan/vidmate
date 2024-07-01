@@ -424,7 +424,6 @@ export class Canvas {
         case "image":
           if (this.crop === event.target || event.target.meta?.placeholder) return;
           if (event.target.clipPath) {
-            this.onEditImageClippingMaskStart(event.target as fabric.Image);
           } else {
             this.onCropImageStart(event.target as fabric.Image);
           }
@@ -881,103 +880,42 @@ export class Canvas {
     this.instance.renderAll();
   }
 
-  *onEditImageClippingMaskStart(image: fabric.Image) {
-    if (!this.instance || !this.artboard) return;
-
-    const index = this.instance._objects.findIndex((object) => object === image);
-    this.crop = image.toObject(propertiesToInclude);
-
-    const clipPath = image.clipPath!;
-    const element = image.getElement() as HTMLImageElement;
-
-    const left = image.left!;
-    const top = image.top!;
-    const x = image.cropX! * image.scaleX!;
-    const y = image.cropY! * image.scaleY!;
-
-    image.set({ left: left - x, top: top - y, width: element.naturalWidth, height: element.naturalHeight, clipPath: undefined, cropX: 0, cropY: 0, opacity: 0.5, dirty: false, lockRotation: true });
-
-    const clone: fabric.Image = yield createInstance(Promise, (resolve) =>
-      image.clone((clone: fabric.Image) => {
-        clone.set({ name: "clone_" + image.name, selectable: false, scaleX: image.scaleX, scaleY: image.scaleY, clipPath: clipPath, opacity: 1 });
-        resolve(clone);
-      })
-    );
-
-    this.instance.insertAt(clone, index + 1, false);
-    this.instance.requestRenderAll();
-
-    image.on("moving", () => {
-      if (image.left! >= clipPath.left!) image.left = clipPath.left!;
-      if (image.top! >= clipPath.top!) image.top = clipPath.top!;
-
-      if (image.left! + image.getScaledWidth() <= clipPath.left! + clipPath.getScaledWidth()) image.left = clipPath.left! - (image.getScaledWidth() - clipPath.getScaledWidth());
-      if (image.top! + image.getScaledHeight() <= clipPath.top! + clipPath.getScaledHeight()) image.top = clipPath.top! - (image.getScaledHeight() - clipPath.getScaledHeight());
-
-      clone.left = image.left;
-      clone.top = image.top;
-
-      this.instance!.requestRenderAll();
-    });
-
-    image.on("scaling", () => {
-      clone.scaleX = image.scaleX;
-      clone.scaleY = image.scaleY;
-
-      clone.left = image.left;
-      clone.top = image.top;
-
-      this.instance!.requestRenderAll();
-    });
-
-    image.on("deselected", () => {
-      this.onEditImageClippingMaskEnd(image, clipPath);
-      this.crop = null;
-      this.instance!.remove(clone);
-      this.instance!.requestRenderAll();
-    });
-  }
-
-  onEditImageClippingMaskEnd(image: fabric.Image, clipPath: fabric.Object) {
-    if (!this.instance || !this.artboard) return;
-
-    const cropX = (clipPath.left! - image.left!) / image.scaleX!;
-    const cropY = (clipPath.top! - image.top!) / image.scaleY!;
-    const width = (clipPath.width! * clipPath.scaleX!) / image.scaleX!;
-    const height = (clipPath.height! * clipPath.scaleY!) / image.scaleY!;
-
-    image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: clipPath.top!, left: clipPath.left!, clipPath: clipPath, selectable: true, lockRotation: false, opacity: 1 });
-    image.setCoords();
-
-    image.off("scaling");
-    image.off("deselected");
-    image.off("moving");
-
-    this.instance.requestRenderAll();
-  }
-
   onAddClipPathToImage(image: fabric.Image, clipPath: fabric.Object) {
     if (!this.instance || !this.artboard) return;
 
-    this.onRemoveElement(clipPath);
+    const index = this.instance._objects.findIndex((object) => object === image);
+    if (index === -1) return;
 
     const height = image.getScaledHeight();
     const width = image.getScaledWidth();
 
+    this.onRemoveElement(clipPath);
+    clipPath.moveTo(index - 1);
+
     if (height > width) clipPath.scaleToWidth(width / 2.05);
     else clipPath.scaleToHeight(height / 2.05);
-
-    console.log(height, width, clipPath.getScaledHeight(), clipPath.getScaledWidth());
 
     clipPath.set({ absolutePositioned: true, name: "clip_" + image.name, selectable: false, evented: false }).setPositionByOrigin(image.getCenterPoint(), "center", "center");
     image.set({ clipPath: clipPath });
 
-    FabricUtils.bindObjectTransformToParent(image, [clipPath]);
-    FabricUtils.updateObjectTransformToParent(image, [{ object: clipPath }]);
+    if (!clipPath.meta) clipPath.meta = {};
+    clipPath.meta.offsetX = clipPath.left! - image.left!;
+    clipPath.meta.offsetY = clipPath.top! - image.top!;
+    clipPath.meta.andleOffset = clipPath.angle! - image.angle!;
+    clipPath.meta.scaleOffsetX = clipPath.scaleX! - image.scaleX!;
+    clipPath.meta.scaleOffsetY = clipPath.scaleY! - image.scaleY!;
 
-    image.on("moving", () => FabricUtils.updateObjectTransformToParent(image, [{ object: clipPath }]));
-    image.on("scaling", () => FabricUtils.updateObjectTransformToParent(image, [{ object: clipPath }]));
-    image.on("rotating", () => FabricUtils.updateObjectTransformToParent(image, [{ object: clipPath }]));
+    image.on("moving", () => {
+      clipPath.set({ left: image.left! + clipPath.meta!.offsetX, top: image.top! + clipPath.meta!.offsetY });
+      clipPath.setCoords();
+    });
+
+    image.on("scaling", () => {
+      clipPath.set({ scaleX: image.scaleX! + clipPath.meta!.scaleOffsetX, scaleY: image.scaleY! + clipPath.meta!.scaleOffsetY });
+      clipPath.setCoords();
+    });
+
+    image.on("rotating", () => {});
 
     this.instance.requestRenderAll();
   }
