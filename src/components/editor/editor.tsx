@@ -38,13 +38,13 @@ function _CanvasBase({ height, width }: EditorCanvasProps) {
   }, [canvas, height, width, isInitialized]);
 
   const style = useMemo(() => {
-    if (!canvas.selected || !canvas.instance) return undefined;
+    if (!canvas.instance) return undefined;
 
     const viewport = canvas.viewportTransform!;
     const offsetX = viewport[4];
     const offsetY = viewport[5];
 
-    const selected = canvas.instance.getItemByName(canvas.selected.name);
+    const selected = canvas.instance.getActiveObject();
 
     if (!selected) return undefined;
 
