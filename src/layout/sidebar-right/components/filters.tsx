@@ -9,6 +9,7 @@ import { useEditorContext } from "@/context/editor";
 import { filters, Filter } from "@/fabric/filters";
 import { filterPlaceholder } from "@/constants/editor";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
 
 function _FilterSidebar() {
   const editor = useEditorContext();
@@ -50,7 +51,7 @@ interface FilterItemProps extends Omit<HTMLAttributes<HTMLButtonElement>, "onCha
 function _FilterItem({ filter, active, className, onChange, ...props }: FilterItemProps) {
   if (!active) {
     return (
-      <button className={cn("h-14 relative rounded-md overflow-hidden group", className)} {...props}>
+      <button className={cn("h-14 w-full relative rounded-md overflow-hidden group", className)} {...props}>
         <img src={filterPlaceholder} className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card-foreground" />
         <span className="absolute bottom-1 left-2 text-card text-xs font-medium">{filter.name}</span>
@@ -59,12 +60,15 @@ function _FilterItem({ filter, active, className, onChange, ...props }: FilterIt
   }
 
   return (
-    <div>
-      <button className={cn("h-20 relative rounded-md overflow-hidden group", className)} {...props}>
+    <div className="flex flex-col gap-2.5">
+      <button className={cn("h-14 w-full relative rounded-md overflow-hidden group ring ring-blue-500", className)} {...props}>
         <img src={filterPlaceholder} className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card-foreground" />
         <span className="absolute bottom-1 left-2 text-card text-xs font-medium">{filter.name}</span>
       </button>
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-medium">Intensity</Label>
+      </div>
     </div>
   );
 }
