@@ -121,7 +121,8 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
     const style = getComputedStyle(ref.current);
     const matrix = createInstance(DOMMatrixReadOnly, style.transform);
     const offset = Math.floor((matrix.m41 / SEEK_TIME_WIDTH) * 1000);
-    editor.canvas.onChangeObjectTimelineOffset(element.name!, offset);
+    const object = editor.canvas.instance!.getItemByName(element.name);
+    editor.canvas.onChangeObjectTimelineProperty(object!, "offset", offset);
   }
 
   const width = (element.meta!.duration / 1000) * SEEK_TIME_WIDTH;

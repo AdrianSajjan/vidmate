@@ -32,7 +32,7 @@ function _ImageToolbar() {
       <ToolbarStrokeOption />
       <Separator orientation="vertical" className="h-8 ml-auto mr-4" />
       <div className="flex items-center gap-4">
-        <Button size="sm" variant="outline" className="gap-1.5">
+        <Button onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "filters" ? null : "filters")} size="sm" variant="outline" className="gap-1.5">
           <BlendIcon size={15} />
           <span>Filters</span>
         </Button>

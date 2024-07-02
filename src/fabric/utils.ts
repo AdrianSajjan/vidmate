@@ -1,7 +1,9 @@
-import { customAlphabet } from "nanoid";
-import { fabric } from "fabric";
-import { createInstance } from "@/lib/utils";
 import _ from "lodash";
+
+import { fabric } from "fabric";
+import { customAlphabet } from "nanoid";
+
+import { createInstance } from "@/lib/utils";
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
 

@@ -362,9 +362,7 @@ export class Canvas {
         const center = this.instance.getCenter();
         this.onUpdateZoom(zoom);
 
-        this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
-        this.instance.requestRenderAll();
-
+        this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom).requestRenderAll();
         this.onUpdateViewportTransform();
       }
     });
@@ -374,6 +372,7 @@ export class Canvas {
         case "image":
           if (this.crop === event.target || event.target.meta?.placeholder) return;
           if (event.target.clipPath) {
+            // this.onModifyImageClipPath(event.target as fabric.Image);
           } else {
             this.onCropImageStart(event.target as fabric.Image);
           }
@@ -554,7 +553,7 @@ export class Canvas {
         this.onInitializeAnimationTimeline();
         this.onToggleCanvasElements(this.seek);
       },
-      { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true }
+      { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {} }
     );
   }
 
@@ -609,7 +608,7 @@ export class Canvas {
         this.onInitializeAnimationTimeline();
         this.onToggleCanvasElements(this.seek);
       },
-      { name: id, crossOrigin: "anonymous", objectCaching: true }
+      { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {} }
     );
   }
 
@@ -861,56 +860,77 @@ export class Canvas {
     this.onAddClipPathToImage(image, clipPath);
   }
 
-  onChangeObjectTimelineOffset(name: string, offset: number) {
-    const object = this.instance?.getItemByName(name);
+  onAddFilterToImage(image: fabric.Image, filter: fabric.IBaseFilter[], name: string, intensity: number) {
+    if (!this.instance || !image || image.type !== "image") return;
 
+    if (image.effects!.name === name && image.effects!.intensity === intensity) return;
+
+    image.effects!.name = name;
+    image.effects!.intensity = intensity;
+
+    if (image.effects!.start >= 0 && image.effects!.end >= 0) {
+      image.filters!.splice(image.effects!.start, image.effects!.end);
+    }
+
+    image.effects!.start = image.filters!.length;
+    image.effects!.end = image.filters!.length + filter.length;
+
+    image.filters!.push(...filter);
+    image.applyFilters();
+
+    this.instance.fire("object:modified", { target: image });
+    this.instance.requestRenderAll();
+  }
+
+  onAddFilterToActiveImage(filter: fabric.IBaseFilter[], name: string, intensity: number) {
+    const image = this.instance?.getActiveObject() as fabric.Image;
+    if (!image || image.type !== "image") return;
+    this.onAddFilterToImage(image, filter, name, intensity);
+  }
+
+  onChangeObjectTimelineProperty(object: fabric.Object, property: string, value: number) {
     if (!object || !this.instance) return;
 
-    this.instance.setActiveObject(object);
-    object.meta!.offset = offset;
+    if (!object.meta) object.meta = {};
+    object.meta[property] = value;
 
     this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
 
     this.instance.fire("object:modified", { target: object });
+    this.instance.requestRenderAll();
   }
 
   onChangeActiveObjectTimelineProperty(property: string, value: any) {
     const selected = this.instance?.getActiveObject();
     if (!this.instance || !selected) return;
+    this.onChangeObjectTimelineProperty(selected, property, value);
+  }
 
-    if (!selected.meta) selected.meta = {};
-    selected.meta[property] = value;
-
-    this.onInitializeAnimationTimeline();
-    this.onToggleCanvasElements(this.seek);
-
-    this.instance.fire("object:modified", { target: selected });
+  onChangeObjectProperty(object: fabric.Object, property: keyof fabric.Object, value: any) {
+    if (!this.instance || !object) return;
+    object.set(property, value);
+    this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
   }
 
   onChangeActiveObjectProperty(property: keyof fabric.Object, value: any) {
     const selected = this.instance?.getActiveObject();
     if (!this.instance || !selected) return;
-    selected.set(property, value);
-    this.instance.fire("object:modified", { target: selected });
+    this.onChangeObjectProperty(selected, property, value);
+  }
+
+  onChangeTextboxProperty(textbox: fabric.Textbox, property: keyof fabric.Textbox, value: any) {
+    if (!this.instance || textbox.type !== "textbox") return;
+    textbox.set(property, value);
+    this.instance.fire("object:modified", { target: textbox });
     this.instance.requestRenderAll();
   }
 
   onChangeActiveTextboxProperty(property: keyof fabric.Textbox, value: any) {
     const selected = this.instance?.getActiveObject() as fabric.Textbox | null;
-    if (!this.instance || !selected || selected.type !== "textbox") return;
-    selected.set(property, value);
-    this.instance.fire("object:modified", { target: selected });
-    this.instance.requestRenderAll();
-  }
-
-  onChangeActiveImageProperty(property: keyof fabric.Image, value: any) {
-    const selected = this.instance?.getActiveObject() as fabric.Image | null;
-    if (!this.instance || !selected || selected.type !== "image") return;
-    selected.set(property, value);
-    this.instance.fire("object:modified", { target: selected });
-    this.instance.requestRenderAll();
+    if (!selected || selected.type !== "textbox") return;
+    this.onChangeTextboxProperty(selected, property, value);
   }
 
   onChangeImageProperty(image: fabric.Image, property: keyof fabric.Image, value: any) {
@@ -918,6 +938,12 @@ export class Canvas {
     image.set(property, value);
     this.instance.fire("object:modified", { target: image });
     this.instance.requestRenderAll();
+  }
+
+  onChangeActiveImageProperty(property: keyof fabric.Image, value: any) {
+    const selected = this.instance?.getActiveObject() as fabric.Image | null;
+    if (!this.instance || !selected || selected.type !== "image") return;
+    this.onChangeImageProperty(selected, property, value);
   }
 
   onChangeSeekTime(seek: number) {

@@ -2567,6 +2567,11 @@ export class Image {
    */
   _toSVG(): string;
   /**
+   * Returns source of an image when image is serialized to object, will not work with live objects
+   * @return Source of an image
+   */
+  src: string;
+  /**
    * Returns source of an image
    * @return Source of an image
    */
@@ -2700,10 +2705,21 @@ interface IObjectOptions {
   meta?: Record<string, any>;
 
   /**
-   * This property is meant to store user defined custom properties
-   * Add meta to the list of exported objects in order to store these later on
+   * This property is meant to store user defined animation timeline properties
+   * Add anim to the list of exported objects in order to store these later on
    */
   anim?: AnimationTimeline;
+
+  /**
+   * This property is meant to store user defined image filter properties
+   * Add effects to the list of exported objects in order to store these later on
+   */
+  effects?: Record<string, any>;
+  /**
+   * This property is meant to store user defined image filter properties
+   * Add effects to the list of exported objects in order to store these later on
+   */
+  adjustments?: Record<string, any>;
 
   /**
    * State properies that are available on calling save state

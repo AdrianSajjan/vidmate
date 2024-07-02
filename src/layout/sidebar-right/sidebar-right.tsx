@@ -6,12 +6,15 @@ import { rightSidebarWidth } from "@/constants/layout";
 
 import { FillSidebar } from "./components/fill";
 import { StrokeSidebar } from "./components/stroke";
+
 import { ClipMaskSidebar } from "./components/clip";
+import { FilterSidebar } from "./components/filters";
 
 const sidebarComponentMap: Record<string, () => JSX.Element> = {
   fill: FillSidebar,
   stroke: StrokeSidebar,
   clip: ClipMaskSidebar,
+  filters: FilterSidebar,
 };
 
 function _EditorSidebarRight() {
