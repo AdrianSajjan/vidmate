@@ -16,10 +16,10 @@ export const filters: Array<Filter> = [
       return [
         createInstance(fabric.Image.filters.ColorMatrix, {  
           matrix: [
-            red, 0, 0, 0, 0,   // Red channel remains the same
-            0, green, 0, 0, 0, // Increase green channel
-            0, 0, 1, 0, 0,  // Increase blue channel
-            0, 0, 0, 1, 0     // Alpha channel remains the same
+            red, 0, 0, 0, 0,   
+            0, green, 0, 0, 0, 
+            0, 0, 1, 0, 0,  
+            0, 0, 0, 1, 0     
           ]
         }),
       ]
@@ -34,10 +34,10 @@ export const filters: Array<Filter> = [
       return [
         createInstance(fabric.Image.filters.ColorMatrix, {  
           matrix: [
-            1 , 0, 0, 0, 0,   // Red channel remains the same
-            0, green, 0, 0, 0, // Increase green channel
-            0, 0, blue, 0, 0,  // Increase blue channel
-            0, 0, 0, 1, 0     // Alpha channel remains the same
+            1 , 0, 0, 0, 0,   
+            0, green, 0, 0, 0, 
+            0, 0, blue, 0, 0,  
+            0, 0, 0, 1, 0     
           ]
         }),
       ]
@@ -51,10 +51,10 @@ export const filters: Array<Filter> = [
       return [
         createInstance(fabric.Image.filters.ColorMatrix, {  
           matrix: [
-            saturation, 0, 0, 0, 0,  // Increase red channel
-            0, saturation, 0, 0, 0,  // Increase green channel
-            0, 0, saturation, 0, 0,  // Increase blue channel
-            0, 0, 0, 1, 0     // Alpha channel remains the same
+            saturation, 0, 0, 0, 0,  
+            0, saturation, 0, 0, 0,  
+            0, 0, saturation, 0, 0,  
+            0, 0, 0, 1, 0     
           ] 
         }),
         createInstance(fabric.Image.filters.Contrast, {
@@ -62,5 +62,76 @@ export const filters: Array<Filter> = [
         })
       ]
     },
+  },
+  {
+    name: "Soft",
+    filter: (intensity = 50) => {
+      const brightness = (intensity / 100) * 0.2; 
+      const contrast = 0.1 + (intensity / 100) * 0.2; 
+      const blur = (intensity / 100) * 0.1; 
+      return [  
+        createInstance(fabric.Image.filters.Brightness, {
+          brightness,
+        }),
+        createInstance(fabric.Image.filters.Contrast, {
+          contrast,
+        }),
+        createInstance(fabric.Image.filters.Blur, {
+          blur,
+        })
+      ]
+    }
+  },
+  {
+    name: "Vintage",
+    filter: (intensity = 50) => {
+      const sepia = intensity / 100; 
+      const brightness = -0.1 + (intensity / 100) * 0.2; 
+      const contrast = 0.1 + (intensity / 100) * 0.3; 
+      return [  
+        createInstance(fabric.Image.filters.Sepia, {
+          sepia,
+        }),
+        createInstance(fabric.Image.filters.Brightness, {
+          brightness,
+        }),
+        createInstance(fabric.Image.filters.Contrast, {
+          contrast,
+        }),
+      ]
+    }
+  },
+  {
+    name: "Color Pop",
+    filter: (intensity = 50) => {
+      const saturation = 1 + (intensity / 100) * 0.7; 
+      const brightness = -0.1 + (intensity / 100) * 0.2; 
+      const contrast = 0.1 + (intensity / 100) * 0.3; 
+      return [  
+        createInstance(fabric.Image.filters.Saturation, {
+          saturation,
+        }),
+        createInstance(fabric.Image.filters.Brightness, {
+          brightness,
+        }),
+        createInstance(fabric.Image.filters.Contrast, {
+          contrast,
+        }),
+      ]
+    }
+  },
+  {
+    name: "Monochrome",
+    filter: (intensity = 50) => {
+      const contrast = 0.1 + (intensity / 100) * 0.3;
+      return [  
+        createInstance(fabric.Image.filters.Grayscale, {
+          mode: "average"
+        }),
+        createInstance(fabric.Image.filters.Contrast, {
+          contrast
+        }),
+      ]
+    }
   },
 ];
