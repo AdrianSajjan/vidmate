@@ -14,7 +14,6 @@ import { useEditorContext } from "@/context/editor";
 import { ToolbarFillOption } from "../common/fill";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
-import { ToolbarAnimationOption } from "../common/animation";
 import { ToolbarPositionOption } from "../common/position";
 
 function _TextToolbar() {
@@ -86,8 +85,6 @@ function _TextToolbar() {
       <ToolbarStrokeOption />
       <Separator orientation="vertical" className="h-8 ml-auto mr-4" />
       <ToolbarTimelineOption />
-      <Separator orientation="vertical" className="h-8 mx-4" />
-      <ToolbarAnimationOption />
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarPositionOption />
     </div>

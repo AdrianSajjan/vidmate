@@ -4,12 +4,13 @@ import { HTMLAttributes, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { rightSidebarWidth } from "@/constants/layout";
+import { Label } from "@/components/ui/label";
+import { FilterSlider } from "@/components/ui/slider";
 
 import { useEditorContext } from "@/context/editor";
 import { filters, Filter } from "@/fabric/filters";
 import { filterPlaceholder } from "@/constants/editor";
 import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
 
 function _FilterSidebar() {
   const editor = useEditorContext();
@@ -20,7 +21,7 @@ function _FilterSidebar() {
   }, [selected, editor]);
 
   const handleApplyFilter = (filter: Filter, intensity = 50) => {
-    editor.canvas.onAddFilterToActiveImage(filter.filter(), filter.name, intensity);
+    editor.canvas.onAddFilterToActiveImage(filter.filter(intensity), filter.name, intensity);
   };
 
   return (
@@ -34,7 +35,7 @@ function _FilterSidebar() {
       <section className="sidebar-container">
         <div className="px-4 py-4 flex flex-col gap-3">
           {filters.map((filter) => (
-            <FilterItem key={filter.name} filter={filter} active={selected?.effects?.name === filter.name} onChange={(intensity) => handleApplyFilter(filter, intensity)} onClick={() => handleApplyFilter(filter)} />
+            <FilterItem key={filter.name} filter={filter} selected={selected} onChange={(intensity) => handleApplyFilter(filter, intensity)} onClick={() => handleApplyFilter(filter)} />
           ))}
         </div>
       </section>
@@ -44,30 +45,34 @@ function _FilterSidebar() {
 
 interface FilterItemProps extends Omit<HTMLAttributes<HTMLButtonElement>, "onChange"> {
   filter: Filter;
-  active: boolean;
+  selected: fabric.Image | null;
   onChange: (value: number) => void;
 }
 
-function _FilterItem({ filter, active, className, onChange, ...props }: FilterItemProps) {
+function _FilterItem({ filter, selected, className, onChange, ...props }: FilterItemProps) {
+  const active = selected?.effects?.name === filter.name;
+  const intensity = selected?.effects?.intensity || 50;
+
   if (!active) {
     return (
       <button className={cn("h-14 w-full relative rounded-md overflow-hidden group", className)} {...props}>
         <img src={filterPlaceholder} className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card-foreground" />
-        <span className="absolute bottom-1 left-2 text-card text-xs font-medium">{filter.name}</span>
+        <span className="absolute bottom-1.5 left-2.5 text-card text-xs font-medium">{filter.name}</span>
       </button>
     );
   }
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-3">
       <button className={cn("h-14 w-full relative rounded-md overflow-hidden group ring ring-blue-500", className)} {...props}>
         <img src={filterPlaceholder} className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card-foreground" />
         <span className="absolute bottom-1 left-2 text-card text-xs font-medium">{filter.name}</span>
       </button>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-10">
         <Label className="text-xs font-medium">Intensity</Label>
+        <FilterSlider min={1} max={100} step={1} value={[intensity]} onValueChange={([intensity]) => onChange(intensity)} />
       </div>
     </div>
   );

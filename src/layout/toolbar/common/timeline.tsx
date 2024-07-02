@@ -1,7 +1,10 @@
+import { LayersIcon } from "lucide-react";
+import { observer } from "mobx-react";
+
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEditorContext } from "@/context/editor";
-import { observer } from "mobx-react";
 
 function _ToolbarTimelineOption() {
   const editor = useEditorContext();
@@ -9,6 +12,10 @@ function _ToolbarTimelineOption() {
 
   return (
     <div className="flex items-center gap-4">
+      <Button size="sm" variant="outline" className="gap-1.5">
+        <LayersIcon size={15} />
+        <span>Animations</span>
+      </Button>
       <div className="flex items-center gap-1.5">
         <Label className="text-xs text-gray-700">Timeline</Label>
         <div className="relative">

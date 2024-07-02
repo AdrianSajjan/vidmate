@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useEditorContext } from "@/context/editor";
 
-import { ToolbarAnimationOption } from "../common/animation";
 import { ToolbarPositionOption } from "../common/position";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
@@ -45,8 +44,6 @@ function _ImageToolbar() {
           <span>Clip Mask</span>
         </Button>
       </div>
-      <Separator orientation="vertical" className="h-8 mx-4" />
-      <ToolbarAnimationOption />
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarTimelineOption />
       <Separator orientation="vertical" className="h-8 mx-4" />
