@@ -2678,22 +2678,25 @@ export class Line {
   calcLinePoints(): { x1: number; x2: number; y1: number; y2: number };
 }
 
-export type EntryAnimation = "none" | "fade-in";
+export type EntryAnimation = "none" | "fade-in" | (string & {});
 
-export type ExitAnimation = "none" | "fade-out";
+export type ExitAnimation = "none" | "fade-out" | (string & {});
 
 interface AnimationTimeline {
   in: {
     name: EntryAnimation;
     duration: number;
+    data?: Record<string, any>;
   };
   out: {
     name: ExitAnimation;
     duration: number;
+    data?: Record<string, any>;
   };
   animate?: {
     name: string;
     duration: number;
+    data?: Record<string, any>;
   };
 }
 

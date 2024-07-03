@@ -6,6 +6,7 @@ import { makeAutoObservable } from "mobx";
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance } from "@/lib/utils";
+import { EntryAnimation, ExitAnimation } from "canvas";
 
 export const artboardHeight = 1080;
 export const artboardWidth = 1080;
@@ -362,7 +363,8 @@ export class Canvas {
         const center = this.instance.getCenter();
         this.onUpdateZoom(zoom);
 
-        this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom).requestRenderAll();
+        this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
+        this.instance.requestRenderAll();
         this.onUpdateViewportTransform();
       }
     });
@@ -410,6 +412,7 @@ export class Canvas {
 
       switch (entry.name) {
         case "fade-in": {
+          entry.data = { opacity: 1 };
           this.timeline.add(
             {
               targets: object,
@@ -422,10 +425,14 @@ export class Canvas {
           );
           break;
         }
+        default: {
+          object.set({ ...(entry.data || {}) });
+        }
       }
 
       switch (exit.name) {
         case "fade-out": {
+          exit.data = { opacity: 1 };
           this.timeline.add(
             {
               targets: object,
@@ -437,6 +444,9 @@ export class Canvas {
             object.meta!.offset + object.meta!.duration - exit.duration
           );
           break;
+        }
+        default: {
+          object.set({ ...(exit.data || {}) });
         }
       }
     }
@@ -983,6 +993,38 @@ export class Canvas {
     const selected = this.instance?.getActiveObject();
     if (!this.instance || !selected) return;
     this.onChangeObjectProperty(selected, property, value);
+  }
+
+  onChangeObjectAnimation(object: fabric.Object, type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
+    if (!this.instance || !object) return;
+
+    object.anim![type].name = animation;
+    this.instance.fire("object:modified", { target: object }).requestRenderAll();
+
+    this.onInitializeAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
+  }
+
+  onChangActiveObjectAnimation(type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
+    const selected = this.instance?.getActiveObject();
+    if (!this.instance || !selected) return;
+    this.onChangeObjectAnimation(selected, type, animation);
+  }
+
+  onChangeObjectAnimationDuration(object: fabric.Object, type: "in" | "out", duration: number) {
+    if (!this.instance || !object) return;
+
+    object.anim![type].duration = duration;
+    this.instance.fire("object:modified", { target: object }).requestRenderAll();
+
+    this.onInitializeAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
+  }
+
+  onChangActiveObjectAnimationDuration(type: "in" | "out", duration: number) {
+    const selected = this.instance?.getActiveObject();
+    if (!this.instance || !selected) return;
+    this.onChangeObjectAnimationDuration(selected, type, duration);
   }
 
   onChangeTextboxProperty(textbox: fabric.Textbox, property: keyof fabric.Textbox, value: any) {

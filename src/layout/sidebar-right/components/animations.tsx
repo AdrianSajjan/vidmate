@@ -1,10 +1,15 @@
-import { useEffect } from "react";
+import { ChangeEventHandler, HTMLAttributes, useEffect, useState } from "react";
 import { XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 
 import { Button } from "@/components/ui/button";
 import { rightSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { EditorAnimation, entry } from "@/fabric/animations";
 
 function _AnimationSidebar() {
   const editor = useEditorContext();
@@ -22,9 +27,102 @@ function _AnimationSidebar() {
           <XIcon size={15} />
         </Button>
       </div>
-      <section className="sidebar-container"></section>
+      <section className="sidebar-container px-4 py-4">
+        <Tabs defaultValue="in">
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="in" className="text-xs h-full">
+              In
+            </TabsTrigger>
+            <TabsTrigger value="out" className="text-xs h-full">
+              Out
+            </TabsTrigger>
+            <TabsTrigger value="animate" className="text-xs h-full" disabled>
+              Animate
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="in" className="mt-0 pt-5">
+            <EntryAnimations />
+          </TabsContent>
+          <TabsContent value="out" className="mt-0 pt-5">
+            <ExitAnimations />
+          </TabsContent>
+        </Tabs>
+      </section>
     </div>
   );
 }
 
+function _EntryAnimations() {
+  const editor = useEditorContext();
+
+  const selected = editor.canvas.selected as fabric.Image | null;
+  const disabled = !selected?.anim?.in.name || selected?.anim?.in.name === "none";
+
+  const handleSelectAnimation = (animation: EditorAnimation) => {
+    editor.canvas.onChangActiveObjectAnimation("in", animation.value);
+    if (animation.value !== "none" && selected?.anim?.in.duration === 0) editor.canvas.onChangActiveObjectAnimationDuration("in", animation.duration!);
+  };
+
+  const handleChangeDuration: ChangeEventHandler<HTMLInputElement> = (event) => {
+    const value = +event.target.value * 1000;
+    if (isNaN(value) || value < 0) return;
+    editor.canvas.onChangActiveObjectAnimationDuration("in", value);
+  };
+
+  return (
+    <div className="flex flex-col px-1">
+      <div className="flex items-center justify-between gap-10">
+        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
+        <Input value={(selected?.anim?.in.duration || 0) / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.5} className="text-xs h-8" />
+      </div>
+      <div className="grid grid-cols-2 gap-5 pt-6">
+        {entry.map((animation) => (
+          <AnimationItem animation={animation} className={selected?.anim?.in.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function _ExitAnimations() {
+  const editor = useEditorContext();
+
+  const [duration, setDuration] = useState(250);
+
+  const selected = editor.canvas.selected as fabric.Image | null;
+  const disabled = !selected?.anim?.in.name || selected?.anim?.in.name === "none";
+
+  const handleChangeDuration: ChangeEventHandler<HTMLInputElement> = (event) => {
+    const value = +event.target.value * 1000;
+    if (isNaN(value) || value < 0) return;
+    setDuration(value);
+  };
+
+  return (
+    <div className="flex flex-col px-1">
+      <div className="flex items-center justify-between gap-10">
+        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
+        <Input value={duration / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" className="text-xs h-8" />
+      </div>
+      <div className="grid grid-cols-2 gap-5 pt-6"></div>
+    </div>
+  );
+}
+
+interface AniamtionItemProps extends HTMLAttributes<HTMLButtonElement> {
+  animation: EditorAnimation;
+}
+
+function _AnimationItem({ animation, className, ...props }: AniamtionItemProps) {
+  return (
+    <div className="space-y-0.5">
+      <button className={cn("w-full aspect-square bg-red-100 rounded-xl", className)} {...props}></button>
+      <p className="text-xs font-medium text-center text-foreground/60">{animation.label}</p>
+    </div>
+  );
+}
+
+const AnimationItem = observer(_AnimationItem);
+const ExitAnimations = observer(_ExitAnimations);
+const EntryAnimations = observer(_EntryAnimations);
 export const AnimationSidebar = observer(_AnimationSidebar);
