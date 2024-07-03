@@ -441,6 +441,21 @@ export class Canvas {
           );
           break;
         }
+        case "slide-out-left": {
+          console.log(1);
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: [1, 0],
+              left: [object.left!, object.left! - 150],
+              duration: exit.duration,
+              easing: exit.easing || "linear",
+              round: false,
+            },
+            object.meta!.offset + object.meta!.duration - exit.duration
+          );
+          break;
+        }
       }
     }
 
