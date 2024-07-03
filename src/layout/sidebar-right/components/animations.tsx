@@ -1,17 +1,17 @@
-import { ChangeEventHandler, HTMLAttributes, useEffect, useState } from "react";
 import { XIcon } from "lucide-react";
 import { observer } from "mobx-react";
+import { ChangeEventHandler, HTMLAttributes, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { rightSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
+import { EditorAnimation, easing, entry, exit } from "@/fabric/animations";
 import { cn } from "@/lib/utils";
-import { EditorAnimation, easing, entry } from "@/fabric/animations";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function _AnimationSidebar() {
   const editor = useEditorContext();
@@ -110,24 +110,52 @@ function _EntryAnimations() {
 function _ExitAnimations() {
   const editor = useEditorContext();
 
-  const [duration, setDuration] = useState(250);
-
   const selected = editor.canvas.selected as fabric.Image | null;
-  const disabled = !selected?.anim?.in.name || selected?.anim?.in.name === "none";
+  const disabled = !selected?.anim?.out.name || selected?.anim?.out.name === "none";
+
+  const handleSelectAnimation = (animation: EditorAnimation) => {
+    editor.canvas.onChangActiveObjectAnimation("out", animation.value);
+    if (animation.value === "none") return;
+    if (selected?.anim?.out.duration === 0) editor.canvas.onChangActiveObjectAnimationDuration("out", animation.duration || 250);
+    if (!selected?.anim?.out.easing) editor.canvas.onChangActiveObjectAnimationEasing("out", animation.easing || "linear");
+  };
+
+  const handleChangeEasing = (easing: string) => {
+    editor.canvas.onChangActiveObjectAnimationEasing("out", easing);
+  };
 
   const handleChangeDuration: ChangeEventHandler<HTMLInputElement> = (event) => {
     const value = +event.target.value * 1000;
     if (isNaN(value) || value < 0) return;
-    setDuration(value);
+    editor.canvas.onChangActiveObjectAnimationDuration("out", value);
   };
 
   return (
     <div className="flex flex-col px-1">
-      <div className="flex items-center justify-between gap-10">
+      <div className="flex items-center justify-between gap-6">
         <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={duration / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" className="text-xs h-8" />
+        <Input value={(selected?.anim?.out.duration || 0) / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.5} className="text-xs h-8 w-40" />
       </div>
-      <div className="grid grid-cols-2 gap-5 pt-6"></div>
+      <div className="flex items-center justify-between gap-6 mt-3">
+        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
+        <Select value={selected?.anim?.out.easing || "linear"} onValueChange={handleChangeEasing} disabled={disabled}>
+          <SelectTrigger className="h-8 text-xs w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="item-aligned">
+            {easing.map((easing) => (
+              <SelectItem key={easing.value} className="text-xs" value={easing.value}>
+                {easing.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid grid-cols-2 gap-5 pt-6">
+        {exit.map((animation) => (
+          <AnimationItem key={animation.label} animation={animation} className={selected?.anim?.out.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -139,7 +167,9 @@ interface AniamtionItemProps extends HTMLAttributes<HTMLButtonElement> {
 function _AnimationItem({ animation, className, ...props }: AniamtionItemProps) {
   return (
     <div className="space-y-0.5">
-      <button className={cn("w-full aspect-square bg-red-100 rounded-xl", className)} {...props}></button>
+      <button className={cn("w-full aspect-square rounded-xl overflow-hidden border", className)} {...props}>
+        <img src={animation.preview} className="h-full w-full" />
+      </button>
       <p className="text-xs font-medium text-center text-foreground/60">{animation.label}</p>
     </div>
   );
