@@ -5271,6 +5271,20 @@ interface IAllFilters {
      */
     fromObject(object: any): IBrightnessFilter;
   };
+  Gamma: {
+    new (options?: {
+      /**
+       * Value to change the gamma channel of the image
+       * @default []
+       */
+      gamma: number[];
+    }): IGammaFilter;
+    /**
+     * Returns filter instance from an object representation
+     * @param object Object to create an instance from
+     */
+    fromObject(object: any): IGammaFilter;
+  };
   ColorMatrix: {
     new (options?: {
       /** Filter matrix */
@@ -5506,6 +5520,20 @@ interface IBlendImageFilter extends IBaseFilter {
   applyTo(canvasEl: HTMLCanvasElement): void;
 }
 interface IBlurFilter extends IBaseFilter {
+  /**
+   * Applies filter to canvas element
+   * @param canvasEl Canvas element to apply filter to
+   */
+  applyTo(canvasEl: HTMLCanvasElement): void;
+}
+interface IBrightnessFilter extends IBaseFilter {
+  /**
+   * Applies filter to canvas element
+   * @param canvasEl Canvas element to apply filter to
+   */
+  applyTo(canvasEl: HTMLCanvasElement): void;
+}
+interface IGammaFilter extends IBaseFilter {
   /**
    * Applies filter to canvas element
    * @param canvasEl Canvas element to apply filter to

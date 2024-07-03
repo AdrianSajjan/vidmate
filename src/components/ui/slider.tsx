@@ -19,7 +19,7 @@ const FilterSlider = React.forwardRef<React.ElementRef<typeof SliderPrimitive.Ro
       <SliderPrimitive.Range className="absolute h-full bg-primary" />
     </SliderPrimitive.Track>
     <SliderPrimitive.Thumb className="block h-6 w-1 rounded-sm border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" />
-    <span className="text-xxs font-medium text-primary-foreground absolute top-1/2 left-1.5 -translate-y-1/2 mt-px">{value?.at(0) || 50}</span>
+    <span className="text-xxs font-medium text-primary-foreground absolute top-1/2 left-1.5 -translate-y-1/2 mt-px">{value?.at(0) || 0}</span>
   </SliderPrimitive.Root>
 ));
 Slider.displayName = SliderPrimitive.Root.displayName;

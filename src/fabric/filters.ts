@@ -6,6 +6,50 @@ export interface Filter {
   filter: (intensity?:number)=> fabric.IBaseFilter[];
 }
 
+export interface Adjustment {
+  name: string;
+  filter: (intensity?:number)=> fabric.IBaseFilter;
+}
+
+export const adjustments:Array<Adjustment> = [
+  {
+    name: "Brightness",
+    filter:(intensity = 0) => {
+      const brightness = intensity / 100;
+      return createInstance(fabric.Image.filters.Brightness, {
+        brightness
+      })
+    }
+  },
+  {
+    name: "Contrast",
+    filter:(intensity = 0) => {
+      const contrast = intensity / 100;
+      return createInstance(fabric.Image.filters.Contrast, {
+        contrast
+      })
+    }
+  },
+  {
+    name: "Saturation",
+    filter:(intensity = 0) => {
+      const saturation = intensity / 100;
+      return createInstance(fabric.Image.filters.Saturation, {
+        saturation,
+      })
+    }
+  },
+  {
+    name: "Gamma",
+    filter:(intensity = 0) => {
+      const gamma = (100 + intensity) / 100;
+      return createInstance(fabric.Image.filters.Gamma, {
+        gamma: [gamma, gamma, gamma],
+      })
+    }
+  }
+]
+
 export const filters: Array<Filter> = [
   {
     name: "Warm",
@@ -135,3 +179,4 @@ export const filters: Array<Filter> = [
     }
   },
 ];
+

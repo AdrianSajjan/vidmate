@@ -553,7 +553,7 @@ export class Canvas {
         this.onInitializeAnimationTimeline();
         this.onToggleCanvasElements(this.seek);
       },
-      { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {} }
+      { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} }
     );
   }
 
@@ -608,7 +608,7 @@ export class Canvas {
         this.onInitializeAnimationTimeline();
         this.onToggleCanvasElements(this.seek);
       },
-      { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {} }
+      { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} }
     );
   }
 
@@ -860,10 +860,31 @@ export class Canvas {
     this.onAddClipPathToImage(image, clipPath);
   }
 
-  onAddFilterToImage(image: fabric.Image, filter: fabric.IBaseFilter[], name: string, intensity: number) {
-    if (!this.instance || !image || image.type !== "image") return;
+  onRemoveFilterFromImage(image: fabric.Image, name: string) {
+    if (!this.instance || !image || image.type !== "image" || image.effects!.name !== name) return;
 
-    if (image.effects!.name === name && image.effects!.intensity === intensity) return;
+    image.effects!.name = null;
+    image.effects!.intensity = null;
+
+    if (image.effects!.start >= 0 && image.effects!.end >= 0) {
+      image.filters!.splice(image.effects!.start, image.effects!.end);
+    }
+
+    image.effects!.end = null;
+    image.effects!.start = null;
+
+    image.applyFilters();
+    this.instance.fire("object:modified", { target: image }).requestRenderAll();
+  }
+
+  onRemoveFilterFromActiveImage(name: string) {
+    const image = this.instance?.getActiveObject() as fabric.Image;
+    if (!image || image.type !== "image") return;
+    this.onRemoveFilterFromImage(image, name);
+  }
+
+  onAddFilterToImage(image: fabric.Image, filter: fabric.IBaseFilter[], name: string, intensity: number) {
+    if (!this.instance || !image || image.type !== "image" || (image.effects!.name === name && image.effects!.intensity === intensity)) return;
 
     image.effects!.name = name;
     image.effects!.intensity = intensity;
@@ -886,6 +907,50 @@ export class Canvas {
     const image = this.instance?.getActiveObject() as fabric.Image;
     if (!image || image.type !== "image") return;
     this.onAddFilterToImage(image, filter, name, intensity);
+  }
+
+  onRemoveAdjustmentFromImage(image: fabric.Image, name: string) {
+    if (!this.instance || !image || image.type !== "image" || !image.adjustments![name]) return;
+
+    if (image.adjustments![name].index >= 0) image.filters!.splice(image.adjustments![name].index, 1);
+    image.applyFilters();
+    image.adjustments![name] = null;
+
+    this.instance.fire("object:modified", { target: image });
+    this.instance.requestRenderAll();
+  }
+
+  onRemoveAdjustmentFromActiveImage(name: string) {
+    const image = this.instance?.getActiveObject() as fabric.Image;
+    if (!image || image.type !== "image") return;
+    this.onRemoveAdjustmentFromImage(image, name);
+  }
+
+  onApplyAdjustmentsToImage(image: fabric.Image, filter: fabric.IBaseFilter, name: string, intensity: number) {
+    if (!this.instance || !image || image.type !== "image") return;
+
+    if (!image.adjustments![name]) image.adjustments![name] = {};
+    const adjustment = image.adjustments![name];
+
+    if (adjustment.name === name && adjustment.intensity === intensity) return;
+
+    adjustment.name = name;
+    adjustment.intensity = intensity;
+
+    if (adjustment.index >= 0) image.filters!.splice(adjustment.index, 1);
+    adjustment.index = image.filters!.length;
+
+    image.filters!.push(filter);
+    image.applyFilters();
+
+    this.instance.fire("object:modified", { target: image });
+    this.instance.requestRenderAll();
+  }
+
+  onApplyAdjustmentToActiveImage(filter: fabric.IBaseFilter, name: string, intensity: number) {
+    const image = this.instance?.getActiveObject() as fabric.Image;
+    if (!image || image.type !== "image") return;
+    this.onApplyAdjustmentsToImage(image, filter, name, intensity);
   }
 
   onChangeObjectTimelineProperty(object: fabric.Object, property: string, value: number) {
