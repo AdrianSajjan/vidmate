@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEditorContext } from "@/context/editor";
+import { cn } from "@/lib/utils";
 
 function _ToolbarTimelineOption() {
   const editor = useEditorContext();
@@ -12,7 +13,12 @@ function _ToolbarTimelineOption() {
 
   return (
     <div className="flex items-center gap-4">
-      <Button size="sm" variant="outline" className="gap-1.5">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "animations" ? null : "animations")}
+        className={cn("gap-1.5", editor.sidebarRight === "animations" ? "bg-card" : "bg-transparent")}
+      >
         <LayersIcon size={15} />
         <span>Animations</span>
       </Button>

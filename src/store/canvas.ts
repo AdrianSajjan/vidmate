@@ -517,7 +517,7 @@ export class Canvas {
     const left = this.artboard.left! + this.artboard.width! / 2;
     const top = this.artboard.top! + this.artboard.height! / 2;
 
-    const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, paintFirst: "stroke", objectCaching: false, textAlign: "center" };
+    const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: 500, paintFirst: "stroke", objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
 
     this.onInitializeElementMeta(textbox);
