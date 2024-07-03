@@ -25,7 +25,7 @@ export class Canvas {
   seek: number;
   duration: number;
   playing: boolean;
-  timeline: anime.AnimeTimelineInstance;
+  timeline?: anime.AnimeTimelineInstance | null;
 
   zoom: number;
   fill: string;
@@ -49,17 +49,6 @@ export class Canvas {
     this.fill = artboardFill;
     this.width = artboardWidth;
     this.height = artboardHeight;
-
-    this.timeline = anime.timeline({
-      duration: this.duration,
-      autoplay: false,
-      complete: () => {
-        this.onUpdateTimelineStatus(false);
-      },
-      update: (anim) => {
-        this.onUpdateSeekTime(anim.currentTime);
-      },
-    });
 
     makeAutoObservable(this);
   }
@@ -98,11 +87,6 @@ export class Canvas {
 
   private onUpdateTimelineStatus(playing: boolean) {
     this.playing = playing;
-  }
-
-  private onUpdateSeekTime(time: number) {
-    this.seek = time;
-    this.onToggleCanvasElements(this.seek);
   }
 
   private onToggleControls(object: fabric.Object, enabled: boolean) {
@@ -386,16 +370,16 @@ export class Canvas {
   private onInitializeAnimationTimeline() {
     if (!this.instance || !this.artboard) return;
 
-    anime.remove(this.timeline);
-
     this.timeline = anime.timeline({
       duration: this.duration,
       autoplay: false,
       complete: () => {
         this.onUpdateTimelineStatus(false);
+        this.onResetAnimationTimeline();
+        this.onChangeSeekTime(0);
       },
       update: (anim) => {
-        this.onUpdateSeekTime(anim.currentTime);
+        this.onChangeSeekTime(anim.currentTime / 1000);
       },
     });
 
@@ -407,57 +391,79 @@ export class Canvas {
     for (const object of this.instance._objects) {
       if (this.isElementExcluded(object)) continue;
 
+      object.anim!.state = { opacity: object.opacity, left: object.left, top: object.top, scaleX: object.scaleX, scaleY: object.scaleY, fill: object.fill, selectable: object.selectable };
+      object.set({ selectable: false });
+
       const entry = object.anim!.in;
       const exit = object.anim!.out;
 
       switch (entry.name) {
         case "fade-in": {
-          entry.data = { opacity: 1 };
           this.timeline.add(
             {
               targets: object,
               opacity: [0, 1],
               duration: entry.duration,
-              easing: "linear",
+              easing: entry.easing || "linear",
               round: false,
             },
             object.meta!.offset
           );
           break;
         }
-        default: {
-          object.set({ ...(entry.data || {}) });
+        case "slide-in-left": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: [0, 1],
+              left: [object.left! - 150, object.left!],
+              duration: entry.duration,
+              easing: entry.easing || "linear",
+              round: false,
+            },
+            object.meta!.offset
+          );
+          break;
         }
       }
 
       switch (exit.name) {
         case "fade-out": {
-          exit.data = { opacity: 1 };
           this.timeline.add(
             {
               targets: object,
               opacity: [1, 0],
               duration: exit.duration,
-              easing: "linear",
+              easing: exit.easing || "linear",
               round: false,
             },
             object.meta!.offset + object.meta!.duration - exit.duration
           );
           break;
         }
-        default: {
-          object.set({ ...(exit.data || {}) });
-        }
       }
     }
 
-    this.timeline.seek(this.seek);
+    this.instance.requestRenderAll();
+  }
+
+  private onResetAnimationTimeline() {
+    if (!this.instance || !this.artboard) return;
+
+    if (this.timeline) {
+      anime.remove(this.timeline);
+      this.timeline = null;
+    }
+
+    for (const object of this.instance._objects) {
+      if (this.isElementExcluded(object)) continue;
+      object.set({ ...(object.anim?.state || {}) });
+    }
   }
 
   onInitialize(element: HTMLCanvasElement) {
     this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
     this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
-    this.timeline.add({ targets: this.artboard, duration: this.duration });
 
     this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
     this.instance.selectionBorderColor = "rgba(98, 155, 255, 0.81)";
@@ -474,12 +480,16 @@ export class Canvas {
   }
 
   onToggleTimeline() {
+    this.instance?.discardActiveObject();
     if (this.playing) {
       this.playing = false;
-      this.timeline.pause();
+      this.timeline?.pause();
+      this.onResetAnimationTimeline();
     } else {
+      this.onInitializeAnimationTimeline();
       this.playing = true;
-      this.timeline.play();
+      this.timeline?.seek(this.seek);
+      this.timeline?.play();
     }
   }
 
@@ -524,21 +534,18 @@ export class Canvas {
   onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
     if (!this.artboard || !this.instance) return;
 
-    const left = this.artboard.left! + this.artboard.width! / 2;
-    const top = this.artboard.top! + this.artboard.height! / 2;
-
     const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: 500, paintFirst: "stroke", objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
 
     this.onInitializeElementMeta(textbox);
     this.onInitializeElementAnimation(textbox);
-    textbox.set({ left: left - textbox.width! / 2, top: top - textbox.height! / 2 });
+
+    textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
 
     this.instance.add(textbox);
     this.instance.setActiveObject(textbox);
-    this.instance.requestRenderAll();
 
-    this.onInitializeAnimationTimeline();
+    this.instance.requestRenderAll();
     this.onToggleCanvasElements(this.seek);
 
     return textbox;
@@ -555,12 +562,11 @@ export class Canvas {
 
         this.onInitializeElementMeta(image);
         this.onInitializeElementAnimation(image);
+
         this.instance!.add(image);
-
         this.instance!.setActiveObject(image);
-        this.instance!.requestRenderAll();
 
-        this.onInitializeAnimationTimeline();
+        this.instance!.requestRenderAll();
         this.onToggleCanvasElements(this.seek);
       },
       { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} }
@@ -587,9 +593,8 @@ export class Canvas {
 
     this.instance.add(thumbnail).add(overlay).add(spinner);
     this.instance.setActiveObject(thumbnail);
-    this.instance.requestRenderAll();
 
-    this.onInitializeAnimationTimeline();
+    this.instance.requestRenderAll();
     this.onToggleCanvasElements(this.seek);
 
     FabricUtils.objectSpinningAnimation(spinner);
@@ -609,13 +614,13 @@ export class Canvas {
         const scaleY = thumbnail.getScaledHeight() / image.getScaledHeight();
 
         image.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+
         this.onInitializeElementMeta(image);
         this.onInitializeElementAnimation(image);
 
         this.instance!.add(image).remove(thumbnail, overlay, spinner);
         this.instance!.setActiveObject(image).requestRenderAll();
 
-        this.onInitializeAnimationTimeline();
         this.onToggleCanvasElements(this.seek);
       },
       { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} }
@@ -635,9 +640,7 @@ export class Canvas {
     this.instance.setActiveObject(shape);
     this.instance.requestRenderAll();
 
-    this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
-
     return shape;
   }
 
@@ -657,9 +660,7 @@ export class Canvas {
     this.instance.setActiveObject(shape);
     this.instance.requestRenderAll();
 
-    this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
-
     return shape;
   }
 
@@ -969,7 +970,6 @@ export class Canvas {
     if (!object.meta) object.meta = {};
     object.meta[property] = value;
 
-    this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
 
     this.instance.fire("object:modified", { target: object });
@@ -997,11 +997,8 @@ export class Canvas {
 
   onChangeObjectAnimation(object: fabric.Object, type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
     if (!this.instance || !object) return;
-
     object.anim![type].name = animation;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
-
-    this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
   }
 
@@ -1013,12 +1010,22 @@ export class Canvas {
 
   onChangeObjectAnimationDuration(object: fabric.Object, type: "in" | "out", duration: number) {
     if (!this.instance || !object) return;
-
     object.anim![type].duration = duration;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
-
-    this.onInitializeAnimationTimeline();
     this.onToggleCanvasElements(this.seek);
+  }
+
+  onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out", easing: any) {
+    if (!this.instance || !object) return;
+    object.anim![type].easing = easing;
+    this.instance.fire("object:modified", { target: object }).requestRenderAll();
+    this.onToggleCanvasElements(this.seek);
+  }
+
+  onChangActiveObjectAnimationEasing(type: "in" | "out", easing: any) {
+    const selected = this.instance?.getActiveObject();
+    if (!this.instance || !selected) return;
+    this.onChangeObjectAnimationEasing(selected, type, easing);
   }
 
   onChangActiveObjectAnimationDuration(type: "in" | "out", duration: number) {
@@ -1055,13 +1062,11 @@ export class Canvas {
 
   onChangeSeekTime(seek: number) {
     this.seek = seek * 1000;
-    this.timeline.seek(this.seek);
     this.onToggleCanvasElements(this.seek);
   }
 
   onChangeDuration(duration: number) {
     this.duration = duration * 1000;
-    this.timeline.duration = this.duration;
-    this.onInitializeAnimationTimeline();
+    if (this.timeline) this.timeline.duration = this.duration;
   }
 }

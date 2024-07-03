@@ -2686,18 +2686,22 @@ interface AnimationTimeline {
   in: {
     name: EntryAnimation;
     duration: number;
-    data?: Record<string, any>;
+    easing?: any;
+    state?: Record<string, any>;
   };
   out: {
     name: ExitAnimation;
     duration: number;
-    data?: Record<string, any>;
+    easing?: any;
+    state?: Record<string, any>;
   };
   animate?: {
     name: string;
     duration: number;
-    data?: Record<string, any>;
+    easing?: any;
+    state?: Record<string, any>;
   };
+  state?: Record<string, any>;
 }
 
 interface IObjectOptions {

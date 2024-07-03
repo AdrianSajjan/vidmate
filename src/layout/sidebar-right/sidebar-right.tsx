@@ -7,6 +7,7 @@ import { rightSidebarWidth } from "@/constants/layout";
 import { FillSidebar } from "./components/fill";
 import { StrokeSidebar } from "./components/stroke";
 import { ClipMaskSidebar } from "./components/clip";
+
 import { FilterSidebar } from "./components/filters";
 import { AnimationSidebar } from "./components/animations";
 

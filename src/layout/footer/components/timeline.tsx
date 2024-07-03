@@ -44,6 +44,7 @@ function _EditorTimeline() {
   }, []);
 
   const onClickSeekTime = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    if (!editor.canvas.playing) return;
     const x = event.clientX - event.currentTarget.getBoundingClientRect().left;
     const seek = x / SEEK_TIME_WIDTH;
     editor.canvas.onChangeSeekTime(seek);
@@ -139,7 +140,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
       onDragEnd={onDragEnd}
       drag={editor.canvas.playing ? false : "x"}
       dragConstraints={{ left: 0, right: trackWidth - width }}
-      onClick={(event) => editor.canvas.onCreateSelection(element.name, event.shiftKey)}
+      onClick={(event) => (editor.canvas.playing ? null : editor.canvas.onCreateSelection(element.name, event.shiftKey))}
       className={cn("h-10 rounded-lg bg-card border-[3px] overflow-visible flex items-stretch relative bg-repeat-x bg-center", isSelected ? "border-blue-600" : "border-foreground/20")}
       style={{
         width,

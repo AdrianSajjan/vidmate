@@ -3,13 +3,15 @@ import { XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 
 import { Button } from "@/components/ui/button";
-import { rightSidebarWidth } from "@/constants/layout";
-import { useEditorContext } from "@/context/editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+
+import { rightSidebarWidth } from "@/constants/layout";
+import { useEditorContext } from "@/context/editor";
 import { cn } from "@/lib/utils";
-import { EditorAnimation, entry } from "@/fabric/animations";
+import { EditorAnimation, easing, entry } from "@/fabric/animations";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function _AnimationSidebar() {
   const editor = useEditorContext();
@@ -60,7 +62,13 @@ function _EntryAnimations() {
 
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangActiveObjectAnimation("in", animation.value);
-    if (animation.value !== "none" && selected?.anim?.in.duration === 0) editor.canvas.onChangActiveObjectAnimationDuration("in", animation.duration!);
+    if (animation.value === "none") return;
+    if (selected?.anim?.in.duration === 0) editor.canvas.onChangActiveObjectAnimationDuration("in", animation.duration || 250);
+    if (!selected?.anim?.in.easing) editor.canvas.onChangActiveObjectAnimationEasing("in", animation.easing || "linear");
+  };
+
+  const handleChangeEasing = (easing: string) => {
+    editor.canvas.onChangActiveObjectAnimationEasing("in", easing);
   };
 
   const handleChangeDuration: ChangeEventHandler<HTMLInputElement> = (event) => {
@@ -71,13 +79,28 @@ function _EntryAnimations() {
 
   return (
     <div className="flex flex-col px-1">
-      <div className="flex items-center justify-between gap-10">
+      <div className="flex items-center justify-between gap-6">
         <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={(selected?.anim?.in.duration || 0) / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.5} className="text-xs h-8" />
+        <Input value={(selected?.anim?.in.duration || 0) / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.5} className="text-xs h-8 w-40" />
+      </div>
+      <div className="flex items-center justify-between gap-6 mt-3">
+        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
+        <Select value={selected?.anim?.in.easing || "linear"} onValueChange={handleChangeEasing} disabled={disabled}>
+          <SelectTrigger className="h-8 text-xs w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="item-aligned">
+            {easing.map((easing) => (
+              <SelectItem key={easing.value} className="text-xs" value={easing.value}>
+                {easing.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="grid grid-cols-2 gap-5 pt-6">
         {entry.map((animation) => (
-          <AnimationItem animation={animation} className={selected?.anim?.in.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
+          <AnimationItem key={animation.label} animation={animation} className={selected?.anim?.in.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
         ))}
       </div>
     </div>
