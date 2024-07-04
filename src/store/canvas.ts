@@ -416,7 +416,66 @@ export class Canvas {
             {
               targets: object,
               opacity: [0, 1],
-              left: [object.left! - 150, object.left!],
+              left: [object.left! - Math.min(object.getScaledWidth() / 2, 100), object.left!],
+              duration: entry.duration,
+              easing: entry.easing || "linear",
+              round: false,
+            },
+            object.meta!.offset
+          );
+          break;
+        }
+        case "slide-in-right": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: [0, 1],
+              left: [object.left! + Math.min(object.getScaledWidth() / 2, 100), object.left!],
+              duration: entry.duration,
+              easing: entry.easing || "linear",
+              round: false,
+            },
+            object.meta!.offset
+          );
+          break;
+        }
+        case "rise-in-up": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: [0, 1],
+              top: [object.top! + Math.min(object.getScaledHeight() / 2, 50), object.top!],
+              duration: entry.duration,
+              easing: entry.easing || "linear",
+              round: false,
+            },
+            object.meta!.offset
+          );
+          break;
+        }
+        case "rise-in-down": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: [0, 1],
+              top: [object.top! - Math.min(object.getScaledHeight() / 2, 50), object.top!],
+              duration: entry.duration,
+              easing: entry.easing || "linear",
+              round: false,
+            },
+            object.meta!.offset
+          );
+          break;
+        }
+        case "pop-in": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: [0, 1],
+              top: [object.top! + object.getScaledHeight() / 4, object.top!],
+              left: [object.left! + object.getScaledWidth() / 4, object.left!],
+              scaleX: [object.scaleX! - 0.5, object.scaleX!],
+              scaleY: [object.scaleY! - 0.5, object.scaleY],
               duration: entry.duration,
               easing: entry.easing || "linear",
               round: false,
@@ -494,7 +553,7 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
-  onToggleTimeline() {
+  onToggleTimeline(playFromLastPost = false) {
     this.instance?.discardActiveObject();
     if (this.playing) {
       this.playing = false;
@@ -503,7 +562,7 @@ export class Canvas {
     } else {
       this.onInitializeAnimationTimeline();
       this.playing = true;
-      this.timeline?.seek(this.seek);
+      if (playFromLastPost) this.timeline?.seek(this.seek);
       this.timeline?.play();
     }
   }

@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { rightSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
-import { EditorAnimation, easing, entry, exit } from "@/fabric/animations";
+import { EditorAnimation, easings, entry, exit } from "@/fabric/animations";
 import { cn } from "@/lib/utils";
 
 function _AnimationSidebar() {
@@ -58,13 +58,19 @@ function _EntryAnimations() {
   const editor = useEditorContext();
 
   const selected = editor.canvas.selected as fabric.Image | null;
+  const animation = entry.find((animation) => animation.value === selected?.anim?.in.name);
+
+  const easing = selected?.anim?.in.easing || "linear";
+  const duration = animation?.fixed?.duration ? 0 : (selected?.anim?.in.duration || 0) / 1000;
   const disabled = !selected?.anim?.in.name || selected?.anim?.in.name === "none";
 
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangActiveObjectAnimation("in", animation.value);
     if (animation.value === "none") return;
-    if (selected?.anim?.in.duration === 0) editor.canvas.onChangActiveObjectAnimationDuration("in", animation.duration || 250);
-    if (!selected?.anim?.in.easing) editor.canvas.onChangActiveObjectAnimationEasing("in", animation.easing || "linear");
+    const duration = animation?.fixed?.duration ? animation.duration : selected?.anim?.out.duration;
+    const easing = animation?.fixed?.easing ? animation.easing : selected?.anim?.out.easing;
+    editor.canvas.onChangActiveObjectAnimationDuration("in", duration || 500);
+    editor.canvas.onChangActiveObjectAnimationEasing("in", easing || "linear");
   };
 
   const handleChangeEasing = (easing: string) => {
@@ -81,16 +87,16 @@ function _EntryAnimations() {
     <div className="flex flex-col px-1">
       <div className="flex items-center justify-between gap-6">
         <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={(selected?.anim?.in.duration || 0) / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.5} className="text-xs h-8 w-40" />
+        <Input value={duration} onChange={handleChangeDuration} disabled={disabled || animation?.fixed?.duration} type="number" step={0.25} className="text-xs h-8 w-40" />
       </div>
       <div className="flex items-center justify-between gap-6 mt-3">
         <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
-        <Select value={selected?.anim?.in.easing || "linear"} onValueChange={handleChangeEasing} disabled={disabled}>
+        <Select value={easing} onValueChange={handleChangeEasing} disabled={disabled || animation?.fixed?.easing}>
           <SelectTrigger className="h-8 text-xs w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent position="item-aligned">
-            {easing.map((easing) => (
+            {easings.map((easing) => (
               <SelectItem key={easing.value} className="text-xs" value={easing.value}>
                 {easing.label}
               </SelectItem>
@@ -116,8 +122,8 @@ function _ExitAnimations() {
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangActiveObjectAnimation("out", animation.value);
     if (animation.value === "none") return;
-    if (selected?.anim?.out.duration === 0) editor.canvas.onChangActiveObjectAnimationDuration("out", animation.duration || 250);
-    if (!selected?.anim?.out.easing) editor.canvas.onChangActiveObjectAnimationEasing("out", animation.easing || "linear");
+    editor.canvas.onChangActiveObjectAnimationDuration("out", animation.duration || selected?.anim?.out.duration || 500);
+    editor.canvas.onChangActiveObjectAnimationEasing("out", animation.easing || selected?.anim?.out.easing || "linear");
   };
 
   const handleChangeEasing = (easing: string) => {
@@ -134,7 +140,7 @@ function _ExitAnimations() {
     <div className="flex flex-col px-1">
       <div className="flex items-center justify-between gap-6">
         <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={(selected?.anim?.out.duration || 0) / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.5} className="text-xs h-8 w-40" />
+        <Input value={(selected?.anim?.out.duration || 0) / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.25} className="text-xs h-8 w-40" />
       </div>
       <div className="flex items-center justify-between gap-6 mt-3">
         <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
@@ -143,7 +149,7 @@ function _ExitAnimations() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent position="item-aligned">
-            {easing.map((easing) => (
+            {easings.map((easing) => (
               <SelectItem key={easing.value} className="text-xs" value={easing.value}>
                 {easing.label}
               </SelectItem>
