@@ -1,4 +1,5 @@
 import { fabric } from "fabric";
+import "@/fabric/video";
 
 import EdgeControl from "@/assets/editor/controls/edge-control.svg";
 import MiddleControl from "@/assets/editor/controls/middle-control.svg";

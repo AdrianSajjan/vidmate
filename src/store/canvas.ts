@@ -24,11 +24,13 @@ export class Canvas {
 
   seek: number;
   duration: number;
+
   playing: boolean;
   timeline?: anime.AnimeTimelineInstance | null;
 
   zoom: number;
   fill: string;
+
   width: number;
   height: number;
 
@@ -83,6 +85,10 @@ export class Canvas {
 
   private onUpdateCrop(image?: fabric.Image | null) {
     this.crop = image ? image.toObject(propertiesToInclude) : null;
+  }
+
+  private onUpdateZoom(zoom: number) {
+    this.zoom = zoom;
   }
 
   private onUpdateTimelineStatus(playing: boolean) {
@@ -601,10 +607,6 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
-  onUpdateZoom(zoom: number) {
-    this.zoom = zoom;
-  }
-
   onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
     if (!this.artboard || !this.instance) return;
 
@@ -698,6 +700,82 @@ export class Canvas {
         this.onToggleCanvasElements(this.seek);
       },
       { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} }
+    );
+  }
+
+  onAddVideoFromSource(source: string) {
+    if (!this.instance || !this.artboard) return;
+
+    return fabric.Video.fromURL(
+      source,
+      (video) => {
+        video.scaleToHeight(500);
+        video.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
+
+        this.onInitializeElementMeta(video);
+        this.onInitializeElementAnimation(video);
+
+        this.instance!.add(video);
+        this.instance!.setActiveObject(video);
+
+        this.instance!.requestRenderAll();
+        this.onToggleCanvasElements(this.seek);
+      },
+      { name: FabricUtils.elementID("video"), crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} }
+    );
+  }
+
+  onAddVideoWithThumbail(source: string, _thumbnail: HTMLImageElement) {
+    if (!this.instance || !this.artboard) return;
+
+    const id = FabricUtils.elementID("video");
+
+    const thumbnail = createInstance(fabric.Image, _thumbnail, { name: id, crossOrigin: "anonymous", lockRotation: true });
+    thumbnail.scaleToWidth(500).setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
+
+    this.onInitializeElementMeta(thumbnail, { placeholder: true });
+    this.onInitializeElementAnimation(thumbnail);
+
+    const props = { evented: false, selectable: false, originX: "center", originY: "center" };
+    const overlay = createInstance(fabric.Rect, { name: "overlay_" + id, height: thumbnail.height, width: thumbnail.width, scaleX: thumbnail.scaleX, scaleY: thumbnail.scaleY, fill: "#000000", opacity: 0.25, ...props });
+    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + id, fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
+
+    overlay.setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+    spinner.scaleToWidth(48).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+
+    this.instance.add(thumbnail).add(overlay).add(spinner);
+    this.instance.setActiveObject(thumbnail);
+
+    this.instance.requestRenderAll();
+    this.onToggleCanvasElements(this.seek);
+
+    FabricUtils.objectSpinningAnimation(spinner);
+    FabricUtils.bindObjectTransformToParent(thumbnail, [overlay, spinner]);
+
+    const children = [{ object: overlay }, { object: spinner, skip: ["angle", "scaleX", "scaleY"] }];
+    FabricUtils.updateObjectTransformToParent(thumbnail, children);
+
+    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
+    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
+    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
+
+    return fabric.Video.fromURL(
+      source,
+      (video) => {
+        const scaleX = thumbnail.getScaledWidth() / video.getScaledWidth();
+        const scaleY = thumbnail.getScaledHeight() / video.getScaledHeight();
+
+        video.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+
+        this.onInitializeElementMeta(video);
+        this.onInitializeElementAnimation(video);
+
+        this.instance!.add(video).remove(thumbnail, overlay, spinner);
+        this.instance!.setActiveObject(video).requestRenderAll();
+
+        this.onToggleCanvasElements(this.seek);
+      },
+      { name: id, crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} }
     );
   }
 
@@ -1132,6 +1210,13 @@ export class Canvas {
     const selected = this.instance?.getActiveObject() as fabric.Image | null;
     if (!this.instance || !selected || selected.type !== "image") return;
     this.onChangeImageProperty(selected, property, value);
+  }
+
+  onChangeZoom(zoom: number) {
+    this.zoom = zoom;
+    if (!this.instance) return;
+    const center = this.instance.getCenter();
+    this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
   }
 
   onChangeSeekTime(seek: number) {

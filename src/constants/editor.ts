@@ -5,3 +5,24 @@ export const lightHexCodes = ["#ffffff", "#cccccc", "#add8e6", "#ffffcc", "#ffb6
 export const pastelHexCodes = ["#FFB3BA", "#FFDFBA", "#FFFFBA", "#BAFFC9", "#BAE1FF", "#E6E6FA", "#FFD1DC", "#D5E8D4", "#FFDAC1", "#F4C2C2"];
 
 export const filterPlaceholder = "https://plus.unsplash.com/premium_photo-1710119487743-48959c984d45?q=75&w=265";
+
+export const formats = [
+  {
+    name: "Social Feed",
+    aspectRatio: 1 / 1,
+    dimensions: { height: 1080, width: 1080 },
+    preview: "https://img.ly/showcases/cesdk/cases/video-ui/page-formats/square.svg",
+  },
+  {
+    name: "Story / Reel",
+    dimensions: { height: 1920, width: 1080 },
+    aspectRatio: 9 / 16,
+    preview: "https://img.ly/showcases/cesdk/cases/video-ui/page-formats/portrait.svg",
+  },
+  {
+    name: "Full HD 1080p",
+    dimensions: { height: 1080, width: 1920 },
+    aspectRatio: 16 / 9,
+    preview: "https://img.ly/showcases/cesdk/cases/video-ui/page-formats/landscape.svg",
+  },
+];

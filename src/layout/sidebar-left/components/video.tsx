@@ -11,24 +11,24 @@ import { leftSidebarWidth } from "@/constants/layout";
 
 import * as mock from "@/constants/mock";
 
-function _ImageSidebar() {
+function _VideoSidebar() {
   const editor = useEditorContext();
 
   const handleClick =
     (source: string): MouseEventHandler<HTMLButtonElement> =>
     (event) => {
-      const image = event.currentTarget.querySelector("img");
-      if (!image) {
-        editor.canvas.onAddImageFromSource(source);
+      const thumbnail = event.currentTarget.querySelector("img");
+      if (!thumbnail) {
+        editor.canvas.onAddVideoFromSource(source);
       } else {
-        editor.canvas.onAddImageWithThumbail(source, image);
+        editor.canvas.onAddVideoWithThumbail(source, thumbnail);
       }
     };
 
   return (
     <div className="h-full" style={{ width: leftSidebarWidth }}>
       <div className="flex items-center justify-between h-14 border-b px-4">
-        <h2 className="font-semibold">Images</h2>
+        <h2 className="font-semibold">Videos</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7" onClick={() => editor.setActiveSidebarLeft(null)}>
           <XIcon size={16} />
         </Button>
@@ -48,7 +48,7 @@ function _ImageSidebar() {
                 <label>
                   <PlusIcon size={14} />
                   <span>Add File</span>
-                  <input hidden type="file" accept="image/*" />
+                  <input hidden type="file" accept="video/*" />
                 </label>
               </Button>
               <Button size="sm" variant="link" className="text-blue-600 h-6 font-medium line-clamp-1 px-1.5">
@@ -56,8 +56,8 @@ function _ImageSidebar() {
               </Button>
             </div>
             <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
-              {mock.images.length ? (
-                mock.images.map(({ source, thumbnail }) => (
+              {mock.videos.length ? (
+                mock.videos.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClick(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
                     <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
                   </button>
@@ -67,7 +67,7 @@ function _ImageSidebar() {
                   {Array.from({ length: 3 }, (_, index) => (
                     <Skeleton key={index} className="h-16 flex-1 rounded-md" />
                   ))}
-                  <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Images</span>
+                  <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Videos</span>
                 </Fragment>
               )}
             </div>
@@ -94,4 +94,4 @@ function _ImageSidebar() {
   );
 }
 
-export const ImageSidebar = observer(_ImageSidebar);
+export const VideoSidebar = observer(_VideoSidebar);

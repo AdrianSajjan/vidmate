@@ -2521,6 +2521,10 @@ interface IImageOptions extends IObjectOptions {
    */
   filters?: IBaseFilter[] | undefined;
 }
+
+interface Video extends Image {}
+export class Video extends Image {}
+
 interface Image extends Object, IImageOptions {}
 export class Image {
   /**

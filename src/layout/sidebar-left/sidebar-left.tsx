@@ -1,25 +1,31 @@
 import { observer } from "mobx-react";
 import { Fragment, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Grid2X2Icon, ImageIcon, LayersIcon, TypeIcon, UploadIcon } from "lucide-react";
+import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEditorContext } from "@/context/editor";
 import { leftSidebarWidth } from "@/constants/layout";
 
-import { TextSidebar } from "./components/text";
-import { ImageSidebar } from "./components/image";
-import { UploadSidebar } from "./components/upload";
-import { ElementSidebar } from "./components/element";
 import { TemplateSidebar } from "./components/template";
+import { TextSidebar } from "./components/text";
+import { ElementSidebar } from "./components/element";
+import { ImageSidebar } from "./components/image";
+import { VideoSidebar } from "./components/video";
+import { AudioSidebar } from "./components/audio";
+import { UploadSidebar } from "./components/upload";
+import { FormatSidebar } from "./components/format";
 
 const sidebarComponentMap: Record<string, () => JSX.Element> = {
   templates: TemplateSidebar,
   texts: TextSidebar,
   uploads: UploadSidebar,
   images: ImageSidebar,
+  videos: VideoSidebar,
+  audios: AudioSidebar,
   elements: ElementSidebar,
+  formats: FormatSidebar,
 };
 
 function _EditorSidebarLeft() {
@@ -48,9 +54,24 @@ function _EditorSidebarLeft() {
         value: "images",
       },
       {
+        icon: VideoIcon,
+        label: "Videos",
+        value: "videos",
+      },
+      {
+        icon: MusicIcon,
+        label: "Audios",
+        value: "audios",
+      },
+      {
         icon: UploadIcon,
         label: "Uploads",
         value: "uploads",
+      },
+      {
+        icon: ScalingIcon,
+        label: "Formats",
+        value: "formats",
       },
     ];
   }, []);
