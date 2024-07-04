@@ -1,7 +1,7 @@
 import useMeasure from "react-use-measure";
 
 import { motion, useAnimationControls } from "framer-motion";
-import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon } from "lucide-react";
+import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon, VideoIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -99,9 +99,8 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
   useEffect(() => {
     const object = editor.canvas.instance?.getItemByName(element.name);
     object?.clone((clone: fabric.Object) => {
-      clone.opacity = 1;
-      clone.visible = true;
-      clone.clipPath = undefined;
+      clone.set({ opacity: 1, visible: true, clipPath: undefined });
+      if (FabricUtils.isVideoElement(clone) && !!backgroundURL) return;
       setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
     });
   }, [element, editor.canvas.instance]);
@@ -175,6 +174,14 @@ function ElementDescription({ name, type }: { type?: string; name?: string }) {
         <Fragment>
           <TypeIcon size={12} />
           <span className="text-xxs">Text</span>
+        </Fragment>
+      );
+
+    case "video":
+      return (
+        <Fragment>
+          <VideoIcon size={12} />
+          <span className="text-xxs">Video</span>
         </Fragment>
       );
 

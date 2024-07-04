@@ -3,6 +3,7 @@ import { fabric } from "fabric";
 
 const FabricVideo = fabric.util.createClass(fabric.Image, {
   type: "video",
+  playing: false,
 
   initialize: function (element: HTMLVideoElement, options?: any) {
     options = options || {};
@@ -12,6 +13,7 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
     element.crossOrigin = options.crossOrigin;
     element.loop = options.loop ?? true;
     element.muted = options.muted ?? true;
+    element.currentTime = 0.1;
 
     this.on("added", () => {
       fabric.util.requestAnimFrame(this.update.bind(this));
@@ -19,19 +21,22 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   },
 
   play: function () {
-    const element = this.element as HTMLVideoElement;
+    const element = this._element as HTMLVideoElement;
+    this.playing = true;
     element.play();
   },
 
   pause: function () {
-    const element = this.element as HTMLVideoElement;
+    const element = this._element as HTMLVideoElement;
+    this.playing = false;
     element.pause();
   },
 
   seek: function (seconds: number) {
-    const element = this.element as HTMLVideoElement;
+    const element = this._element as HTMLVideoElement;
     if (seconds < 0 || seconds > element.duration) return;
     element.currentTime = seconds;
+    this.canvas?.requestRenderAll();
   },
 
   update: function () {

@@ -730,7 +730,7 @@ export class Canvas {
 
     const id = FabricUtils.elementID("video");
 
-    const thumbnail = createInstance(fabric.Image, _thumbnail, { name: id, crossOrigin: "anonymous", lockRotation: true });
+    const thumbnail = createInstance(fabric.Image, _thumbnail, { name: id, type: "video", crossOrigin: "anonymous", lockRotation: true });
     thumbnail.scaleToWidth(500).setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
     this.onInitializeElementMeta(thumbnail, { placeholder: true });

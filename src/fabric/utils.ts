@@ -12,6 +12,14 @@ export abstract class FabricUtils {
     return object?.type === "activeSelection";
   }
 
+  static isImageElement(object?: fabric.Object | null): object is fabric.Image {
+    return object?.type === "image";
+  }
+
+  static isVideoElement(object?: fabric.Object | null): object is fabric.Video {
+    return object?.type === "video";
+  }
+
   static elementID(prefix: string) {
     return prefix.toLowerCase() + "_" + nanoid(4);
   }

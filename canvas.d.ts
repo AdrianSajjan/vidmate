@@ -2523,7 +2523,43 @@ interface IImageOptions extends IObjectOptions {
 }
 
 interface Video extends Image {}
-export class Video extends Image {}
+export class Video extends Image {
+  /**
+   * Returns the current video playback status
+   */
+  playing: boolean;
+  /**
+   * Returns the video element which this instance is based on
+   * @return the Video element
+   */
+  _element: HTMLVideoElement;
+  /**
+   * Returns the video element which this instance is based on
+   * @return the Video element
+   */
+  getElement(): HTMLVideoElement;
+  /**
+   * Sets the video element for this instance to a specified one.
+   * If filters defined they are applied to new video.
+   * You might need to call `canvas.renderAll` and `object.setCoords` after replacing, to render new image and update controls area.
+   * @param element image element
+   * @param [options] Options object
+   */
+  setElement(element: HTMLVideoElement, options?: IImageOptions): Image;
+  /**
+   * Starts the video playback
+   */
+  play(): void;
+  /**
+   * Stops the video playback
+   */
+  pause(): void;
+  /**
+   * Changes the current seek time of video
+   * * @param [seek] The seek time in seconds
+   */
+  seek(seek: number): void;
+}
 
 interface Image extends Object, IImageOptions {}
 export class Image {
@@ -2533,6 +2569,11 @@ export class Image {
    * @param [options] Options object
    */
   constructor(element: string | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement, options?: IImageOptions);
+  /**
+   * Returns image or video element which this instance is based on
+   * @return Image or Video element
+   */
+  _element: HTMLImageElement | HTMLVideoElement;
   /**
    * Returns image or video element which this instance is based on
    * @return Image or Video element
