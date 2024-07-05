@@ -31,7 +31,12 @@ function _EditorFooter() {
             <span className="mx-1">/</span>
             <span>{formatVideoDuration(editor.canvas.duration)}</span>
           </div>
-          <Button size="icon" className="rounded-full bg-card dark:bg-secondary shadow-sm border h-11 w-11 ml-5 mr-3" variant="outline" onClick={() => editor.canvas.onToggleTimeline()}>
+          <Button
+            size="icon"
+            className="rounded-full bg-card dark:bg-secondary shadow-sm border h-11 w-11 ml-5 mr-3"
+            variant="outline"
+            onClick={() => (editor.canvas.playing ? editor.canvas.onPauseTimeline() : editor.canvas.onStartTimeline())}
+          >
             {editor.canvas.playing ? <PauseIcon size={20} className="fill-foreground text-foreground" /> : <PlayIcon size={20} className="fill-foreground text-foreground" />}
           </Button>
           <Button size="icon" variant="ghost">

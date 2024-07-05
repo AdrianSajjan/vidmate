@@ -2484,6 +2484,7 @@ export class ActiveSelection {
   static fromObject(object: any, callback: Function): void;
 }
 
+interface IVideoOptions extends IImageOptions {}
 interface IImageOptions extends IObjectOptions {
   /**
    * crossOrigin value (one of "", "anonymous", "allow-credentials")
@@ -2574,10 +2575,15 @@ export class Image {
    */
   constructor(element: string | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement, options?: IImageOptions);
   /**
+   * Returns image or video element which this instance is based on. If filter is applied, returns a canvas element
+   * @return Image or Video or Canvas element
+   */
+  _element: HTMLImageElement | HTMLVideoElement;
+  /**
    * Returns image or video element which this instance is based on
    * @return Image or Video element
    */
-  _element: HTMLImageElement | HTMLVideoElement;
+  _originalElement: HTMLImageElement | HTMLVideoElement;
   /**
    * Returns image or video element which this instance is based on
    * @return Image or Video element
@@ -6274,6 +6280,15 @@ interface IUtilMisc {
   enlivenObjects(objects: any[], callback: Function, namespace: string, reviver?: Function): void;
 
   /**
+   * Creates corresponding fabric instances from their object representations
+   * @param objects Objects to enliven
+   * @param callback Callback to invoke when all objects are created
+   * @param namespace Namespace to get klass "Class" object from
+   * @param reviver Method for further parsing of object elements, called after each fabric object created.
+   */
+  enlivenObjectEnlivables(objects: any[], callback: Function, namespace: string, reviver?: Function): void;
+
+  /**
    * Groups SVG elements (usually those retrieved from SVG document)
    * @param elements SVG elements to group
    * @param [options] Options object
@@ -6445,6 +6460,8 @@ export interface FilterBackend {
   clearWebGLCaches(): void;
 }
 export let filterBackend: FilterBackend | undefined;
+export function initFilterBackend();
+
 export interface Canvas2dFilterBackend extends FilterBackend {}
 export class Canvas2dFilterBackend {
   constructor();

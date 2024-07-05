@@ -1,15 +1,18 @@
 import { observer } from "mobx-react";
 import { useEditorContext } from "@/context/editor";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { TextToolbar } from "./components/text";
-import { CropToolbar } from "./components/crop";
 import { ShapeToolbar } from "./components/shape";
+
 import { ImageToolbar } from "./components/image";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { VideoToolbar } from "./components/video";
+import { CropToolbar } from "./components/crop";
 
 const toolbarComponentMap: Record<string, () => JSX.Element> = {
   textbox: TextToolbar,
   image: ImageToolbar,
+  video: VideoToolbar,
   triangle: ShapeToolbar,
   path: ShapeToolbar,
   circle: ShapeToolbar,

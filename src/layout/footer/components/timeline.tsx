@@ -8,6 +8,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { useEditorContext } from "@/context/editor";
 import { FabricUtils } from "@/fabric/utils";
 import { cn, createInstance } from "@/lib/utils";
+import { propertiesToInclude } from "@/fabric/constants";
 
 const SEEK_TIME_WIDTH = 42;
 
@@ -97,16 +98,21 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const object = editor.canvas.instance?.getItemByName(element.name);
-    object?.clone((clone: fabric.Object) => {
-      clone.set({ opacity: 1, visible: true, clipPath: undefined, meta: object.meta });
+    const object = editor.canvas.instance!.getItemByName(element.name);
+    if (!object) return;
+    object.clone((clone: fabric.Object) => {
+      clone.set({ opacity: 1, visible: true, clipPath: undefined });
       if (FabricUtils.isVideoElement(clone) && !clone.meta?.placeholder) {
         clone.seek(1);
-        setTimeout(() => setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true })), 1000);
+        setTimeout(() => {
+          clone.set({ filters: [] });
+          clone.applyFilters();
+          setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
+        }, 1000);
       } else {
         setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
       }
-    });
+    }, propertiesToInclude);
   }, [element, editor.canvas.instance]);
 
   useEffect(() => {

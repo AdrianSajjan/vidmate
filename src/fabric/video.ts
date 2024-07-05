@@ -23,30 +23,36 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   },
 
   get duration(): number {
-    const element = this._element as HTMLVideoElement;
+    const element = this._originalElement as HTMLVideoElement;
     return element ? element.duration : 0;
   },
 
   play: function () {
-    const element = this._element as HTMLVideoElement;
+    const element = this._originalElement as HTMLVideoElement;
     this.playing = true;
     element.play();
   },
 
   pause: function () {
-    const element = this._element as HTMLVideoElement;
+    const element = this._originalElement as HTMLVideoElement;
     this.playing = false;
     element.pause();
   },
 
   seek: function (seconds: number) {
-    const element = this._element as HTMLVideoElement;
+    const element = this._originalElement as HTMLVideoElement;
     element.currentTime = seconds < 0 ? 0 : seconds > element.duration ? element.duration : seconds;
     if (this.canvas) this.canvas.requestRenderAll();
   },
 
   update: function () {
     if (this.canvas) {
+      const backend = fabric.filterBackend;
+      if (backend?.evictCachesForKey) {
+        backend.evictCachesForKey(this.cacheKey);
+        backend.evictCachesForKey(this.cacheKey + "_filtered");
+      }
+      this.applyFilters();
       this.canvas.requestRenderAll();
       fabric.util.requestAnimFrame(this.update.bind(this));
     }
@@ -70,13 +76,29 @@ FabricVideo.fromURL = function (url: string, callback: (video: fabric.Video) => 
 };
 
 FabricVideo.fromObject = function (object: any, callback: (video: fabric.Video) => void) {
-  FabricVideo.fromURL(
-    object.src,
-    (video: fabric.Video) => {
-      callback(video);
-    },
-    object
-  );
+  Promise.all([
+    createInstance(Promise<fabric.IBaseFilter[]>, (resolve) => {
+      if (!object.filters?.length) {
+        resolve([]);
+      } else {
+        fabric.util.enlivenObjects(
+          object.filters,
+          (filters: fabric.IBaseFilter[]) => {
+            resolve(filters);
+          },
+          "fabric.Image.filters"
+        );
+      }
+    }),
+  ]).then(([filters]) => {
+    FabricVideo.fromURL(
+      object.src,
+      (video: fabric.Video) => {
+        callback(video);
+      },
+      { ...object, filters }
+    );
+  });
 };
 
 fabric.Video = FabricVideo;

@@ -5,7 +5,7 @@ import { makeAutoObservable } from "mobx";
 
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
-import { createInstance } from "@/lib/utils";
+import { createInstance, isVideoElement } from "@/lib/utils";
 import { EntryAnimation, ExitAnimation } from "canvas";
 
 export const artboardHeight = 1080;
@@ -372,6 +372,7 @@ export class Canvas {
 
     this.instance.on("mouse:dblclick", (event) => {
       switch (event.target?.type) {
+        case "video":
         case "image":
           if (this.crop === event.target || event.target.meta?.placeholder) return;
           if (event.target.clipPath) {
@@ -390,13 +391,16 @@ export class Canvas {
     this.timeline = anime.timeline({
       duration: this.duration,
       autoplay: false,
+      begin: (anim) => {
+        this.onChangeSeekTime(anim.currentTime / 1000);
+      },
+      update: (anim) => {
+        this.onChangeSeekTime(anim.currentTime / 1000);
+      },
       complete: () => {
         this.onUpdateTimelineStatus(false);
         this.onResetAnimationTimeline();
         this.onChangeSeekTime(0);
-      },
-      update: (anim) => {
-        this.onChangeSeekTime(anim.currentTime / 1000);
       },
     });
 
@@ -572,19 +576,25 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
-  onToggleTimeline(playFromLastPost = false) {
-    this.instance?.discardActiveObject();
+  onStartTimeline(last?: boolean) {
+    if (!this.instance || this.playing) return;
 
-    if (this.playing) {
-      this.playing = false;
-      this.timeline?.pause();
-      this.onResetAnimationTimeline();
-    } else {
-      this.onInitializeAnimationTimeline();
-      this.playing = true;
-      if (playFromLastPost) this.timeline?.seek(this.seek);
-      this.timeline?.play();
-    }
+    this.instance.discardActiveObject();
+    this.onInitializeAnimationTimeline();
+
+    this.playing = true;
+    if (last) this.timeline!.seek(this.seek);
+    this.timeline!.play();
+  }
+
+  onPauseTimeline(initial?: boolean) {
+    if (!this.instance || !this.playing) return;
+
+    this.playing = false;
+    this.timeline!.pause();
+
+    if (initial) this.seek = 0;
+    this.onResetAnimationTimeline();
   }
 
   onDeleteObjectByName(name?: string) {
@@ -866,7 +876,7 @@ export class Canvas {
     if (!this.instance || !this.artboard) return;
 
     this.onUpdateCrop(image);
-    const element = image.getElement() as HTMLImageElement;
+    const element = image._originalElement as HTMLImageElement | HTMLVideoElement;
 
     const props = { top: image.top, left: image.left, angle: image.angle, width: image.getScaledWidth(), height: image.getScaledHeight(), lockRotation: true };
     const crop = createInstance(fabric.Cropper, { name: "crop_" + image.name, fill: "#ffffff", globalCompositeOperation: "overlay", ...props });
@@ -892,7 +902,10 @@ export class Canvas {
     const cropX = image.cropX!;
     const cropY = image.cropY!;
 
-    image.set({ cropX: 0, cropY: 0, dirty: false, selectable: false, left: image.left! - cropX * image.scaleX!, top: image.top! - cropY * image.scaleY!, width: element.naturalWidth, height: element.naturalHeight });
+    const elementWidth = isVideoElement(element) ? element.videoWidth : element.naturalWidth;
+    const elementHeight = isVideoElement(element) ? element.videoHeight : element.naturalHeight;
+
+    image.set({ cropX: 0, cropY: 0, dirty: false, selectable: false, left: image.left! - cropX * image.scaleX!, top: image.top! - cropY * image.scaleY!, width: elementWidth, height: elementHeight });
     crop.set({ left: image.left! + cropX * image.scaleX!, top: image.top! + cropY * image.scaleY!, width: width * image.scaleX!, height: height * image.scaleY!, dirty: false });
     overlay.set({ left: image.left, top: image.top, width: image.width! * image.scaleX!, height: image.height! * image.scaleY!, dirty: false });
 
@@ -1032,13 +1045,13 @@ export class Canvas {
   }
 
   onAddClipPathToActiveImage(clipPath: fabric.Object) {
-    const image = this.instance?.getActiveObject() as fabric.Image;
-    if (!image || image.type !== "image") return;
-    this.onAddClipPathToImage(image, clipPath);
+    const object = this.instance?.getActiveObject() as fabric.Image | fabric.Video;
+    if (!object || !(object.type === "image" || object.type === "video")) return;
+    this.onAddClipPathToImage(object, clipPath);
   }
 
   onRemoveFilterFromImage(image: fabric.Image, name: string) {
-    if (!this.instance || !image || image.type !== "image" || image.effects!.name !== name) return;
+    if (!this.instance || !image || !(image.type === "image" || image.type === "video") || image.effects!.name !== name) return;
 
     image.effects!.name = null;
     image.effects!.intensity = null;
@@ -1056,12 +1069,12 @@ export class Canvas {
 
   onRemoveFilterFromActiveImage(name: string) {
     const image = this.instance?.getActiveObject() as fabric.Image;
-    if (!image || image.type !== "image") return;
+    if (!image || !(image.type === "image" || image.type === "video")) return;
     this.onRemoveFilterFromImage(image, name);
   }
 
   onAddFilterToImage(image: fabric.Image, filter: fabric.IBaseFilter[], name: string, intensity: number) {
-    if (!this.instance || !image || image.type !== "image" || (image.effects!.name === name && image.effects!.intensity === intensity)) return;
+    if (!this.instance || !image || (image.effects!.name === name && image.effects!.intensity === intensity)) return;
 
     image.effects!.name = name;
     image.effects!.intensity = intensity;
@@ -1082,12 +1095,12 @@ export class Canvas {
 
   onAddFilterToActiveImage(filter: fabric.IBaseFilter[], name: string, intensity: number) {
     const image = this.instance?.getActiveObject() as fabric.Image;
-    if (!image || image.type !== "image") return;
+    if (!image || !(image.type === "image" || image.type === "video")) return;
     this.onAddFilterToImage(image, filter, name, intensity);
   }
 
   onRemoveAdjustmentFromImage(image: fabric.Image, name: string) {
-    if (!this.instance || !image || image.type !== "image" || !image.adjustments![name]) return;
+    if (!this.instance || !image || !(image.type === "image" || image.type === "video") || !image.adjustments![name]) return;
 
     if (image.adjustments![name].index >= 0) image.filters!.splice(image.adjustments![name].index, 1);
     image.applyFilters();
@@ -1099,12 +1112,12 @@ export class Canvas {
 
   onRemoveAdjustmentFromActiveImage(name: string) {
     const image = this.instance?.getActiveObject() as fabric.Image;
-    if (!image || image.type !== "image") return;
+    if (!image || !(image.type === "image" || image.type === "video")) return;
     this.onRemoveAdjustmentFromImage(image, name);
   }
 
   onApplyAdjustmentsToImage(image: fabric.Image, filter: fabric.IBaseFilter, name: string, intensity: number) {
-    if (!this.instance || !image || image.type !== "image") return;
+    if (!this.instance || !image || !(image.type === "image" || image.type === "video")) return;
 
     if (!image.adjustments![name]) image.adjustments![name] = {};
     const adjustment = image.adjustments![name];
@@ -1126,7 +1139,7 @@ export class Canvas {
 
   onApplyAdjustmentToActiveImage(filter: fabric.IBaseFilter, name: string, intensity: number) {
     const image = this.instance?.getActiveObject() as fabric.Image;
-    if (!image || image.type !== "image") return;
+    if (!image || !(image.type === "image" || image.type === "video")) return;
     this.onApplyAdjustmentsToImage(image, filter, name, intensity);
   }
 
@@ -1135,7 +1148,6 @@ export class Canvas {
 
     if (!object.meta) object.meta = {};
     object.meta[property] = value;
-
     this.onToggleCanvasElements(this.seek);
 
     this.instance.fire("object:modified", { target: object });
@@ -1159,6 +1171,17 @@ export class Canvas {
     const selected = this.instance?.getActiveObject();
     if (!this.instance || !selected) return;
     this.onChangeObjectProperty(selected, property, value);
+  }
+
+  onChangeObjectFillGradient(object: fabric.Object, type: string, direction: string, colors: fabric.IGradientOptionsColorStops) {
+    if (!this.instance || !object) return;
+
+    console.log(direction);
+    const gradient = createInstance(fabric.Gradient, { type: type, colorStops: colors, coords: { x1: 0, x2: 0, y1: 0, y2: object.getScaledHeight() } });
+    object.set({ fill: gradient });
+
+    this.instance.fire("object:modified", { target: object });
+    this.instance.requestRenderAll();
   }
 
   onChangeObjectAnimation(object: fabric.Object, type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
@@ -1214,7 +1237,7 @@ export class Canvas {
   }
 
   onChangeImageProperty(image: fabric.Image, property: keyof fabric.Image, value: any) {
-    if (!this.instance || image.type !== "image") return;
+    if (!this.instance || !(image.type === "image" || image.type === "video")) return;
     image.set(property, value);
     this.instance.fire("object:modified", { target: image });
     this.instance.requestRenderAll();

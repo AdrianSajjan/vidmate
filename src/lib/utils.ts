@@ -12,3 +12,7 @@ export function createInstance<T, R extends any[]>(_class: new (...args: R) => T
 export function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export function isVideoElement(element: HTMLElement): element is HTMLVideoElement {
+  return element.tagName === "VIDEO";
+}

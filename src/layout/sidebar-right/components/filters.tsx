@@ -19,7 +19,7 @@ function _FilterSidebar() {
   const selected = editor.canvas.selected as fabric.Image | null;
 
   useEffect(() => {
-    if (!selected || selected.type !== "image") editor.setActiveSidebarRight(null);
+    if (!selected || !(selected.type === "image" || selected.type === "video")) editor.setActiveSidebarRight(null);
   }, [selected, editor]);
 
   const handleToggleFilter = (filter: Filter) => {

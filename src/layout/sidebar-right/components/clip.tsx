@@ -12,8 +12,7 @@ function _ClipMaskSidebar() {
   const selected = editor.canvas.selected;
 
   useEffect(() => {
-    if (selected && selected.type === "image") return;
-    editor.setActiveSidebarRight(null);
+    if (!selected || !(selected.type === "image" || selected.type === "video")) editor.setActiveSidebarRight(null);
   }, [selected, editor]);
 
   const scene = useMemo(() => {

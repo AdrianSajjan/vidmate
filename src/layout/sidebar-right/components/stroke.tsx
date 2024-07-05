@@ -18,8 +18,7 @@ function _StrokeSidebar() {
   const selected = editor.canvas.selected;
 
   useEffect(() => {
-    if (selected) return;
-    editor.setActiveSidebarRight(null);
+    if (!selected) editor.setActiveSidebarRight(null);
   }, [selected, editor]);
 
   const onColorChange = (result: ColorResult) => {
