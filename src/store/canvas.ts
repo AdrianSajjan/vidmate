@@ -259,8 +259,19 @@ export class Canvas {
 
     for (const object of this.instance._objects) {
       if (this.isElementExcluded(object)) continue;
+
       const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
       object.visible = !hidden;
+
+      if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder) {
+        if (this.playing) {
+          if (hidden && object.playing) object.pause();
+          if (!hidden && !object.playing) object.play();
+        } else {
+          if (object.playing) object.pause();
+          object.seek((ms - object.meta!.offset) / 1000);
+        }
+      }
     }
 
     this.instance.requestRenderAll();
@@ -539,6 +550,8 @@ export class Canvas {
       if (this.isElementExcluded(object)) continue;
       object.set({ ...(object.anim?.state || {}) });
     }
+
+    this.onToggleCanvasElements(this.seek);
   }
 
   onInitialize(element: HTMLCanvasElement) {
@@ -561,6 +574,7 @@ export class Canvas {
 
   onToggleTimeline(playFromLastPost = false) {
     this.instance?.discardActiveObject();
+
     if (this.playing) {
       this.playing = false;
       this.timeline?.pause();

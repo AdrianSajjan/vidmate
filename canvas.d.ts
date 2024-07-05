@@ -2529,6 +2529,10 @@ export class Video extends Image {
    */
   playing: boolean;
   /**
+   * Returns the total duration of the video
+   */
+  get duration(): number;
+  /**
    * Returns the video element which this instance is based on
    * @return the Video element
    */

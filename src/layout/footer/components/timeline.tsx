@@ -99,9 +99,13 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
   useEffect(() => {
     const object = editor.canvas.instance?.getItemByName(element.name);
     object?.clone((clone: fabric.Object) => {
-      clone.set({ opacity: 1, visible: true, clipPath: undefined });
-      if (FabricUtils.isVideoElement(clone) && !!backgroundURL) return;
-      setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
+      clone.set({ opacity: 1, visible: true, clipPath: undefined, meta: object.meta });
+      if (FabricUtils.isVideoElement(clone) && !clone.meta?.placeholder) {
+        clone.seek(1);
+        setTimeout(() => setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true })), 1000);
+      } else {
+        setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
+      }
     });
   }, [element, editor.canvas.instance]);
 

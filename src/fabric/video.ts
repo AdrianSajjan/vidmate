@@ -7,17 +7,24 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
 
   initialize: function (element: HTMLVideoElement, options?: any) {
     options = options || {};
-    this.callSuper("initialize", element, options);
-    this.set({ left: options.left || 0, top: options.top || 0, objectCaching: false });
 
+    this.callSuper("initialize", element, options);
+    this.set({ left: options.left ?? 0, top: options.top ?? 0, objectCaching: false });
+
+    element.currentTime = 0;
     element.crossOrigin = options.crossOrigin;
-    element.loop = options.loop ?? true;
+
+    element.loop = options.loop ?? false;
     element.muted = options.muted ?? true;
-    element.currentTime = 0.1;
 
     this.on("added", () => {
       fabric.util.requestAnimFrame(this.update.bind(this));
     });
+  },
+
+  get duration(): number {
+    const element = this._element as HTMLVideoElement;
+    return element ? element.duration : 0;
   },
 
   play: function () {
@@ -34,9 +41,8 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
 
   seek: function (seconds: number) {
     const element = this._element as HTMLVideoElement;
-    if (seconds < 0 || seconds > element.duration) return;
-    element.currentTime = seconds;
-    this.canvas?.requestRenderAll();
+    element.currentTime = seconds < 0 ? 0 : seconds > element.duration ? element.duration : seconds;
+    if (this.canvas) this.canvas.requestRenderAll();
   },
 
   update: function () {
