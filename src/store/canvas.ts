@@ -112,7 +112,7 @@ export class Canvas {
         selectable: false,
         evented: false,
         name: "center_h",
-      })
+      }),
     );
     this.instance.add(
       createInstance(fabric.Line, [0, vCenter, this.instance.width!, vCenter], {
@@ -120,7 +120,7 @@ export class Canvas {
         selectable: false,
         evented: false,
         name: "center_v",
-      })
+      }),
     );
     this.instance.add(
       createInstance(fabric.Line, [hCenter, this.artboard.top!, hCenter, this.artboard.height! + this.artboard.top!], {
@@ -129,7 +129,7 @@ export class Canvas {
         selectable: false,
         evented: false,
         name: "line_h",
-      })
+      }),
     );
     this.instance.add(
       createInstance(fabric.Line, [this.artboard.left!, vCenter, this.artboard.width! + this.artboard.left!, vCenter], {
@@ -138,7 +138,7 @@ export class Canvas {
         selectable: false,
         evented: false,
         name: "line_v",
-      })
+      }),
     );
 
     this.instance.requestRenderAll();
@@ -428,7 +428,7 @@ export class Canvas {
               easing: entry.easing || "linear",
               round: false,
             },
-            object.meta!.offset
+            object.meta!.offset,
           );
           break;
         }
@@ -442,7 +442,7 @@ export class Canvas {
               easing: entry.easing || "linear",
               round: false,
             },
-            object.meta!.offset
+            object.meta!.offset,
           );
           break;
         }
@@ -456,7 +456,7 @@ export class Canvas {
               easing: entry.easing || "linear",
               round: false,
             },
-            object.meta!.offset
+            object.meta!.offset,
           );
           break;
         }
@@ -470,7 +470,7 @@ export class Canvas {
               easing: entry.easing || "linear",
               round: false,
             },
-            object.meta!.offset
+            object.meta!.offset,
           );
           break;
         }
@@ -484,7 +484,7 @@ export class Canvas {
               easing: entry.easing || "linear",
               round: false,
             },
-            object.meta!.offset
+            object.meta!.offset,
           );
           break;
         }
@@ -501,7 +501,7 @@ export class Canvas {
               easing: entry.easing || "linear",
               round: false,
             },
-            object.meta!.offset
+            object.meta!.offset,
           );
           break;
         }
@@ -517,7 +517,7 @@ export class Canvas {
               easing: exit.easing || "linear",
               round: false,
             },
-            object.meta!.offset + object.meta!.duration - exit.duration
+            object.meta!.offset + object.meta!.duration - exit.duration,
           );
           break;
         }
@@ -532,7 +532,7 @@ export class Canvas {
               easing: exit.easing || "linear",
               round: false,
             },
-            object.meta!.offset + object.meta!.duration - exit.duration
+            object.meta!.offset + object.meta!.duration - exit.duration,
           );
           break;
         }
@@ -669,7 +669,7 @@ export class Canvas {
         this.instance!.requestRenderAll();
         this.onToggleCanvasElements(this.seek);
       },
-      { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} }
+      { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
     );
   }
 
@@ -723,7 +723,7 @@ export class Canvas {
 
         this.onToggleCanvasElements(this.seek);
       },
-      { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} }
+      { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
     );
   }
 
@@ -745,7 +745,7 @@ export class Canvas {
         this.instance!.requestRenderAll();
         this.onToggleCanvasElements(this.seek);
       },
-      { name: FabricUtils.elementID("video"), crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} }
+      { name: FabricUtils.elementID("video"), crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
     );
   }
 
@@ -799,7 +799,7 @@ export class Canvas {
 
         this.onToggleCanvasElements(this.seek);
       },
-      { name: id, crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} }
+      { name: id, crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
     );
   }
 
@@ -924,10 +924,10 @@ export class Canvas {
       if (crop.left! + crop.getScaledWidth() >= image.left! + image.getScaledWidth()) crop.set({ left: image.left! + image.getScaledWidth() - crop.getScaledWidth() });
 
       verticals.map((vertical, index) =>
-        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() })
+        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() }),
       );
       horizontals.map((vertical, index) =>
-        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) })
+        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) }),
       );
 
       this.instance!.requestRenderAll();
@@ -935,10 +935,10 @@ export class Canvas {
 
     crop.on("scaling", () => {
       verticals.map((vertical, index) =>
-        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() })
+        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() }),
       );
       horizontals.map((vertical, index) =>
-        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) })
+        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) }),
       );
     });
 
@@ -968,10 +968,10 @@ export class Canvas {
       }
 
       verticals.map((vertical, index) =>
-        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() })
+        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() }),
       );
       horizontals.map((vertical, index) =>
-        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) })
+        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) }),
       );
     });
 
@@ -1182,6 +1182,12 @@ export class Canvas {
 
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
+  }
+
+  onChangeActiveObjectFillGradient(type: string, direction: string, colors: fabric.IGradientOptionsColorStops) {
+    const selected = this.instance?.getActiveObject();
+    if (!this.instance || !selected) return;
+    this.onChangeObjectFillGradient(selected, type, direction, colors);
   }
 
   onChangeObjectAnimation(object: fabric.Object, type: "in" | "out", animation: EntryAnimation | ExitAnimation) {

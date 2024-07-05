@@ -1678,7 +1678,7 @@ export class StaticCanvas {
       top?: number;
       width?: number;
       height?: number;
-    }>
+    }>,
   ): HTMLCanvasElement;
 
   /**
@@ -2938,6 +2938,11 @@ interface IObjectOptions {
    * Color of object's fill
    */
   fill?: string | Pattern | Gradient | undefined;
+
+  /**
+   * Color of object's last fill -> state to switch between solid and gradient fill
+   */
+  previousFill?: string | Pattern | Gradient | undefined;
 
   /**
    * Fill rule used to fill an object
@@ -6083,7 +6088,7 @@ interface IUtilDomRequest {
       method?: string | undefined;
       /** Callback to invoke when request is completed */
       onComplete: Function;
-    }
+    },
   ): XMLHttpRequest;
 }
 

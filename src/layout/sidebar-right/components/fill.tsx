@@ -1,6 +1,6 @@
 import { fabric } from "fabric";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { SketchPicker, ColorResult } from "react-color";
@@ -12,6 +12,7 @@ import { useEditorContext } from "@/context/editor";
 import { rightSidebarWidth } from "@/constants/layout";
 import { cn } from "@/lib/utils";
 import { darkHexCodes, lightHexCodes, pastelHexCodes } from "@/constants/editor";
+import { GradientSlider } from "@/components/slider/gradient";
 
 const picker = { default: { picker: { boxShadow: "none", padding: 0, width: "100%", background: "transparent", borderRadius: 0 } } };
 
@@ -19,20 +20,54 @@ function _FillSidebar() {
   const editor = useEditorContext();
   const selected = editor.canvas.selected;
 
-  const [tab, setTab] = useState("solid");
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
     if (!selected) editor.setActiveSidebarRight(null);
   }, [selected, editor]);
 
-  const onColorChange = (result: ColorResult) => {
-    const { r, g, b, a } = result.rgb;
-    const color = fabric.Color.fromRgba(`rgba(${r},${g},${b},${a || 1})`);
+  const mode = useMemo(() => {
+    if (!selected || !selected.fill || typeof selected.fill === "string") return "solid";
+    return "gradient";
+  }, [selected]);
+
+  const onChangeColor = (result: ColorResult) => {
+    const { r, g, b, a = 1 } = result.rgb;
+    const color = fabric.Color.fromRgba(`rgba(${r},${g},${b},${a})`);
     const hex = color.toHexa();
-    editor.canvas.onChangeActiveObjectProperty("fill", `#${hex}`);
+
+    switch (mode) {
+      case "solid": {
+        editor.canvas.onChangeActiveObjectProperty("fill", `#${hex}`);
+        break;
+      }
+      case "gradient": {
+        break;
+      }
+    }
   };
 
-  const disabled = !selected || !selected.fill || typeof selected.fill !== "string";
+  const onChangeOffset = (index: number, offset: number) => {
+    console.log(index, offset);
+  };
+
+  const onChangeMode = (value: string) => {
+    if (value === mode || !selected) return;
+    switch (value) {
+      case "solid": {
+        const current = !selected.previousFill || typeof selected.previousFill !== "string" ? "#000000" : selected.previousFill;
+        const previous = selected.fill;
+        editor.canvas.onChangeActiveObjectProperty("fill", current);
+        editor.canvas.onChangeActiveObjectProperty("previousFill", previous);
+        break;
+      }
+      case "gradient": {
+        break;
+      }
+    }
+  };
+
+  const disabled = !selected || !selected.fill;
   const color = !selected || typeof selected.fill !== "string" ? "#ffffff" : selected.fill;
 
   return (
@@ -48,7 +83,7 @@ function _FillSidebar() {
       </div>
       <section className="sidebar-container">
         <div className="px-4 py-5">
-          <Tabs value={tab} onValueChange={setTab}>
+          <Tabs value={mode} onValueChange={onChangeMode}>
             <TabsList className="w-full grid grid-cols-2">
               <TabsTrigger value="solid" className="text-xs h-full gap-1">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -74,9 +109,13 @@ function _FillSidebar() {
           </Tabs>
         </div>
         <div className={cn("px-4 flex flex-col divide-y", !disabled ? "opacity-100 pointer-events-auto" : "opacity-50 pointer-events-none")}>
-          {tab === "gradient" ? <div className="pb-4"></div> : null}
+          {mode === "gradient" ? (
+            <div className="pb-4">
+              <GradientSlider width={264} selected={index} onSelect={setIndex} onChange={onChangeOffset} />
+            </div>
+          ) : null}
           <div className="pb-4">
-            <SketchPicker color={color} onChange={onColorChange} presetColors={[]} styles={picker} />
+            <SketchPicker color={color} onChange={onChangeColor} presetColors={[]} styles={picker} />
           </div>
           <div className="flex flex-col gap-4 py-5">
             <h4 className="text-xs font-semibold line-clamp-1">Light Colors</h4>
