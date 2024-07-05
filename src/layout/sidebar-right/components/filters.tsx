@@ -5,7 +5,7 @@ import { HTMLAttributes, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { rightSidebarWidth } from "@/constants/layout";
 import { Label } from "@/components/ui/label";
-import { FilterSlider } from "@/components/ui/slider";
+import { FilterSlider } from "@/components/slider/filter";
 
 import { useEditorContext } from "@/context/editor";
 import { filters, Filter, adjustments, Adjustment } from "@/fabric/filters";
