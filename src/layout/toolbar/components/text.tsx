@@ -65,7 +65,15 @@ function _TextToolbar() {
         >
           <BoldIcon size={15} />
         </Toggle>
-        <Toggle variant="outline" disabled className="data-[state=on]:bg-card data-[state=on]:text-blue-600" size="sm" value="italic" aria-label="italic">
+        <Toggle
+          pressed={selected.fontStyle === "italic"}
+          onPressedChange={(pressed) => editor.canvas.onChangeActiveTextboxProperty("fontStyle", pressed ? "italic" : "normal")}
+          variant="outline"
+          className="data-[state=on]:bg-card data-[state=on]:text-blue-600"
+          size="sm"
+          value="italic"
+          aria-label="italic"
+        >
           <ItalicIcon size={15} />
         </Toggle>
         <Toggle

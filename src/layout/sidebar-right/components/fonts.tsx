@@ -76,7 +76,7 @@ function _FontItem({ font, selected, ...props }: FontItemProps) {
     <button
       {...props}
       disabled={!isLoaded}
-      className="inline-flex items-center text-sm text-start hover:bg-gray-100 rounded-md transition-colors p-2.5 gap-4 disabled:opacity-50 disabled:cursor-wait"
+      className="inline-flex items-center text-sm text-start hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors p-2.5 gap-4 disabled:opacity-50 disabled:cursor-wait"
       style={{ fontFamily: font }}
     >
       <ArrowRightIcon size={15} />
