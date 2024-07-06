@@ -1,21 +1,38 @@
 import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
+import { flowResult } from "mobx";
 import { observer } from "mobx-react";
-import { Fragment, MouseEventHandler } from "react";
+import { Fragment, MouseEventHandler, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { leftSidebarWidth } from "@/constants/layout";
+import { uploadAssetToS3 } from "@/api/upload";
 import { useEditorContext } from "@/context/editor";
+import { isImageLoaded } from "@/lib/utils";
 
 import * as mock from "@/constants/mock";
-import { isImageLoaded } from "@/lib/utils";
-import { flowResult } from "mobx";
-import { toast } from "sonner";
 
 function _ImageSidebar() {
   const editor = useEditorContext();
+  const [uploads, setUploads] = useState(mock.images);
+
+  const upload = useMutation({
+    mutationFn: (file: File) => uploadAssetToS3(file),
+    onSuccess: (response) => setUploads((state) => [...state, { source: response, thumbnail: response }]),
+  });
+
+  const handleUpload = (files: FileList | null) => {
+    if (!files || !files.item(0)) return;
+    toast.promise(upload.mutateAsync(files.item(0)!), {
+      loading: `Your image asset is being uploaded...`,
+      success: `Image has been successfully uploaded`,
+      error: `Ran into an error while uploading the image`,
+    });
+  };
 
   const handleClick =
     (source: string): MouseEventHandler<HTMLButtonElement> =>
@@ -57,7 +74,7 @@ function _ImageSidebar() {
                 <label>
                   <PlusIcon size={14} />
                   <span>Add File</span>
-                  <input hidden type="file" accept="image/*" />
+                  <input hidden type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files)} />
                 </label>
               </Button>
               <Button size="sm" variant="link" className="text-blue-600 h-6 font-medium line-clamp-1 px-1.5">
@@ -65,10 +82,10 @@ function _ImageSidebar() {
               </Button>
             </div>
             <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
-              {mock.images.length ? (
-                mock.images.map(({ source, thumbnail }) => (
+              {uploads.length ? (
+                uploads.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClick(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
-                    <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
+                    <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
                   </button>
                 ))
               ) : (

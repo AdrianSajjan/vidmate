@@ -1,4 +1,4 @@
-interface EditorMedia {
+export interface EditorMedia {
   source: string;
   thumbnail: string;
 }
