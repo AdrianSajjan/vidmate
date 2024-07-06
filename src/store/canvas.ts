@@ -640,7 +640,7 @@ export class Canvas {
   onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
     if (!this.artboard || !this.instance) return;
 
-    const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: 500, paintFirst: "stroke", objectCaching: false, textAlign: "center" };
+    const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: 500, objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
 
     this.onInitializeElementMeta(textbox);
@@ -1279,17 +1279,21 @@ export class Canvas {
     this.onChangeObjectAnimationDuration(selected, type, duration);
   }
 
-  onChangeTextboxProperty(textbox: fabric.Textbox, property: keyof fabric.Textbox, value: any) {
+  onChangeTextboxProperty(textbox: fabric.Textbox, property: keyof fabric.Textbox, value: any, selection = false) {
     if (!this.instance || textbox.type !== "textbox") return;
-    textbox.set(property, value);
+    if (selection) {
+      // TODO: Add styles for the specific selection element
+    } else {
+      textbox.set(property, value);
+    }
     this.instance.fire("object:modified", { target: textbox });
     this.instance.requestRenderAll();
   }
 
-  onChangeActiveTextboxProperty(property: keyof fabric.Textbox, value: any) {
+  onChangeActiveTextboxProperty(property: keyof fabric.Textbox, value: any, selection = false) {
     const selected = this.instance?.getActiveObject() as fabric.Textbox | null;
     if (!selected || selected.type !== "textbox") return;
-    this.onChangeTextboxProperty(selected, property, value);
+    this.onChangeTextboxProperty(selected, property, value, selection);
   }
 
   onChangeImageProperty(image: fabric.Image, property: keyof fabric.Image, value: any) {

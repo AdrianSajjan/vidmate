@@ -7,7 +7,7 @@ import { observer } from "mobx-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { fonts } from "@/constants/fonts";
+import { EditorFont, fonts } from "@/constants/fonts";
 import { rightSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
 
@@ -15,12 +15,12 @@ function _FontSidebar() {
   const editor = useEditorContext();
   const selected = editor.canvas.selected! as fabric.Textbox;
 
-  const isFontSelected = (font: string) => {
-    return selected.fontFamily?.toLowerCase() === font.toLowerCase();
+  const isFontSelected = (font: EditorFont) => {
+    return selected.fontFamily?.toLowerCase() === font.family.toLowerCase();
   };
 
-  const handleChangeFontFamily = (font: string) => {
-    editor.canvas.onChangeActiveTextboxProperty("fontFamily", font);
+  const handleChangeFontFamily = (font: EditorFont) => {
+    editor.canvas.onChangeActiveTextboxProperty("fontFamily", font.family);
   };
 
   return (
@@ -40,7 +40,7 @@ function _FontSidebar() {
         </div>
         <div className="px-3 flex flex-col gap-1">
           {fonts.map((font) => (
-            <FontItem key={font} font={font} selected={isFontSelected(font)} onClick={() => handleChangeFontFamily(font)} />
+            <FontItem key={font.family} font={font} selected={isFontSelected(font)} onClick={() => handleChangeFontFamily(font)} />
           ))}
         </div>
       </section>
@@ -49,7 +49,7 @@ function _FontSidebar() {
 }
 
 interface FontItemProps extends HTMLAttributes<HTMLButtonElement> {
-  font: string;
+  font: EditorFont;
   selected: boolean;
 }
 
@@ -57,16 +57,18 @@ function _FontItem({ font, selected, ...props }: FontItemProps) {
   const [isLoaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const isLoaded = Array.from(document.fonts).some(({ family }) => family === font);
+    const isLoaded = Array.from(document.fonts).some(({ family }) => family === font.family);
     if (isLoaded) {
       setLoaded(true);
     } else {
+      const styles = font.styles.map((style) => `${style.weight}`).join(",");
+      const family = `${font.family}:${styles}`;
       WebFont.load({
         google: {
-          families: [font],
+          families: [family],
         },
         fontactive: (family) => {
-          if (family === font) setLoaded(true);
+          if (family === font.family) setLoaded(true);
         },
       });
     }
@@ -77,10 +79,10 @@ function _FontItem({ font, selected, ...props }: FontItemProps) {
       {...props}
       disabled={!isLoaded}
       className="inline-flex items-center text-sm text-start hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors p-2.5 gap-4 disabled:opacity-50 disabled:cursor-wait"
-      style={{ fontFamily: font }}
+      style={{ fontFamily: font.family }}
     >
       <ArrowRightIcon size={15} />
-      <span>{font}</span>
+      <span>{font.family}</span>
       {selected ? <CheckIcon size={15} className="ml-auto" /> : null}
     </button>
   );

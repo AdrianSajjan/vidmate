@@ -1,4 +1,4 @@
-import { BoldIcon, ChevronDownIcon, ItalicIcon, LigatureIcon, UnderlineIcon } from "lucide-react";
+import { AlignCenterIcon, AlignJustifyIcon, AlignLeftIcon, AlignRightIcon, ArrowDownZAIcon, BoldIcon, ChevronDownIcon, ItalicIcon, LigatureIcon, UnderlineIcon, WholeWordIcon } from "lucide-react";
 import { observer } from "mobx-react";
 
 import { Button } from "@/components/ui/button";
@@ -6,15 +6,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import { fontSizes } from "@/constants/editor";
 import { useEditorContext } from "@/context/editor";
+import { cn } from "@/lib/utils";
 
 import { ToolbarFillOption } from "../common/fill";
 import { ToolbarPositionOption } from "../common/position";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
-import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 
 function _TextToolbar() {
   const editor = useEditorContext();
@@ -87,6 +91,65 @@ function _TextToolbar() {
         >
           <UnderlineIcon size={15} />
         </Toggle>
+      </div>
+      <Separator orientation="vertical" className="h-8 mx-4" />
+      <ToggleGroup type="single" value={selected.textAlign} onValueChange={(value) => editor.canvas.onChangeActiveTextboxProperty("textAlign", value)} className="flex items-center gap-1">
+        <ToggleGroupItem variant="outline" size="sm" value="left" aria-label="left" className="data-[state=on]:bg-card data-[state=on]:text-blue-600">
+          <AlignLeftIcon size={15} />
+        </ToggleGroupItem>
+        <ToggleGroupItem variant="outline" size="sm" value="center" aria-label="center" className="data-[state=on]:bg-card data-[state=on]:text-blue-600">
+          <AlignCenterIcon size={15} />
+        </ToggleGroupItem>
+        <ToggleGroupItem variant="outline" size="sm" value="right" aria-label="right" className="data-[state=on]:bg-card data-[state=on]:text-blue-600">
+          <AlignRightIcon size={15} />
+        </ToggleGroupItem>
+        <ToggleGroupItem variant="outline" size="sm" value="justify" aria-label="justify" className="data-[state=on]:bg-card data-[state=on]:text-blue-600">
+          <AlignJustifyIcon size={15} />
+        </ToggleGroupItem>
+      </ToggleGroup>
+      <Separator orientation="vertical" className="h-8 mx-4" />
+      <div className="flex items-center gap-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button size="sm" variant="outline" aria-label="letter-spacing" className="data-[state=open]:bg-card">
+              <WholeWordIcon size={15} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="pt-2 pb-3 px-3" align="center">
+            <Label className="text-xs font-medium">Letter Spacing</Label>
+            <div className="flex items-center justify-between gap-4">
+              <Slider min={0} max={100} value={[selected.charSpacing!]} onValueChange={([charSpacing]) => editor.canvas.onChangeActiveTextboxProperty("charSpacing", charSpacing)} />
+              <Input
+                autoFocus
+                type="number"
+                className="h-8 w-16 text-xs"
+                value={selected.charSpacing}
+                onChange={(event) => (+event.target.value < 0 || +event.target.value > 100 ? null : editor.canvas.onChangeActiveTextboxProperty("charSpacing", +event.target.value))}
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button size="sm" variant="outline" aria-label="line-height" className="data-[state=open]:bg-card">
+              <ArrowDownZAIcon size={15} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="pt-2 pb-3 px-3" align="center">
+            <Label className="text-xs font-medium">Line Height</Label>
+            <div className="flex items-center justify-between gap-4">
+              <Slider min={0.5} max={2.5} step={0.02} value={[selected.lineHeight!]} onValueChange={([lineHeight]) => editor.canvas.onChangeActiveTextboxProperty("lineHeight", lineHeight)} />
+              <Input
+                autoFocus
+                step={0.02}
+                type="number"
+                className="h-8 w-20 text-xs"
+                value={selected.lineHeight}
+                onChange={(event) => (+event.target.value < 0.5 || +event.target.value > 2.5 ? null : editor.canvas.onChangeActiveTextboxProperty("lineHeight", +event.target.value))}
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarFillOption />
