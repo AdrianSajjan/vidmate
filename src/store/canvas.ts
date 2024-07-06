@@ -316,6 +316,10 @@ export class Canvas {
 
     this.instance.on("object:scaling", (event) => {
       this.onToggleControls(event.target!, false);
+      if (event.target!.type === "textbox") {
+        const textbox = event.target as fabric.Textbox;
+        textbox.set({ fontSize: Math.round(textbox.fontSize! * textbox.scaleY!), width: textbox.width! * textbox.scaleX!, scaleY: 1, scaleX: 1 });
+      }
     });
 
     this.instance.on("object:resizing", (event) => {

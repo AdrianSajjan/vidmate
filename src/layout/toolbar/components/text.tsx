@@ -26,12 +26,12 @@ function _TextToolbar() {
         <Button
           size="sm"
           variant="outline"
-          className={cn("gap-1.5", editor.sidebarRight === "fonts" ? "bg-card" : "bg-transparent")}
+          className={cn("gap-1.5 justify-start px-2.5", editor.sidebarRight === "fonts" ? "bg-card" : "bg-transparent")}
           onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "fonts" ? null : "fonts")}
         >
-          <LigatureIcon size={15} />
-          <span>Montserrat</span>
-          <ChevronDownIcon size={15} />
+          <LigatureIcon size={15} className="shrink-0" />
+          <span className="text-start text-ellipsis whitespace-nowrap overflow-hidden w-20">{selected.fontFamily || "Inter"}</span>
+          <ChevronDownIcon size={15} className="ml-auto shrink-0" />
         </Button>
         <div className="relative">
           <Input className="h-8 w-24 text-xs pr-14" value={selected.fontSize} onChange={(event) => !isNaN(+event.target.value) && editor.canvas.onChangeActiveTextboxProperty("fontSize", +event.target.value)} />
