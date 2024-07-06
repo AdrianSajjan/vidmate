@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { TextToolbar } from "./components/text";
 import { ShapeToolbar } from "./components/shape";
+import { LineToolbar } from "./components/line";
 
 import { ImageToolbar } from "./components/image";
 import { VideoToolbar } from "./components/video";
@@ -18,6 +19,7 @@ const toolbarComponentMap: Record<string, () => JSX.Element> = {
   circle: ShapeToolbar,
   ellipse: ShapeToolbar,
   rect: ShapeToolbar,
+  line: LineToolbar,
 };
 
 function _EditorToolbar() {

@@ -28,7 +28,7 @@ function _FormatSidebar() {
         </div>
         <div className="px-4 grid grid-cols-3 gap-4 relative">
           {formats.map((format) => (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2" key={format.name}>
               <button
                 key={format.name}
                 onClick={() => editor.canvas.onUpdateDimensions(format.dimensions)}

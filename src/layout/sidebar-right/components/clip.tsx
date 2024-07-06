@@ -9,14 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function _ClipMaskSidebar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected;
-
-  useEffect(() => {
-    if (!selected || !(selected.type === "image" || selected.type === "video")) editor.setActiveSidebarRight(null);
-  }, [selected, editor]);
+  const selected = editor.canvas.selected!;
 
   const scene = useMemo(() => {
-    return editor.canvas.elements.filter((element) => element.name !== selected?.name && element.type !== "textbox");
+    return editor.canvas.elements.filter((element) => element.name !== selected.name && element.type !== "textbox");
   }, [editor.canvas.elements, editor.canvas.elements.length, selected]);
 
   return (

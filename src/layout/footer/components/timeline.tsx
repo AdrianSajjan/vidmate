@@ -150,7 +150,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
       drag={editor.canvas.playing ? false : "x"}
       dragConstraints={{ left: 0, right: trackWidth - width }}
       onClick={(event) => (editor.canvas.playing ? null : editor.canvas.onCreateSelection(element.name, event.shiftKey))}
-      className={cn("h-10 rounded-lg bg-card border-[3px] overflow-visible flex items-stretch relative bg-repeat-x bg-center", isSelected ? "border-blue-600" : "border-foreground/20")}
+      className={cn("h-10 rounded-lg bg-card border-[3px] overflow-visible flex items-stretch relative bg-repeat-x bg-center shrink-0", isSelected ? "border-blue-600" : "border-foreground/20")}
       style={{
         width,
         backgroundImage: `url(${backgroundURL})`,

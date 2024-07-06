@@ -323,6 +323,8 @@ export class Canvas {
     });
 
     this.instance.on("object:rotating", (event) => {
+      if (event.e.shiftKey) event.target!.set({ snapAngle: 45 });
+      else event.target!.set({ snapAngle: undefined });
       this.onToggleControls(event.target!, false);
     });
 
@@ -841,8 +843,8 @@ export class Canvas {
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
     this.instance.requestRenderAll();
-
     this.onToggleCanvasElements(this.seek);
+
     return shape;
   }
 
@@ -864,6 +866,25 @@ export class Canvas {
 
     this.onToggleCanvasElements(this.seek);
     return shape;
+  }
+
+  onAddLine(points: number[], name = "line") {
+    if (!this.artboard || !this.instance) return;
+
+    const options = { name: FabricUtils.elementID(name), objectCaching: true, strokeWidth: 4, stroke: "#000000", hasBorders: false };
+    const line = createInstance(fabric.Line, points, options);
+
+    line.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
+    line.set({ controls: { mtr: fabric.Object.prototype.controls.mtr, mr: fabric.Object.prototype.controls.mr, ml: fabric.Object.prototype.controls.ml } });
+
+    this.onInitializeElementMeta(line);
+    this.onInitializeElementAnimation(line);
+
+    this.instance.add(line);
+    this.instance.setActiveObject(line).requestRenderAll();
+    this.onToggleCanvasElements(this.seek);
+
+    return line;
   }
 
   onCreateSelection(name?: string, multiple?: boolean) {

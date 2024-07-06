@@ -1,6 +1,6 @@
 import { EyeIcon, EyeOff, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { HTMLAttributes, useEffect } from "react";
+import { HTMLAttributes } from "react";
 
 import { Button } from "@/components/ui/button";
 import { rightSidebarWidth } from "@/constants/layout";
@@ -16,14 +16,10 @@ import { Toggle } from "@/components/ui/toggle";
 
 function _FilterSidebar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected as fabric.Image | null;
-
-  useEffect(() => {
-    if (!selected || !(selected.type === "image" || selected.type === "video")) editor.setActiveSidebarRight(null);
-  }, [selected, editor]);
+  const selected = editor.canvas.selected! as fabric.Image;
 
   const handleToggleFilter = (filter: Filter) => {
-    if (selected?.effects?.name === filter.name) {
+    if (selected.effects!.name === filter.name) {
       editor.canvas.onRemoveFilterFromActiveImage(filter.name);
     } else {
       editor.canvas.onAddFilterToActiveImage(filter.filter(50), filter.name, 50);
@@ -92,13 +88,13 @@ function _FilterSidebar() {
 
 interface FilterItemProps extends Omit<HTMLAttributes<HTMLButtonElement>, "onChange"> {
   filter: Filter;
-  selected: fabric.Image | null;
+  selected: fabric.Image;
   onChange: (value: number) => void;
 }
 
 function _FilterItem({ filter, selected, className, onChange, ...props }: FilterItemProps) {
-  const active = selected?.effects?.name === filter.name;
-  const intensity = selected?.effects?.intensity || 50;
+  const active = selected.effects!.name === filter.name;
+  const intensity = selected.effects?.intensity || 50;
 
   if (!active) {
     return (

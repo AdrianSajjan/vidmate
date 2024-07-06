@@ -1,6 +1,6 @@
 import { XIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { ChangeEventHandler, HTMLAttributes, useEffect } from "react";
+import { ChangeEventHandler, HTMLAttributes } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +15,6 @@ import { cn } from "@/lib/utils";
 
 function _AnimationSidebar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected as fabric.Image | null;
-
-  useEffect(() => {
-    if (!selected) editor.setActiveSidebarRight(null);
-  }, [selected, editor]);
 
   return (
     <div className="h-full" style={{ width: rightSidebarWidth }}>
@@ -57,18 +52,18 @@ function _AnimationSidebar() {
 function _EntryAnimations() {
   const editor = useEditorContext();
 
-  const selected = editor.canvas.selected as fabric.Image | null;
-  const animation = entry.find((animation) => animation.value === selected?.anim?.in.name);
+  const selected = editor.canvas.selected!;
+  const animation = entry.find((animation) => animation.value === selected.anim?.in.name);
 
-  const easing = selected?.anim?.in.easing || "linear";
-  const duration = animation?.fixed?.duration ? 0 : (selected?.anim?.in.duration || 0) / 1000;
-  const disabled = !selected?.anim?.in.name || selected?.anim?.in.name === "none";
+  const easing = selected.anim?.in.easing || "linear";
+  const duration = animation?.fixed?.duration ? 0 : (selected.anim?.in.duration || 0) / 1000;
+  const disabled = !selected.anim?.in.name || selected.anim?.in.name === "none";
 
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangActiveObjectAnimation("in", animation.value);
     if (animation.value === "none") return;
-    const duration = animation?.fixed?.duration ? animation.duration : selected?.anim?.out.duration;
-    const easing = animation?.fixed?.easing ? animation.easing : selected?.anim?.out.easing;
+    const duration = animation?.fixed?.duration ? animation.duration : selected.anim?.out.duration;
+    const easing = animation?.fixed?.easing ? animation.easing : selected.anim?.out.easing;
     editor.canvas.onChangActiveObjectAnimationDuration("in", duration || 500);
     editor.canvas.onChangActiveObjectAnimationEasing("in", easing || "linear");
   };
@@ -106,7 +101,7 @@ function _EntryAnimations() {
       </div>
       <div className="grid grid-cols-2 gap-5 pt-6">
         {entry.map((animation) => (
-          <AnimationItem key={animation.label} animation={animation} className={selected?.anim?.in.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
+          <AnimationItem key={animation.label} animation={animation} className={selected.anim?.in.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
         ))}
       </div>
     </div>
@@ -116,14 +111,14 @@ function _EntryAnimations() {
 function _ExitAnimations() {
   const editor = useEditorContext();
 
-  const selected = editor.canvas.selected as fabric.Image | null;
-  const disabled = !selected?.anim?.out.name || selected?.anim?.out.name === "none";
+  const selected = editor.canvas.selected!;
+  const disabled = !selected.anim?.out.name || selected.anim?.out.name === "none";
 
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangActiveObjectAnimation("out", animation.value);
     if (animation.value === "none") return;
-    editor.canvas.onChangActiveObjectAnimationDuration("out", animation.duration || selected?.anim?.out.duration || 500);
-    editor.canvas.onChangActiveObjectAnimationEasing("out", animation.easing || selected?.anim?.out.easing || "linear");
+    editor.canvas.onChangActiveObjectAnimationDuration("out", animation.duration || selected.anim?.out.duration || 500);
+    editor.canvas.onChangActiveObjectAnimationEasing("out", animation.easing || selected.anim?.out.easing || "linear");
   };
 
   const handleChangeEasing = (easing: string) => {
@@ -140,11 +135,11 @@ function _ExitAnimations() {
     <div className="flex flex-col px-1">
       <div className="flex items-center justify-between gap-6">
         <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={(selected?.anim?.out.duration || 0) / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.25} className="text-xs h-8 w-40" />
+        <Input value={(selected.anim?.out.duration || 0) / 1000} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.25} className="text-xs h-8 w-40" />
       </div>
       <div className="flex items-center justify-between gap-6 mt-3">
         <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
-        <Select value={selected?.anim?.out.easing || "linear"} onValueChange={handleChangeEasing} disabled={disabled}>
+        <Select value={selected.anim?.out.easing || "linear"} onValueChange={handleChangeEasing} disabled={disabled}>
           <SelectTrigger className="h-8 text-xs w-40">
             <SelectValue />
           </SelectTrigger>
@@ -159,7 +154,7 @@ function _ExitAnimations() {
       </div>
       <div className="grid grid-cols-2 gap-5 pt-6">
         {exit.map((animation) => (
-          <AnimationItem key={animation.label} animation={animation} className={selected?.anim?.out.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
+          <AnimationItem key={animation.label} animation={animation} className={selected.anim?.out.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
         ))}
       </div>
     </div>

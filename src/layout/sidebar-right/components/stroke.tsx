@@ -1,6 +1,5 @@
 import { fabric } from "fabric";
 
-import { useEffect } from "react";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { SketchPicker, ColorResult } from "react-color";
@@ -15,11 +14,7 @@ const picker = { default: { picker: { boxShadow: "none", padding: 0, width: "100
 
 function _StrokeSidebar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected;
-
-  useEffect(() => {
-    if (!selected) editor.setActiveSidebarRight(null);
-  }, [selected, editor]);
+  const selected = editor.canvas.selected!;
 
   const onColorChange = (result: ColorResult) => {
     const { r, g, b, a } = result.rgb;

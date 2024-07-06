@@ -55,3 +55,11 @@ export const advancedShapes = [
     path: "M 24,4 L 44,16 L 44,32 L 24,44 L 4,32 L 4,16 Z",
   },
 ];
+
+export const lines = [
+  {
+    name: "Line",
+    path: "M 0.46601942,2.5631068 2.5631068,0.40776699 48.563819,45.433327 46.463094,47.534052 Z",
+    points: [0, 0, 250, 0],
+  },
+];

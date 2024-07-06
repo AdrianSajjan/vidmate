@@ -1,40 +1,35 @@
 import { fabric } from "fabric";
-
-import { useEffect, useMemo, useState } from "react";
+import { toJS } from "mobx";
 import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { SketchPicker, ColorResult } from "react-color";
+import { useMemo, useState } from "react";
+import { ColorResult, SketchPicker } from "react-color";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-import { useEditorContext } from "@/context/editor";
-import { rightSidebarWidth } from "@/constants/layout";
-import { cn } from "@/lib/utils";
-import { darkHexCodes, lightHexCodes, pastelHexCodes } from "@/constants/editor";
 import { GradientSlider } from "@/components/slider/gradient";
+
+import { darkHexCodes, lightHexCodes, pastelHexCodes } from "@/constants/editor";
+import { rightSidebarWidth } from "@/constants/layout";
+import { useEditorContext } from "@/context/editor";
 import { defaultFill, defaultGradient } from "@/fabric/constants";
-import { toJS } from "mobx";
+import { cn } from "@/lib/utils";
 
 const picker = { default: { picker: { boxShadow: "none", padding: 0, width: "100%", background: "transparent", borderRadius: 0 } } };
 
 function _FillSidebar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected;
+  const selected = editor.canvas.selected!;
 
   const [index, setIndex] = useState(0);
 
-  useEffect(() => {
-    if (!selected) editor.setActiveSidebarRight(null);
-  }, [selected, editor]);
-
   const mode = useMemo(() => {
-    if (!selected || !selected.fill || typeof selected.fill === "string") return "solid";
+    if (!selected.fill || typeof selected.fill === "string") return "solid";
     return "gradient";
   }, [selected]);
 
   const color = useMemo(() => {
-    if (!selected || !selected.fill) return defaultFill;
+    if (!selected.fill) return defaultFill;
     if (typeof selected.fill === "string") return selected.fill;
     return (selected.fill as fabric.Gradient).colorStops![index].color;
   }, [selected, index]);
@@ -45,7 +40,6 @@ function _FillSidebar() {
   }, [selected]);
 
   const onToggleFill = () => {
-    if (!selected) return;
     if (selected.fill) {
       editor.canvas.onChangeActiveObjectProperty("previousFill", mode === "solid" ? selected.fill : selected.previousFill);
       editor.canvas.onChangeActiveObjectProperty("fill", "");
@@ -56,8 +50,6 @@ function _FillSidebar() {
   };
 
   const onChangeColor = (result: ColorResult) => {
-    if (!selected) return;
-
     const { r, g, b, a = 1 } = result.rgb;
     const color = fabric.Color.fromRgba(`rgba(${r},${g},${b},${a})`);
     const hex = color.toHexa();
@@ -78,8 +70,6 @@ function _FillSidebar() {
   };
 
   const onSelectColorFromSwatch = (color: string) => {
-    if (!selected) return;
-
     switch (mode) {
       case "solid": {
         editor.canvas.onChangeActiveObjectProperty("fill", color);
@@ -96,7 +86,6 @@ function _FillSidebar() {
   };
 
   const onChangeOffset = (index: number, offset: number) => {
-    if (!selected) return;
     const fill = selected.fill as fabric.Gradient;
     const stops = toJS(fill.colorStops!);
     stops[index].offset = offset;
@@ -105,7 +94,7 @@ function _FillSidebar() {
   };
 
   const onChangeMode = (value: string) => {
-    if (value === mode || !selected) return;
+    if (value === mode) return;
     switch (value) {
       case "solid": {
         const fill = !selected.previousFill || typeof selected.previousFill !== "string" ? defaultFill : selected.previousFill;

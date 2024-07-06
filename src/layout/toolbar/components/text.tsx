@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
 
@@ -12,9 +11,10 @@ import { fontSizes } from "@/constants/editor";
 import { useEditorContext } from "@/context/editor";
 
 import { ToolbarFillOption } from "../common/fill";
+import { ToolbarPositionOption } from "../common/position";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
-import { ToolbarPositionOption } from "../common/position";
+import { cn } from "@/lib/utils";
 
 function _TextToolbar() {
   const editor = useEditorContext();
@@ -23,15 +23,16 @@ function _TextToolbar() {
   return (
     <div className="flex items-center h-full w-full overflow-x-scroll scrollbar-hidden">
       <div className="flex items-center gap-4">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button size="sm" variant="outline" className="gap-1.5">
-              <LigatureIcon size={15} />
-              <span>Montserrat</span>
-              <ChevronDownIcon size={15} />
-            </Button>
-          </PopoverTrigger>
-        </Popover>
+        <Button
+          size="sm"
+          variant="outline"
+          className={cn("gap-1.5", editor.sidebarRight === "fonts" ? "bg-card" : "bg-transparent")}
+          onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "fonts" ? null : "fonts")}
+        >
+          <LigatureIcon size={15} />
+          <span>Montserrat</span>
+          <ChevronDownIcon size={15} />
+        </Button>
         <div className="relative">
           <Input className="h-8 w-24 text-xs pr-14" value={selected.fontSize} onChange={(event) => !isNaN(+event.target.value) && editor.canvas.onChangeActiveTextboxProperty("fontSize", +event.target.value)} />
           <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs">px</span>

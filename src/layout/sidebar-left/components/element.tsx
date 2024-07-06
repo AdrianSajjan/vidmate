@@ -9,7 +9,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from 
 
 import { useEditorContext } from "@/context/editor";
 
-import { advancedShapes, basicShapes } from "@/constants/elements";
+import { advancedShapes, basicShapes, lines } from "@/constants/elements";
 import { leftSidebarWidth } from "@/constants/layout";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +88,27 @@ function _ElementSidebar() {
                     className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
                   >
                     <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+                      <path d={path} className="h-full" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-4">
+                <h4 className="text-xs font-semibold line-clamp-1">Lines</h4>
+                <Button size="sm" variant="link" className="text-blue-600 font-medium line-clamp-1">
+                  See All
+                </Button>
+              </div>
+              <div className="flex gap-2.5 items-center overflow-scroll relative scrollbar-hidden">
+                {lines.map(({ name, path, points }) => (
+                  <button
+                    key={name}
+                    onClick={() => editor.canvas.onAddLine(points, name)}
+                    className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+                  >
+                    <svg viewBox="0 0 48 48" aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
                       <path d={path} className="h-full" />
                     </svg>
                   </button>
