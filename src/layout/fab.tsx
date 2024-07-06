@@ -8,7 +8,7 @@ function _EditorFAB() {
   const editor = useEditorContext();
 
   return (
-    <div className="absolute bottom-6 right-6 flex items-center gap-2.5">
+    <div className="absolute bottom-6 left-6 flex items-center gap-2.5">
       <Tabs value={String(editor.page)}>
         <TabsList className="shadow-sm bg-card dark:bg-muted">
           {editor.pages.map((_, index) => (

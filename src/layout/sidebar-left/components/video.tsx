@@ -1,13 +1,16 @@
-import { Fragment, MouseEventHandler } from "react";
 import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
+import { flowResult } from "mobx";
 import { observer } from "mobx-react";
+import { Fragment, MouseEventHandler } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useEditorContext } from "@/context/editor";
 import { leftSidebarWidth } from "@/constants/layout";
+import { useEditorContext } from "@/context/editor";
+import { isImageLoaded } from "@/lib/utils";
 
 import * as mock from "@/constants/mock";
 
@@ -16,12 +19,18 @@ function _VideoSidebar() {
 
   const handleClick =
     (source: string): MouseEventHandler<HTMLButtonElement> =>
-    (event) => {
+    async (event) => {
       const thumbnail = event.currentTarget.querySelector("img");
-      if (!thumbnail) {
-        editor.canvas.onAddVideoFromSource(source);
+      if (!thumbnail || !isImageLoaded(thumbnail)) {
+        toast.promise(flowResult(editor.canvas.onAddVideoFromSource(source)), {
+          loading: "The video asset is being loaded...",
+          success: () => "The video asset has been added to artboard",
+          error: () => "Ran into an error adding the video asset",
+        });
       } else {
-        editor.canvas.onAddVideoWithThumbail(source, thumbnail);
+        toast.promise(flowResult(editor.canvas.onAddVideoWithThumbail(source, thumbnail)), {
+          error: () => "Ran into an error adding the video asset",
+        });
       }
     };
 

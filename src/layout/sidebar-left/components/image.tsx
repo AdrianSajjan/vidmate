@@ -1,15 +1,18 @@
-import { Fragment, MouseEventHandler } from "react";
 import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
+import { Fragment, MouseEventHandler } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useEditorContext } from "@/context/editor";
 import { leftSidebarWidth } from "@/constants/layout";
+import { useEditorContext } from "@/context/editor";
 
 import * as mock from "@/constants/mock";
+import { isImageLoaded } from "@/lib/utils";
+import { flowResult } from "mobx";
+import { toast } from "sonner";
 
 function _ImageSidebar() {
   const editor = useEditorContext();
@@ -17,11 +20,17 @@ function _ImageSidebar() {
   const handleClick =
     (source: string): MouseEventHandler<HTMLButtonElement> =>
     (event) => {
-      const image = event.currentTarget.querySelector("img");
-      if (!image) {
-        editor.canvas.onAddImageFromSource(source);
+      const thumbnail = event.currentTarget.querySelector("img");
+      if (!thumbnail || !isImageLoaded(thumbnail)) {
+        toast.promise(flowResult(editor.canvas.onAddImageFromSource(source)), {
+          loading: "The image asset is being loaded...",
+          success: () => "The image asset has been added to artboard",
+          error: () => "Ran into an error adding the image asset",
+        });
       } else {
-        editor.canvas.onAddImageWithThumbail(source, image);
+        toast.promise(flowResult(editor.canvas.onAddImageWithThumbail(source, thumbnail)), {
+          error: () => "Ran into an error adding the image asset",
+        });
       }
     };
 

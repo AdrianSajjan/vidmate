@@ -358,7 +358,7 @@ export class Canvas {
         let zoom = this.instance.getZoom();
         zoom *= 0.999 ** (event.e.deltaY * 5);
 
-        if (zoom > 20) zoom = 20;
+        if (zoom > 2.5) zoom = 2.5;
         if (zoom < 0.01) zoom = 0.01;
 
         const center = this.instance.getCenter();
@@ -651,29 +651,34 @@ export class Canvas {
     return textbox;
   }
 
-  onAddImageFromSource(source: string) {
+  *onAddImageFromSource(source: string): Generator<Promise<fabric.Image>, fabric.Image | undefined, fabric.Image> {
     if (!this.instance || !this.artboard) return;
+    return yield createInstance(Promise<fabric.Image>, (resolve, reject) => {
+      fabric.Image.fromURL(
+        source,
+        (image) => {
+          if (!image._originalElement) return reject();
 
-    return fabric.Image.fromURL(
-      source,
-      (image) => {
-        image.scaleToHeight(500);
-        image.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
+          image.scaleToHeight(500);
+          image.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
 
-        this.onInitializeElementMeta(image);
-        this.onInitializeElementAnimation(image);
+          this.onInitializeElementMeta(image);
+          this.onInitializeElementAnimation(image);
 
-        this.instance!.add(image);
-        this.instance!.setActiveObject(image);
+          this.instance!.add(image);
+          this.instance!.setActiveObject(image);
 
-        this.instance!.requestRenderAll();
-        this.onToggleCanvasElements(this.seek);
-      },
-      { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
-    );
+          this.instance!.requestRenderAll();
+          this.onToggleCanvasElements(this.seek);
+
+          resolve(image);
+        },
+        { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
+      );
+    });
   }
 
-  onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement) {
+  *onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement): Generator<Promise<fabric.Image>, fabric.Image | undefined, fabric.Image> {
     if (!this.instance || !this.artboard) return;
 
     const id = FabricUtils.elementID("image");
@@ -707,49 +712,62 @@ export class Canvas {
     thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
     thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
 
-    return fabric.Image.fromURL(
-      source,
-      (image) => {
-        const scaleX = thumbnail.getScaledWidth() / image.getScaledWidth();
-        const scaleY = thumbnail.getScaledHeight() / image.getScaledHeight();
+    return yield createInstance(Promise<fabric.Image>, (resolve, reject) => {
+      fabric.Image.fromURL(
+        source,
+        (image) => {
+          if (!image._originalElement) {
+            this.instance!.remove(thumbnail, overlay, spinner).requestRenderAll();
+            return reject();
+          }
 
-        image.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+          const scaleX = thumbnail.getScaledWidth() / image.getScaledWidth();
+          const scaleY = thumbnail.getScaledHeight() / image.getScaledHeight();
 
-        this.onInitializeElementMeta(image);
-        this.onInitializeElementAnimation(image);
+          image.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
 
-        this.instance!.add(image).remove(thumbnail, overlay, spinner);
-        this.instance!.setActiveObject(image).requestRenderAll();
+          this.onInitializeElementMeta(image);
+          this.onInitializeElementAnimation(image);
 
-        this.onToggleCanvasElements(this.seek);
-      },
-      { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
-    );
+          this.instance!.add(image).remove(thumbnail, overlay, spinner);
+          this.instance!.setActiveObject(image).requestRenderAll();
+
+          this.onToggleCanvasElements(this.seek);
+          resolve(image);
+        },
+        { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
+      );
+    });
   }
 
-  onAddVideoFromSource(source: string) {
+  *onAddVideoFromSource(source: string): Generator<Promise<fabric.Video>, fabric.Video | undefined, fabric.Video> {
     if (!this.instance || !this.artboard) return;
+    return yield createInstance(Promise<fabric.Video>, (resolve, reject) => {
+      fabric.Video.fromURL(
+        source,
+        (video) => {
+          if (!video) return reject();
 
-    return fabric.Video.fromURL(
-      source,
-      (video) => {
-        video.scaleToHeight(500);
-        video.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
+          video.scaleToHeight(500);
+          video.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
 
-        this.onInitializeElementMeta(video);
-        this.onInitializeElementAnimation(video);
+          this.onInitializeElementMeta(video);
+          this.onInitializeElementAnimation(video);
 
-        this.instance!.add(video);
-        this.instance!.setActiveObject(video);
+          this.instance!.add(video);
+          this.instance!.setActiveObject(video);
 
-        this.instance!.requestRenderAll();
-        this.onToggleCanvasElements(this.seek);
-      },
-      { name: FabricUtils.elementID("video"), crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
-    );
+          this.instance!.requestRenderAll();
+          this.onToggleCanvasElements(this.seek);
+
+          resolve(video);
+        },
+        { name: FabricUtils.elementID("video"), crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
+      );
+    });
   }
 
-  onAddVideoWithThumbail(source: string, _thumbnail: HTMLImageElement) {
+  *onAddVideoWithThumbail(source: string, _thumbnail: HTMLImageElement): Generator<Promise<fabric.Video>, fabric.Video | undefined, fabric.Video> {
     if (!this.instance || !this.artboard) return;
 
     const id = FabricUtils.elementID("video");
@@ -783,24 +801,32 @@ export class Canvas {
     thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
     thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
 
-    return fabric.Video.fromURL(
-      source,
-      (video) => {
-        const scaleX = thumbnail.getScaledWidth() / video.getScaledWidth();
-        const scaleY = thumbnail.getScaledHeight() / video.getScaledHeight();
+    return yield createInstance(Promise<fabric.Video>, (resolve, reject) => {
+      fabric.Video.fromURL(
+        source,
+        (video) => {
+          if (!video) {
+            this.instance!.remove(thumbnail, overlay, spinner).requestRenderAll();
+            return reject();
+          }
 
-        video.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+          const scaleX = thumbnail.getScaledWidth() / video.getScaledWidth();
+          const scaleY = thumbnail.getScaledHeight() / video.getScaledHeight();
 
-        this.onInitializeElementMeta(video);
-        this.onInitializeElementAnimation(video);
+          video.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
 
-        this.instance!.add(video).remove(thumbnail, overlay, spinner);
-        this.instance!.setActiveObject(video).requestRenderAll();
+          this.onInitializeElementMeta(video);
+          this.onInitializeElementAnimation(video);
 
-        this.onToggleCanvasElements(this.seek);
-      },
-      { name: id, crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
-    );
+          this.instance!.add(video).remove(thumbnail, overlay, spinner);
+          this.instance!.setActiveObject(video).requestRenderAll();
+
+          this.onToggleCanvasElements(this.seek);
+          resolve(video);
+        },
+        { name: id, crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
+      );
+    });
   }
 
   onAddBasicShape(klass: string, params: any) {
@@ -1173,21 +1199,20 @@ export class Canvas {
     this.onChangeObjectProperty(selected, property, value);
   }
 
-  onChangeObjectFillGradient(object: fabric.Object, type: string, direction: string, colors: fabric.IGradientOptionsColorStops) {
+  onChangeObjectFillGradient(object: fabric.Object, type: string, colors: fabric.IGradientOptionsColorStops) {
     if (!this.instance || !object) return;
 
-    console.log(direction);
-    const gradient = createInstance(fabric.Gradient, { type: type, colorStops: colors, coords: { x1: 0, x2: 0, y1: 0, y2: object.getScaledHeight() } });
+    const gradient = createInstance(fabric.Gradient, { type: type, gradientUnits: "percentage", colorStops: colors, coords: { x1: 0, y1: 0, x2: 1, y2: 0 } });
     object.set({ fill: gradient });
 
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
   }
 
-  onChangeActiveObjectFillGradient(type: string, direction: string, colors: fabric.IGradientOptionsColorStops) {
+  onChangeActiveObjectFillGradient(type: string, colors: fabric.IGradientOptionsColorStops) {
     const selected = this.instance?.getActiveObject();
     if (!this.instance || !selected) return;
-    this.onChangeObjectFillGradient(selected, type, direction, colors);
+    this.onChangeObjectFillGradient(selected, type, colors);
   }
 
   onChangeObjectAnimation(object: fabric.Object, type: "in" | "out", animation: EntryAnimation | ExitAnimation) {

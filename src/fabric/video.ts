@@ -63,14 +63,18 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   },
 });
 
-FabricVideo.fromURL = function (url: string, callback: (video: fabric.Video) => void, options?: any) {
+FabricVideo.fromURL = function (url: string, callback: (video: fabric.Video | null) => void, options?: any) {
   const element = document.createElement("video");
   element.src = url;
+  element.currentTime = 0;
   element.crossOrigin = options.crossOrigin;
-  element.addEventListener("loadedmetadata", () => {
+  element.addEventListener("loadeddata", () => {
     element.height = element.videoHeight;
     element.width = element.videoWidth;
     callback(createInstance(FabricVideo, element, options));
+  });
+  element.addEventListener("error", () => {
+    callback(null);
   });
   element.load();
 };
@@ -86,7 +90,7 @@ FabricVideo.fromObject = function (object: any, callback: (video: fabric.Video) 
           (filters: fabric.IBaseFilter[]) => {
             resolve(filters);
           },
-          "fabric.Image.filters"
+          "fabric.Image.filters",
         );
       }
     }),
@@ -96,7 +100,7 @@ FabricVideo.fromObject = function (object: any, callback: (video: fabric.Video) 
       (video: fabric.Video) => {
         callback(video);
       },
-      { ...object, filters }
+      { ...object, filters },
     );
   });
 };

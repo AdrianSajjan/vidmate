@@ -16,3 +16,7 @@ export function wait(ms: number) {
 export function isVideoElement(element: HTMLElement): element is HTMLVideoElement {
   return element.tagName === "VIDEO";
 }
+
+export function isImageLoaded(element: HTMLImageElement) {
+  return element.complete && !!element.naturalWidth;
+}

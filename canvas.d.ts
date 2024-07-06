@@ -2523,8 +2523,14 @@ interface IImageOptions extends IObjectOptions {
   filters?: IBaseFilter[] | undefined;
 }
 
-interface Video extends Image {}
+interface Video extends Object, IVideoOptions {}
 export class Video extends Image {
+  /**
+   * Constructor
+   * @param element Video element
+   * @param [options] Options object
+   */
+  constructor(element: HTMLVideoElement, options?: IVideoOptions);
   /**
    * Returns the current video playback status
    */
@@ -2550,7 +2556,7 @@ export class Video extends Image {
    * @param element image element
    * @param [options] Options object
    */
-  setElement(element: HTMLVideoElement, options?: IImageOptions): Image;
+  setElement(element: HTMLVideoElement, options?: IVideoOptions): Image;
   /**
    * Starts the video playback
    */
@@ -2564,6 +2570,13 @@ export class Video extends Image {
    * * @param [seek] The seek time in seconds
    */
   seek(seek: number): void;
+  /**
+   * Creates an instance of fabric.Image from an URL string
+   * @param url URL to create an image from
+   * @param [callback] Callback to invoke when image is created (newly created image is passed as a first argument)
+   * @param [imgOptions] Options object
+   */
+  static fromURL(url: string, callback?: (video: Video | null) => void, options?: IVideoOptions): Video;
 }
 
 interface Image extends Object, IImageOptions {}
@@ -2942,7 +2955,7 @@ interface IObjectOptions {
   /**
    * Color of object's last fill -> state to switch between solid and gradient fill
    */
-  previousFill?: string | Pattern | Gradient | undefined;
+  previousFill?: any;
 
   /**
    * Fill rule used to fill an object
