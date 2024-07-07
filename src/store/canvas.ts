@@ -22,6 +22,7 @@ export class Canvas {
   elements: fabric.Object[];
   selected?: fabric.Object | null;
   crop?: fabric.Image | null;
+  trim?: fabric.Video | null;
 
   seek: number;
   duration: number;

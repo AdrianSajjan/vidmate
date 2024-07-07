@@ -113,4 +113,8 @@ FabricVideo.fromObject = function (object: any, callback: (video: fabric.Video) 
   });
 };
 
+FabricVideo.toObject = function (properties: any[]) {
+  return fabric.Object.prototype.toObject.call(this, ["trimLeft", "trimRight"].concat(properties));
+};
+
 fabric.Video = FabricVideo;
