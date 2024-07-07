@@ -27,7 +27,7 @@ export function App() {
             <div className="flex-1 relative" ref={ref}>
               <EditorCanvas page={0} height={height} width={width} />
               <EditorFAB />
-              <Toaster richColors position="bottom-right" offset={24} />
+              <Toaster richColors position="bottom-right" offset={24} visibleToasts={6} />
             </div>
             <EditorFooter />
           </section>

@@ -38,7 +38,7 @@ function _FontSidebar() {
             <SearchIcon size={15} className="absolute top-1/2 -translate-y-1/2 left-2.5 text-foreground/60" />
           </div>
         </div>
-        <div className="px-3 flex flex-col gap-1">
+        <div className="px-3 pb-4 flex flex-col gap-1">
           {fonts.map((font) => (
             <FontItem key={font.family} font={font} selected={isFontSelected(font)} onClick={() => handleChangeFontFamily(font)} />
           ))}

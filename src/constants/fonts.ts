@@ -7,114 +7,185 @@ export interface EditorFontStyle {
   name: string;
   weight: string;
   style: string;
-  url: string;
+  url?: string;
 }
 
 export const fonts: EditorFont[] = [
   {
     family: "Inter",
     styles: [
-      {
-        name: "Inter Regular",
-        weight: "400",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZ1rib2Bg-4.woff2",
-      },
-      {
-        name: "Inter Bold 700",
-        weight: "700",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYMZ1rib2Bg-4.woff2",
-      },
+      { name: "Inter Regular", weight: "400", style: "normal" },
+      { name: "Inter Bold 700", weight: "700", style: "normal" },
     ],
   },
   {
     family: "Poppins",
     styles: [
-      {
-        name: "Poppins Regular",
-        weight: "regular",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/poppins/v20/pxiEyp8kv8JHgFVrFJXUc1NECPY.woff2",
-      },
-      {
-        name: "Poppins 700",
-        weight: "700",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/poppins/v20/pxiByp8kv8JHgFVrLCz7V15vFP-KUEg.woff2",
-      },
-    ],
-  },
-  {
-    family: "Montserrat",
-    styles: [
-      {
-        name: "Montserrat Bold 700",
-        weight: "700",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM70w7Y3tcoqK5.woff2",
-      },
-
-      {
-        name: "Montserrat Regular",
-        weight: "regular",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Ew7Y3tcoqK5.woff2",
-      },
+      { name: "Poppins Regular", weight: "regular", style: "normal" },
+      { name: "Poppins 700", weight: "700", style: "normal" },
     ],
   },
   {
     family: "Roboto",
     styles: [
-      {
-        name: "Roboto Bold 700",
-        weight: "700",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlvBh05IsDqlA.woff2",
-      },
-
-      {
-        name: "Roboto Regular",
-        weight: "regular",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me4GZLCzYlKw.woff2",
-      },
+      { name: "Roboto Regular", style: "normal", weight: "400" },
+      { name: "Roboto Bold", style: "normal", weight: "700" },
     ],
+  },
+  {
+    family: "Open Sans",
+    styles: [
+      { name: "Open Sans Regular", style: "normal", weight: "400" },
+      { name: "Open Sans Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Lato",
+    styles: [
+      { name: "Lato Regular", style: "normal", weight: "400" },
+      { name: "Lato Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Montserrat",
+    styles: [
+      { name: "Montserrat Regular", style: "normal", weight: "400" },
+      { name: "Montserrat Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Oswald",
+    styles: [
+      { name: "Oswald Regular", style: "normal", weight: "400" },
+      { name: "Oswald Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Slabo 27px",
+    styles: [{ name: "Slabo 27px Regular", style: "normal", weight: "400" }],
   },
   {
     family: "Raleway",
     styles: [
-      {
-        name: "Raleway Bold 700",
-        weight: "700",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/raleway/v29/1Ptxg8zYS_SKggPN4iEgvnHyvveLxVs9pYCKNLA3JC9c.woff2",
-      },
-
-      {
-        name: "Raleway Regular",
-        weight: "regular",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/raleway/v29/1Ptxg8zYS_SKggPN4iEgvnHyvveLxVvaooCKNLA3JC9c.woff2",
-      },
+      { name: "Raleway Regular", style: "normal", weight: "400" },
+      { name: "Raleway Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Merriweather",
+    styles: [
+      { name: "Merriweather Regular", style: "normal", weight: "400" },
+      { name: "Merriweather Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "PT Sans",
+    styles: [
+      { name: "PT Sans Regular", style: "normal", weight: "400" },
+      { name: "PT Sans Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Ubuntu",
+    styles: [
+      { name: "Ubuntu Regular", style: "normal", weight: "400" },
+      { name: "Ubuntu Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Noto Sans",
+    styles: [
+      { name: "Noto Sans Regular", style: "normal", weight: "400" },
+      { name: "Noto Sans Bold", style: "normal", weight: "700" },
     ],
   },
   {
     family: "Playfair Display",
     styles: [
-      {
-        name: "Playfair Display Bold 700",
-        weight: "700",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/playfairdisplay/v36/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKeiukDVZNLo_U2r.woff2",
-      },
-
-      {
-        name: "Playfair Display Regular",
-        weight: "regular",
-        style: "normal",
-        url: "https://fonts.gstatic.com/s/playfairdisplay/v36/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvUDVZNLo_U2r.woff2",
-      },
+      { name: "Playfair Display Regular", style: "normal", weight: "400" },
+      { name: "Playfair Display Bold", style: "normal", weight: "700" },
     ],
+  },
+  {
+    family: "Droid Sans",
+    styles: [
+      { name: "Droid Sans Regular", style: "normal", weight: "400" },
+      { name: "Droid Sans Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Titillium Web",
+    styles: [
+      { name: "Titillium Web Regular", style: "normal", weight: "400" },
+      { name: "Titillium Web Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Source Sans Pro",
+    styles: [
+      { name: "Source Sans Pro Regular", style: "normal", weight: "400" },
+      { name: "Source Sans Pro Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Fira Sans",
+    styles: [
+      { name: "Fira Sans Regular", style: "normal", weight: "400" },
+      { name: "Fira Sans Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Bitter",
+    styles: [
+      { name: "Bitter Regular", style: "normal", weight: "400" },
+      { name: "Bitter Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Libre Baskerville",
+    styles: [
+      { name: "Libre Baskerville Regular", style: "normal", weight: "400" },
+      { name: "Libre Baskerville Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Lora",
+    styles: [
+      { name: "Lora Regular", style: "normal", weight: "400" },
+      { name: "Lora Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Arvo",
+    styles: [
+      { name: "Arvo Regular", style: "normal", weight: "400" },
+      { name: "Arvo Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Cabin",
+    styles: [
+      { name: "Cabin Regular", style: "normal", weight: "400" },
+      { name: "Cabin Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Muli",
+    styles: [
+      { name: "Muli Regular", style: "normal", weight: "400" },
+      { name: "Muli Bold", style: "normal", weight: "700" },
+    ],
+  },
+  {
+    family: "Indie Flower",
+    styles: [{ name: "Indie Flower Regular", style: "normal", weight: "400" }],
+  },
+  {
+    family: "Varela Round",
+    styles: [{ name: "Varela Round Regular", style: "normal", weight: "400" }],
+  },
+  {
+    family: "Abril Fatface",
+    styles: [{ name: "Abril Fatface Regular", style: "normal", weight: "400" }],
   },
 ];
