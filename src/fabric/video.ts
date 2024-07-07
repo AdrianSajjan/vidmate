@@ -4,6 +4,8 @@ import { fabric } from "fabric";
 const FabricVideo = fabric.util.createClass(fabric.Image, {
   type: "video",
   playing: false,
+  trimLeft: 0,
+  trimRight: 0,
 
   initialize: function (element: HTMLVideoElement, options?: any) {
     options = options || {};
@@ -20,6 +22,11 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
     this.on("added", () => {
       fabric.util.requestAnimFrame(this.update.bind(this));
     });
+
+    element.addEventListener("timeupdate", () => {
+      if (!this.trimRight || element.currentTime < element.duration - this.trimRight) return;
+      element.pause();
+    });
   },
 
   get duration(): number {
@@ -28,14 +35,15 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   },
 
   play: function () {
-    const element = this._originalElement as HTMLVideoElement;
     this.playing = true;
+    const element = this._originalElement as HTMLVideoElement;
+    if (this.trimLeft) element.currentTime = this.trimLeft;
     element.play();
   },
 
   pause: function () {
-    const element = this._originalElement as HTMLVideoElement;
     this.playing = false;
+    const element = this._originalElement as HTMLVideoElement;
     element.pause();
   },
 

@@ -2484,7 +2484,10 @@ export class ActiveSelection {
   static fromObject(object: any, callback: Function): void;
 }
 
-interface IVideoOptions extends IImageOptions {}
+interface IVideoOptions extends IImageOptions {
+  trimLeft?: number;
+  trimRight?: number;
+}
 interface IImageOptions extends IObjectOptions {
   /**
    * crossOrigin value (one of "", "anonymous", "allow-credentials")
@@ -2535,6 +2538,14 @@ export class Video extends Image {
    * Returns the current video playback status
    */
   playing: boolean;
+  /**
+   * Returns the current video playback status
+   */
+  trimLeft: boolean;
+  /**
+   * Returns the current video playback status
+   */
+  trimRight: boolean;
   /**
    * Returns the total duration of the video
    */

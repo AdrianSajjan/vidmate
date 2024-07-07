@@ -1,5 +1,5 @@
 import { observer } from "mobx-react";
-import { BlendIcon, CropIcon, WandIcon } from "lucide-react";
+import { BlendIcon, ClapperboardIcon, CropIcon, WandIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -13,7 +13,6 @@ import { ToolbarTimelineOption } from "../common/timeline";
 
 function _VideoToolbar() {
   const editor = useEditorContext();
-
   const selected = editor.canvas.selected as fabric.Video;
 
   const handleCropStart = () => {
@@ -25,6 +24,10 @@ function _VideoToolbar() {
   return (
     <div className="flex items-center h-full w-full overflow-x-scroll scrollbar-hidden">
       <div className="flex items-center gap-2.5">
+        <Button onClick={handleCropStart} variant="outline" size="sm" className="gap-1.5">
+          <ClapperboardIcon size={15} />
+          <span className="text-xs font-normal">Trim</span>
+        </Button>
         <Button onClick={handleCropStart} variant="outline" size="sm" className="gap-1.5">
           <CropIcon size={15} />
           <span className="text-xs font-normal">Crop</span>

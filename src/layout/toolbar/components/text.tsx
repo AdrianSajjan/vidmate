@@ -38,7 +38,12 @@ function _TextToolbar() {
           <ChevronDownIcon size={15} className="ml-auto shrink-0" />
         </Button>
         <div className="relative">
-          <Input className="h-8 w-24 text-xs pr-14" value={selected.fontSize} onChange={(event) => !isNaN(+event.target.value) && editor.canvas.onChangeActiveTextboxProperty("fontSize", +event.target.value)} />
+          <Input
+            className="h-8 w-28 text-xs pr-14"
+            type="number"
+            value={selected.fontSize}
+            onChange={(event) => (+event.target.value <= 0 ? null : editor.canvas.onChangeActiveTextboxProperty("fontSize", +event.target.value))}
+          />
           <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs">px</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

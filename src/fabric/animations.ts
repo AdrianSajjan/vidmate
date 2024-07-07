@@ -49,8 +49,8 @@ export const entry: EditorAnimation[] = [
     duration: 250,
   },
   {
-    value: "rise-in-down",
-    label: "Rise Down",
+    value: "sink-in-down",
+    label: "Sink Down",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
@@ -83,20 +83,8 @@ export const exit: EditorAnimation[] = [
     duration: 500,
   },
   {
-    value: "pan-out-left",
-    label: "Pan Left",
-    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
-    duration: 500,
-  },
-  {
     value: "slide-out-right",
     label: "Slide Right",
-    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
-    duration: 500,
-  },
-  {
-    value: "pan-out-right",
-    label: "Pan Right",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 500,
   },
@@ -105,6 +93,12 @@ export const exit: EditorAnimation[] = [
     label: "Rise Up",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 500,
+  },
+  {
+    value: "sink-out-down",
+    label: "Sink Down",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    duration: 250,
   },
 ];
 

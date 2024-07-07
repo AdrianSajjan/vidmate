@@ -7,6 +7,7 @@ import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fab
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, isVideoElement } from "@/lib/utils";
 import { EntryAnimation, ExitAnimation } from "canvas";
+import { trunc } from "@/lib/maths";
 
 export const artboardHeight = 1080;
 export const artboardWidth = 1080;
@@ -25,6 +26,7 @@ export class Canvas {
   seek: number;
   duration: number;
 
+  loop: boolean;
   playing: boolean;
   timeline?: anime.AnimeTimelineInstance | null;
 
@@ -44,6 +46,7 @@ export class Canvas {
     this.seek = 0;
     this.duration = 30000;
     this.playing = false;
+    this.loop = false;
 
     this.hasControls = true;
     this.viewportTransform = [];
@@ -397,11 +400,23 @@ export class Canvas {
     this.timeline = anime.timeline({
       duration: this.duration,
       autoplay: false,
+      loop: this.loop,
       begin: (anim) => {
         this.onChangeSeekTime(anim.currentTime / 1000);
       },
       update: (anim) => {
-        this.onChangeSeekTime(anim.currentTime / 1000);
+        if (anim.currentTime >= this.duration) {
+          if (anim.loop) {
+            anim.pause();
+            anim.seek(0);
+            this.onChangeSeekTime(0);
+            anim.play();
+          } else {
+            this.onPauseTimeline(true);
+          }
+        } else {
+          this.onChangeSeekTime(anim.currentTime / 1000);
+        }
       },
       complete: () => {
         this.onUpdateTimelineStatus(false);
@@ -518,7 +533,7 @@ export class Canvas {
           this.timeline.add(
             {
               targets: object,
-              opacity: [1, 0],
+              opacity: 0,
               duration: exit.duration,
               easing: exit.easing || "linear",
               round: false,
@@ -528,12 +543,53 @@ export class Canvas {
           break;
         }
         case "slide-out-left": {
-          console.log(1);
           this.timeline.add(
             {
               targets: object,
-              opacity: [1, 0],
-              left: [object.left!, object.left! - 150],
+              opacity: 0,
+              left: [object.left!, object.left! - Math.min(object.getScaledWidth() / 2, 100)],
+              duration: exit.duration,
+              easing: exit.easing || "linear",
+              round: false,
+            },
+            object.meta!.offset + object.meta!.duration - exit.duration,
+          );
+          break;
+        }
+        case "slide-out-right": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: 0,
+              left: [object.left!, object.left! + Math.min(object.getScaledWidth() / 2, 100)],
+              duration: exit.duration,
+              easing: exit.easing || "linear",
+              round: false,
+            },
+            object.meta!.offset + object.meta!.duration - exit.duration,
+          );
+          break;
+        }
+        case "rise-out-up": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: 0,
+              top: [object.top!, object.top! - Math.min(object.getScaledHeight() / 2, 50)],
+              duration: exit.duration,
+              easing: exit.easing || "linear",
+              round: false,
+            },
+            object.meta!.offset + object.meta!.duration - exit.duration,
+          );
+          break;
+        }
+        case "sink-out-down": {
+          this.timeline.add(
+            {
+              targets: object,
+              opacity: 0,
+              top: [object.top!, object.top! + Math.min(object.getScaledHeight() / 2, 50)],
               duration: exit.duration,
               easing: exit.easing || "linear",
               round: false,
@@ -752,12 +808,13 @@ export class Canvas {
       fabric.Video.fromURL(
         source,
         (video) => {
-          if (!video) return reject();
+          if (!video || !video._originalElement) return reject();
+          const element = video._originalElement as HTMLVideoElement;
 
           video.scaleToHeight(500);
           video.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
 
-          this.onInitializeElementMeta(video);
+          this.onInitializeElementMeta(video, { duration: Math.min(trunc(element.duration, 1) * 1000, this.duration) });
           this.onInitializeElementAnimation(video);
 
           this.instance!.add(video);
@@ -811,17 +868,18 @@ export class Canvas {
       fabric.Video.fromURL(
         source,
         (video) => {
-          if (!video) {
+          if (!video || !video._originalElement) {
             this.instance!.remove(thumbnail, overlay, spinner).requestRenderAll();
             return reject();
           }
 
+          const element = video._originalElement as HTMLVideoElement;
           const scaleX = thumbnail.getScaledWidth() / video.getScaledWidth();
           const scaleY = thumbnail.getScaledHeight() / video.getScaledHeight();
 
           video.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
 
-          this.onInitializeElementMeta(video);
+          this.onInitializeElementMeta(video, { duration: Math.min(trunc(element.duration, 1) * 1000, this.duration) });
           this.onInitializeElementAnimation(video);
 
           this.instance!.add(video).remove(thumbnail, overlay, spinner);
@@ -1319,6 +1377,11 @@ export class Canvas {
   onChangeSeekTime(seek: number) {
     this.seek = seek * 1000;
     this.onToggleCanvasElements(this.seek);
+  }
+
+  onToggleLoop(loop: boolean) {
+    this.loop = loop;
+    if (this.timeline) this.timeline.loop = loop;
   }
 
   onChangeDuration(duration: number) {
