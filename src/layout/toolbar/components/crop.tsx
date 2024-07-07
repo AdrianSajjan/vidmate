@@ -8,16 +8,16 @@ import { useEditorContext } from "@/context/editor";
 
 function _CropToolbar() {
   const editor = useEditorContext();
-  const crop = editor.canvas.crop;
+  const crop = editor.canvas.crop!;
 
   const handleCropEnd = () => {
-    const image = editor.canvas.instance?.getItemByName(crop?.name);
+    const image = editor.canvas.instance?.getItemByName(crop.name);
     editor.canvas.instance?.discardActiveObject();
     if (image) editor.canvas.instance?.setActiveObject(image);
   };
 
   const handleFlipImage = (property: "flipX" | "flipY") => {
-    const image = editor.canvas.instance?.getItemByName(crop?.name) as fabric.Image;
+    const image = editor.canvas.instance?.getItemByName(crop.name) as fabric.Image;
     if (!image) return;
     editor.canvas.onChangeImageProperty(image, property, !image[property]);
   };

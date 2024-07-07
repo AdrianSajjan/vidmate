@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 import { cn } from "@/lib/utils";
+import { FabricUtils } from "@/fabric/utils";
 import { useEditorContext } from "@/context/editor";
 
 import { ToolbarStrokeOption } from "../common/stroke";
@@ -16,15 +17,21 @@ function _VideoToolbar() {
   const selected = editor.canvas.selected as fabric.Video;
 
   const handleCropStart = () => {
-    const video = editor.canvas.instance?.getItemByName(selected.name) as fabric.Video | null;
-    if (!video || video.type !== "video") return;
+    const video = editor.canvas.instance?.getItemByName(selected.name);
+    if (!FabricUtils.isVideoElement(video)) return;
     editor.canvas.onCropImageStart(video);
+  };
+
+  const handleTrimStart = () => {
+    const video = editor.canvas.instance?.getItemByName(selected.name);
+    if (!FabricUtils.isVideoElement(video)) return;
+    editor.canvas.onTrimVideoStart(video);
   };
 
   return (
     <div className="flex items-center h-full w-full overflow-x-scroll scrollbar-hidden">
       <div className="flex items-center gap-2.5">
-        <Button onClick={handleCropStart} variant="outline" size="sm" className="gap-1.5">
+        <Button onClick={handleTrimStart} variant="outline" size="sm" className="gap-1.5">
           <ClapperboardIcon size={15} />
           <span className="text-xs font-normal">Trim</span>
         </Button>

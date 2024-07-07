@@ -2541,20 +2541,20 @@ export class Video extends Image {
   /**
    * Returns the current video playback status
    */
-  trimLeft: boolean;
+  trimLeft: number;
   /**
    * Returns the current video playback status
    */
-  trimRight: boolean;
-  /**
-   * Returns the total duration of the video
-   */
-  get duration(): number;
+  trimRight: number;
   /**
    * Returns the video element which this instance is based on
    * @return the Video element
    */
   _element: HTMLVideoElement;
+  /**
+   * Returns the total duration of the video after applying trim left and trim right
+   */
+  duration(trim?: boolean): number;
   /**
    * Returns the video element which this instance is based on
    * @return the Video element

@@ -1,5 +1,6 @@
 import { createInstance } from "@/lib/utils";
 import { fabric } from "fabric";
+import { clamp } from "lodash";
 
 const FabricVideo = fabric.util.createClass(fabric.Image, {
   type: "video",
@@ -13,31 +14,26 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
     this.callSuper("initialize", element, options);
     this.set({ left: options.left ?? 0, top: options.top ?? 0, objectCaching: false });
 
+    element.loop = false;
     element.currentTime = 0;
-    element.crossOrigin = options.crossOrigin;
 
-    element.loop = options.loop ?? false;
     element.muted = options.muted ?? true;
+    element.crossOrigin = options.crossOrigin;
 
     this.on("added", () => {
       fabric.util.requestAnimFrame(this.update.bind(this));
     });
-
-    element.addEventListener("timeupdate", () => {
-      if (!this.trimRight || element.currentTime < element.duration - this.trimRight) return;
-      element.pause();
-    });
   },
 
-  get duration(): number {
+  duration: function (trim?: boolean) {
     const element = this._originalElement as HTMLVideoElement;
-    return element ? element.duration : 0;
+    return element ? (trim ? element.duration - this.trimLeft - this.trimRight : element.duration) : 0;
   },
 
   play: function () {
     this.playing = true;
     const element = this._originalElement as HTMLVideoElement;
-    if (this.trimLeft) element.currentTime = this.trimLeft;
+    element.currentTime = this.trimLeft;
     element.play();
   },
 
@@ -47,9 +43,10 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
     element.pause();
   },
 
-  seek: function (seconds: number) {
+  seek: function (_seconds: number) {
     const element = this._originalElement as HTMLVideoElement;
-    element.currentTime = seconds < 0 ? 0 : seconds > element.duration ? element.duration : seconds;
+    const seconds = _seconds + this.trimLeft;
+    element.currentTime = clamp(seconds, 0, this.duration);
     if (this.canvas) this.canvas.requestRenderAll();
   },
 

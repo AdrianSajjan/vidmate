@@ -1,13 +1,13 @@
 import anime from "animejs";
 
 import { fabric } from "fabric";
+import { floor } from "lodash";
+import { EntryAnimation, ExitAnimation } from "canvas";
 import { makeAutoObservable } from "mobx";
 
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, isVideoElement } from "@/lib/utils";
-import { EntryAnimation, ExitAnimation } from "canvas";
-import { trunc } from "@/lib/maths";
 
 export const artboardHeight = 1080;
 export const artboardWidth = 1080;
@@ -815,7 +815,7 @@ export class Canvas {
           video.scaleToHeight(500);
           video.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
 
-          this.onInitializeElementMeta(video, { duration: Math.min(trunc(element.duration, 1) * 1000, this.duration) });
+          this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.duration) });
           this.onInitializeElementAnimation(video);
 
           this.instance!.add(video);
@@ -880,7 +880,7 @@ export class Canvas {
 
           video.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
 
-          this.onInitializeElementMeta(video, { duration: Math.min(trunc(element.duration, 1) * 1000, this.duration) });
+          this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.duration) });
           this.onInitializeElementAnimation(video);
 
           this.instance!.add(video).remove(thumbnail, overlay, spinner);
@@ -1105,6 +1105,17 @@ export class Canvas {
 
     this.instance.remove(crop);
     this.instance.renderAll();
+  }
+
+  onTrimVideoStart(video: fabric.Video) {
+    this.trim = video;
+    video.on("deselected", () => {
+      this.onTrimVideoEnd();
+    });
+  }
+
+  onTrimVideoEnd() {
+    this.trim = null;
   }
 
   onAddClipPathToImage(image: fabric.Image, clipPath: fabric.Object) {
