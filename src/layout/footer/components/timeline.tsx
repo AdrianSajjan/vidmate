@@ -10,6 +10,7 @@ import { FabricUtils } from "@/fabric/utils";
 import { cn, createInstance } from "@/lib/utils";
 import { propertiesToInclude } from "@/fabric/constants";
 import Draggable from "react-draggable";
+import { formatVideoDuration } from "@/lib/time";
 
 const SEEK_TIME_WIDTH = 42;
 const HANDLE_WIDTH = 16;
@@ -152,7 +153,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
     <div className="h-10 overflow-visible shrink-0 relative">
       {isSelected ? (
         <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: offset + width - HANDLE_WIDTH * 2 }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragLeftBar(data.x)}>
-          <button className="flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-l-lg" style={{ width: HANDLE_WIDTH }}>
+          <button className="flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-l-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH }}>
             {!Math.round(element.meta!.offset) ? <MinusIcon size={15} className="text-white rotate-90" strokeWidth={2.5} /> : <ChevronLeftIcon size={15} className="text-white" strokeWidth={2.5} />}
           </button>
         </Draggable>
@@ -161,10 +162,11 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
       <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
         <button
           onClick={(event) => (editor.canvas.playing ? null : editor.canvas.onCreateSelection(element.name, event.shiftKey))}
-          className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden", isSelected ? "border-blue-600" : "border-foreground/20")}
+          className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-blue-600" : "border-gray-400")}
           style={{ width, backgroundImage: `url(${backgroundURL})`, backgroundSize: `${backgroundWidth}px 40px` }}
         >
-          <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-1.5 capitalize", isSelected ? "left-5" : "left-1")}>
+          <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-2.5 capitalize", isSelected ? "left-5" : "left-1")}>
+            <span className="text-xxs">{formatVideoDuration(element.meta!.duration)}</span>
             <ElementDescription name={element.name} type={element.type} />
           </span>
         </button>
@@ -177,7 +179,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
           position={{ y: 0, x: offset + width }}
           onDrag={(_, data) => handleDragRightBar(data.x)}
         >
-          <button className="flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-r-lg" style={{ width: HANDLE_WIDTH, left: -HANDLE_WIDTH }}>
+          <button className="inline-flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-r-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH, left: -HANDLE_WIDTH }}>
             <ChevronRightIcon size={15} className="text-white" strokeWidth={2.5} />
           </button>
         </Draggable>
@@ -191,51 +193,51 @@ function ElementDescription({ name, type }: { type?: string; name?: string }) {
     case "text":
     case "textbox":
       return (
-        <Fragment>
+        <div className="inline-flex items-center gap-1.5">
           <TypeIcon size={12} />
           <span className="text-xxs">Text</span>
-        </Fragment>
+        </div>
       );
 
     case "video":
       return (
-        <Fragment>
+        <div className="inline-flex items-center gap-1.5">
           <VideoIcon size={12} />
           <span className="text-xxs">Video</span>
-        </Fragment>
+        </div>
       );
 
     case "image":
       return (
-        <Fragment>
+        <div className="inline-flex items-center gap-1.5">
           <ImageIcon size={12} />
           <span className="text-xxs">Image</span>
-        </Fragment>
+        </div>
       );
 
     case "triangle":
       return (
-        <Fragment>
+        <div className="inline-flex items-center gap-1.5">
           <TriangleIcon size={12} />
           <span className="text-xxs">Triangle</span>
-        </Fragment>
+        </div>
       );
 
     case "rect":
       return (
-        <Fragment>
+        <div className="inline-flex items-center gap-1.5">
           <RectangleHorizontalIcon size={12} />
           <span className="text-xxs">Rectangle</span>
-        </Fragment>
+        </div>
       );
 
     case "ellipse":
     case "circle":
       return (
-        <Fragment>
+        <div className="inline-flex items-center gap-1.5">
           <CircleIcon size={12} />
           <span className="text-xxs">Ellipse</span>
-        </Fragment>
+        </div>
       );
 
     case "path":
@@ -243,10 +245,10 @@ function ElementDescription({ name, type }: { type?: string; name?: string }) {
     case "polygon":
     case "polyline":
       return (
-        <Fragment>
+        <div className="inline-flex items-center gap-1.5">
           <BoxIcon size={12} />
           <span className="text-xxs">{name?.split("_").at(0) || "Shape"}</span>
-        </Fragment>
+        </div>
       );
 
     default:
