@@ -2,6 +2,7 @@ import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { flowResult } from "mobx";
 import { observer } from "mobx-react";
 import { Fragment, MouseEventHandler } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -11,11 +12,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { leftSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
 import { isImageLoaded } from "@/lib/utils";
-
-import * as mock from "@/constants/mock";
+import { mock, useMockStore } from "@/constants/mock";
+import { uploadAssetToS3 } from "@/api/upload";
+import { extractThumbnailFromVideoURL } from "@/lib/media";
 
 function _VideoSidebar() {
+  const store = useMockStore();
   const editor = useEditorContext();
+
+  const upload = useMutation({
+    mutationFn: async (file: File) => {
+      const source = await uploadAssetToS3(file);
+      const thumbnail = await extractThumbnailFromVideoURL(source);
+      return { source, thumbnail };
+    },
+    onSuccess: ({ source, thumbnail }) => mock.upload("video", source, thumbnail),
+  });
+
+  const handleUpload = (files: FileList | null) => {
+    if (!files || !files.item(0)) return;
+    toast.promise(upload.mutateAsync(files.item(0)!), {
+      loading: `Your video asset is being uploaded...`,
+      success: `Video has been successfully uploaded`,
+      error: `Ran into an error while uploading the video`,
+    });
+  };
 
   const handleClick =
     (source: string): MouseEventHandler<HTMLButtonElement> =>
@@ -57,7 +78,7 @@ function _VideoSidebar() {
                 <label>
                   <PlusIcon size={14} />
                   <span>Add File</span>
-                  <input hidden type="file" accept="video/*" />
+                  <input hidden type="file" accept="video/*" onChange={(event) => handleUpload(event.target.files)} />
                 </label>
               </Button>
               <Button size="sm" variant="link" className="text-blue-600 h-6 font-medium line-clamp-1 px-1.5">
@@ -65,8 +86,8 @@ function _VideoSidebar() {
               </Button>
             </div>
             <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
-              {mock.videos.length ? (
-                mock.videos.map(({ source, thumbnail }) => (
+              {store.videos.length ? (
+                store.videos.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClick(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
                     <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
                   </button>
@@ -83,7 +104,7 @@ function _VideoSidebar() {
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-4">
-              <h4 className="text-xs font-semibold line-clamp-1">Images</h4>
+              <h4 className="text-xs font-semibold line-clamp-1">Videos</h4>
               <Button size="sm" variant="link" className="text-blue-600 font-medium line-clamp-1 px-1.5">
                 See All
               </Button>

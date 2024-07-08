@@ -1,28 +1,30 @@
+import { useMutation } from "@tanstack/react-query";
 import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { flowResult } from "mobx";
 import { observer } from "mobx-react";
-import { Fragment, MouseEventHandler, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { Fragment, MouseEventHandler } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { leftSidebarWidth } from "@/constants/layout";
 import { uploadAssetToS3 } from "@/api/upload";
+import { leftSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
 import { isImageLoaded } from "@/lib/utils";
-
-import * as mock from "@/constants/mock";
+import { mock, useMockStore } from "@/constants/mock";
 
 function _ImageSidebar() {
+  const store = useMockStore();
   const editor = useEditorContext();
-  const [uploads, setUploads] = useState(mock.images);
 
   const upload = useMutation({
-    mutationFn: (file: File) => uploadAssetToS3(file),
-    onSuccess: (response) => setUploads((state) => [...state, { source: response, thumbnail: response }]),
+    mutationFn: async (file: File) => {
+      const source = await uploadAssetToS3(file);
+      return { source, thumbnail: source };
+    },
+    onSuccess: ({ source, thumbnail }) => mock.upload("image", source, thumbnail),
   });
 
   const handleUpload = (files: FileList | null) => {
@@ -82,8 +84,8 @@ function _ImageSidebar() {
               </Button>
             </div>
             <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
-              {uploads.length ? (
-                uploads.map(({ source, thumbnail }) => (
+              {store.images.length ? (
+                store.images.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClick(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
                     <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
                   </button>

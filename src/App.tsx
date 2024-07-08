@@ -1,6 +1,7 @@
 import "@/fabric/initialize";
 
 import useMeasure from "react-use-measure";
+import { useEffect } from "react";
 
 import { EditorFAB } from "@/layout/fab";
 import { EditorFooter } from "@/layout/footer";
@@ -8,18 +9,46 @@ import { EditorMenubar } from "@/layout/menubar";
 import { EditorToolbar } from "@/layout/toolbar";
 import { EditorSidebarLeft } from "@/layout/sidebar-left";
 import { EditorSidebarRight } from "@/layout/sidebar-right";
-import { EditorProvider } from "@/context/editor";
+import { EditorProvider, useEditorContext } from "@/context/editor";
 
 import { Toaster } from "@/components/ui/sonner";
 import { EditorCanvas } from "@/components/editor";
+import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { observer } from "mobx-react";
 
 export function App() {
+  return (
+    <TooltipProvider delayDuration={300}>
+      <EditorProvider>
+        <Editor />
+      </EditorProvider>
+    </TooltipProvider>
+  );
+}
+
+function _Editor() {
+  const editor = useEditorContext();
   const [ref, dimensions] = useMeasure();
 
-  return (
-    <EditorProvider>
-      <TooltipProvider delayDuration={300}>
+  useEffect(() => {
+    editor.onInitialize();
+  }, []);
+
+  switch (editor.status) {
+    case "pending":
+    case "uninitialized":
+      return (
+        <section className="h-screen grid place-items-center">
+          <div className="flex flex-col gap-2">
+            <Spinner size="md" />
+            <span className="text-sm font-medium">Initializing editor</span>
+          </div>
+        </section>
+      );
+
+    case "complete":
+      return (
         <section className="h-screen overflow-hidden flex flex-col">
           <EditorMenubar />
           <main className="flex-1 flex w-full">
@@ -36,7 +65,15 @@ export function App() {
             <EditorSidebarRight />
           </main>
         </section>
-      </TooltipProvider>
-    </EditorProvider>
-  );
+      );
+
+    case "error":
+      return (
+        <section className="h-screen grid place-items-center">
+          <span className="text-sm font-medium text-destructive">Your browser doesn't support the editor</span>
+        </section>
+      );
+  }
 }
+
+const Editor = observer(_Editor);

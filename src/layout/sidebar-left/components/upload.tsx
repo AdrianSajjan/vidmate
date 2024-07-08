@@ -1,15 +1,56 @@
-import { Fragment } from "react";
 import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
+import { Fragment, MouseEventHandler } from "react";
+import { flowResult } from "mobx";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEditorContext } from "@/context/editor";
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { leftSidebarWidth } from "@/constants/layout";
+import { useEditorContext } from "@/context/editor";
+import { isImageLoaded } from "@/lib/utils";
+
+import { useMockStore } from "@/constants/mock";
 
 function _UploadSidebar() {
+  const store = useMockStore();
   const editor = useEditorContext();
+
+  const handleClickImage =
+    (source: string): MouseEventHandler<HTMLButtonElement> =>
+    (event) => {
+      const thumbnail = event.currentTarget.querySelector("img");
+      if (!thumbnail || !isImageLoaded(thumbnail)) {
+        toast.promise(flowResult(editor.canvas.onAddImageFromSource(source)), {
+          loading: "The image asset is being loaded...",
+          success: () => "The image asset has been added to artboard",
+          error: () => "Ran into an error adding the image asset",
+        });
+      } else {
+        toast.promise(flowResult(editor.canvas.onAddImageWithThumbail(source, thumbnail)), {
+          error: () => "Ran into an error adding the image asset",
+        });
+      }
+    };
+
+  const handleClickVideo =
+    (source: string): MouseEventHandler<HTMLButtonElement> =>
+    async (event) => {
+      const thumbnail = event.currentTarget.querySelector("img");
+      if (!thumbnail || !isImageLoaded(thumbnail)) {
+        toast.promise(flowResult(editor.canvas.onAddVideoFromSource(source)), {
+          loading: "The video asset is being loaded...",
+          success: () => "The video asset has been added to artboard",
+          error: () => "Ran into an error adding the video asset",
+        });
+      } else {
+        toast.promise(flowResult(editor.canvas.onAddVideoWithThumbail(source, thumbnail)), {
+          error: () => "Ran into an error adding the video asset",
+        });
+      }
+    };
 
   return (
     <div className="h-full" style={{ width: leftSidebarWidth }}>
@@ -42,12 +83,20 @@ function _UploadSidebar() {
               </Button>
             </div>
             <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
-              <Fragment>
-                {Array.from({ length: 3 }, (_, index) => (
-                  <Skeleton key={index} className="h-16 flex-1 rounded-md" />
-                ))}
-                <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Images</span>
-              </Fragment>
+              {store.images.length ? (
+                store.images.map(({ source, thumbnail }) => (
+                  <button key={source} onClick={handleClickImage(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
+                    <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
+                  </button>
+                ))
+              ) : (
+                <Fragment>
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <Skeleton key={index} className="h-16 flex-1 rounded-md" />
+                  ))}
+                  <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Images</span>
+                </Fragment>
+              )}
             </div>
           </div>
           <div className="flex flex-col gap-4 py-6">
@@ -65,12 +114,20 @@ function _UploadSidebar() {
               </Button>
             </div>
             <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
-              <Fragment>
-                {Array.from({ length: 3 }, (_, index) => (
-                  <Skeleton key={index} className="h-16 flex-1 rounded-md" />
-                ))}
-                <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Videos</span>
-              </Fragment>
+              {store.videos.length ? (
+                store.videos.map(({ source, thumbnail }) => (
+                  <button key={source} onClick={handleClickVideo(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
+                    <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
+                  </button>
+                ))
+              ) : (
+                <Fragment>
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <Skeleton key={index} className="h-16 flex-1 rounded-md" />
+                  ))}
+                  <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Videos</span>
+                </Fragment>
+              )}
             </div>
           </div>
           <div className="flex flex-col gap-4 py-6">

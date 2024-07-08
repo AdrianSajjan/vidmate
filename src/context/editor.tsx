@@ -1,13 +1,13 @@
-import { ReactNode, createContext, useContext, useState } from "react";
+import { ReactNode, createContext, useContext } from "react";
 
 import { createInstance } from "@/lib/utils";
 import { Editor } from "@/store/editor";
 
 export const EditorContext = createContext<Editor | null>(null);
+export const editor = createInstance(Editor);
 
 export function EditorProvider({ children }: { children?: ReactNode }) {
-  const [store] = useState(() => createInstance(Editor));
-  return <EditorContext.Provider value={store}>{children}</EditorContext.Provider>;
+  return <EditorContext.Provider value={editor}>{children}</EditorContext.Provider>;
 }
 
 export function useEditorContext() {

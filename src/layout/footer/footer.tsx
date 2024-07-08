@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { useEditorContext } from "@/context/editor";
-import { formatVideoDuration } from "@/lib/time";
+import { formatMediaDuration } from "@/lib/time";
 
 import { EditorTimeline } from "./components/timeline";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -61,9 +61,9 @@ function _EditorFooter() {
         </div>
         <div className="flex items-center">
           <div className="text-xs tabular-nums">
-            <span>{formatVideoDuration(editor.canvas.seek)}</span>
+            <span>{formatMediaDuration(editor.canvas.seek)}</span>
             <span className="mx-1">/</span>
-            <span>{formatVideoDuration(editor.canvas.duration)}</span>
+            <span>{formatMediaDuration(editor.canvas.duration)}</span>
           </div>
           <Button
             size="icon"

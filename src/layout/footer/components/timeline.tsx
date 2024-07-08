@@ -1,16 +1,16 @@
 import useMeasure from "react-use-measure";
+import Draggable from "react-draggable";
 
+import { observer } from "mobx-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, useAnimationControls } from "framer-motion";
 import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, MinusIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon, VideoIcon } from "lucide-react";
-import { observer } from "mobx-react";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useEditorContext } from "@/context/editor";
 import { FabricUtils } from "@/fabric/utils";
 import { cn, createInstance } from "@/lib/utils";
 import { propertiesToInclude } from "@/fabric/constants";
-import Draggable from "react-draggable";
-import { formatVideoDuration } from "@/lib/time";
+import { formatMediaDuration } from "@/lib/time";
 
 const SEEK_TIME_WIDTH = 42;
 const HANDLE_WIDTH = 16;
@@ -141,7 +141,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
     if (editor.canvas.playing) return;
     const duration = Math.floor((value / SEEK_TIME_WIDTH) * 1000);
     const object = editor.canvas.instance!.getItemByName(element.name);
-    editor.canvas.onChangeObjectTimelineProperty(object!, "duration", duration);
+    editor.canvas.onChangeObjectTimelineProperty(object!, "duration", duration - element.meta!.offset);
   };
 
   const offset = (element.meta!.offset / 1000) * SEEK_TIME_WIDTH;
@@ -166,19 +166,14 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
           style={{ width, backgroundImage: `url(${backgroundURL})`, backgroundSize: `${backgroundWidth}px 40px` }}
         >
           <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-2.5 capitalize", isSelected ? "left-5" : "left-1")}>
-            <span className="text-xxs">{formatVideoDuration(element.meta!.duration)}</span>
+            <span className="text-xxs">{formatMediaDuration(element.meta!.duration)}</span>
             <ElementDescription name={element.name} type={element.type} />
           </span>
         </button>
       </Draggable>
 
       {isSelected ? (
-        <Draggable
-          axis={editor.canvas.playing ? "none" : "x"}
-          bounds={{ left: offset + HANDLE_WIDTH, right: trackWidth - HANDLE_WIDTH }}
-          position={{ y: 0, x: offset + width }}
-          onDrag={(_, data) => handleDragRightBar(data.x)}
-        >
+        <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: offset + HANDLE_WIDTH, right: trackWidth }} position={{ y: 0, x: offset + width }} onDrag={(_, data) => handleDragRightBar(data.x)}>
           <button className="inline-flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-r-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH, left: -HANDLE_WIDTH }}>
             <ChevronRightIcon size={15} className="text-white" strokeWidth={2.5} />
           </button>

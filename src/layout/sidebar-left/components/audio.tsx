@@ -1,6 +1,8 @@
-import { Fragment, MouseEventHandler } from "react";
-import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
+import { Fragment, MouseEventHandler, useEffect, useRef, useState } from "react";
+import { PauseIcon, PlayIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,14 +11,37 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEditorContext } from "@/context/editor";
 import { leftSidebarWidth } from "@/constants/layout";
 
-import * as mock from "@/constants/mock";
+import { mock, useMockStore } from "@/constants/mock";
+import { EditorAudio } from "@/types/editor";
+import { uploadAssetToS3 } from "@/api/upload";
+import { extractAudioWaveformFromAudioFile } from "@/lib/media";
+import { formatMediaDuration } from "@/lib/time";
 
 function _AudioSidebar() {
+  const store = useMockStore();
   const editor = useEditorContext();
 
-  const handleClick =
-    (_: string): MouseEventHandler<HTMLButtonElement> =>
-    () => {};
+  const upload = useMutation({
+    mutationFn: async (file: File) => {
+      const source = await uploadAssetToS3(file);
+      const waveform = await extractAudioWaveformFromAudioFile(file);
+      return { source, name: file.name, ...waveform };
+    },
+    onSuccess: ({ source, name, duration, thumbnail }) => mock.upload("audio", source, thumbnail, duration, name),
+  });
+
+  const handleUpload = (files: FileList | null) => {
+    if (!files || !files.item(0)) return;
+    toast.promise(upload.mutateAsync(files.item(0)!), {
+      loading: `Your audio asset is being uploaded...`,
+      success: `Audio has been successfully uploaded`,
+      error: `Ran into an error while uploading the audio`,
+    });
+  };
+
+  const handleClick = (audio: EditorAudio) => () => {
+    console.log(audio);
+  };
 
   return (
     <div className="h-full" style={{ width: leftSidebarWidth }}>
@@ -41,7 +66,7 @@ function _AudioSidebar() {
                 <label>
                   <PlusIcon size={14} />
                   <span>Add File</span>
-                  <input hidden type="file" accept="video/*" />
+                  <input hidden type="file" accept="audio/*" onChange={(event) => handleUpload(event.target.files)} />
                 </label>
               </Button>
               <Button size="sm" variant="link" className="text-blue-600 h-6 font-medium line-clamp-1 px-1.5">
@@ -49,25 +74,21 @@ function _AudioSidebar() {
               </Button>
             </div>
             <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
-              {mock.audios.length ? (
-                mock.audios.map((image) => (
-                  <button key={image} onClick={handleClick(image)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
-                    <img src={image + "?q=75&w=256&auto=format"} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
-                  </button>
-                ))
+              {store.audios.length ? (
+                store.audios.map((audio) => <AudioItem key={audio.source} audio={audio} onClick={handleClick(audio)} />)
               ) : (
                 <Fragment>
                   {Array.from({ length: 3 }, (_, index) => (
                     <Skeleton key={index} className="h-16 flex-1 rounded-md" />
                   ))}
-                  <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Videos</span>
+                  <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Audios</span>
                 </Fragment>
               )}
             </div>
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-4">
-              <h4 className="text-xs font-semibold line-clamp-1">Images</h4>
+              <h4 className="text-xs font-semibold line-clamp-1">Audios</h4>
               <Button size="sm" variant="link" className="text-blue-600 font-medium line-clamp-1 px-1.5">
                 See All
               </Button>
@@ -83,6 +104,50 @@ function _AudioSidebar() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function AudioItem({ audio, onClick }: { audio: EditorAudio; onClick?: () => void }) {
+  const ref = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setPlaying] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const current = ref.current;
+    const handler = () => setPlaying(false);
+    current.addEventListener("ended", handler);
+    return () => {
+      current.removeEventListener("ended", handler);
+    };
+  }, [ref]);
+
+  const handlePlay: MouseEventHandler<HTMLDivElement> = (event) => {
+    event.stopPropagation();
+    if (isPlaying) {
+      setPlaying(false);
+      ref.current?.pause();
+    } else {
+      setPlaying(true);
+      ref.current?.play();
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button onClick={onClick} className="group shrink-0 h-16 w-20 border overflow-hidden rounded-md shadow-sm relative">
+        <img src={audio.thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
+        <div className="absolute hidden group-hover:inline-flex items-center justify-between gap-2 bottom-1 left-1 right-1 text-card bg-foreground/50 pr-1.5 rounded-sm">
+          <div role="button" className="px-1.5 py-1 transition-transform hover:scale-125" onClick={handlePlay}>
+            {isPlaying ? <PauseIcon size={14} className="fill-card" /> : <PlayIcon size={14} className="fill-card" />}
+          </div>
+          <span className="text-xxs font-medium">{formatMediaDuration(audio.duration * 1000, false)}</span>
+          <audio ref={ref}>
+            <source src={audio.source} />
+          </audio>
+        </div>
+      </button>
+      <div className="text-xxs font-medium w-20 px-1 mx-auto whitespace-nowrap overflow-hidden text-ellipsis">{audio.name}</div>
     </div>
   );
 }

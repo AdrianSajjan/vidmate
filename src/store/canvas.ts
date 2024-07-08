@@ -8,6 +8,7 @@ import { makeAutoObservable } from "mobx";
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, isVideoElement } from "@/lib/utils";
+import { EditorAudioElement } from "@/types/editor";
 
 export const artboardHeight = 1080;
 export const artboardWidth = 1080;
@@ -20,6 +21,8 @@ export class Canvas {
   artboard?: fabric.Rect;
 
   elements: fabric.Object[];
+  audios: EditorAudioElement[];
+
   selected?: fabric.Object | null;
   crop?: fabric.Image | null;
   trim?: fabric.Video | null;
@@ -43,6 +46,7 @@ export class Canvas {
   constructor() {
     this.zoom = 0.5;
     this.elements = [];
+    this.audios = [];
 
     this.seek = 0;
     this.duration = 30000;
@@ -715,6 +719,8 @@ export class Canvas {
 
     return textbox;
   }
+
+  // onAddAudio(source: string, name: string) {}
 
   *onAddImageFromSource(source: string): Generator<Promise<fabric.Image>, fabric.Image | undefined, fabric.Image> {
     if (!this.instance || !this.artboard) return;

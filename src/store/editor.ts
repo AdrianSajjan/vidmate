@@ -1,6 +1,10 @@
 import { makeAutoObservable } from "mobx";
 import { Canvas } from "@/store/canvas";
 import { createInstance } from "@/lib/utils";
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { toBlobURL } from "@ffmpeg/util";
+
+const FFMPEG_BASE_URL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
 
 export class Editor {
   page: number;
@@ -10,21 +14,40 @@ export class Editor {
   sidebarRight: string | null;
   isTimelineOpen: boolean;
 
+  ffmpeg: FFmpeg;
+  status: "uninitialized" | "pending" | "complete" | "error";
+
   constructor() {
-    const canvas = createInstance(Canvas);
-    this.isTimelineOpen = false;
+    this.ffmpeg = createInstance(FFmpeg);
+    this.pages = [createInstance(Canvas)];
 
     this.page = 0;
-    this.pages = [canvas];
+    this.status = "uninitialized";
 
     this.sidebarLeft = null;
     this.sidebarRight = null;
+    this.isTimelineOpen = false;
 
     makeAutoObservable(this);
   }
 
   get canvas() {
     return this.pages[this.page];
+  }
+
+  *onInitialize() {
+    this.status = "pending";
+    try {
+      yield this.ffmpeg.load({
+        coreURL: yield toBlobURL(`${FFMPEG_BASE_URL}/ffmpeg-core.js`, "text/javascript"),
+        wasmURL: yield toBlobURL(`${FFMPEG_BASE_URL}/ffmpeg-core.wasm`, "application/wasm"),
+      });
+      this.ffmpeg.on("log", console.log);
+      this.status = "complete";
+    } catch (error) {
+      console.log(error);
+      this.status = "error";
+    }
   }
 
   setActiveSidebarLeft(sidebar: string | null) {
@@ -42,7 +65,6 @@ export class Editor {
   }
 
   onAddPage() {
-    const canvas = createInstance(Canvas);
-    this.pages.push(canvas);
+    this.pages.push(createInstance(Canvas));
   }
 }
