@@ -19,6 +19,9 @@ module.exports = {
       fontFamily: {
         sans: ['"Inter"', ...defaultTheme.fontFamily.sans],
       },
+      borderWidth: {
+        3: "3px",
+      },
       fontSize: {
         xxs: ["0.625rem", "0.75rem"],
       },

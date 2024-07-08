@@ -7,13 +7,14 @@ import { CopyPlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CanvasProvider, useCanvasContext, useInitializeCanvas } from "@/context/canvas";
 import { cn } from "@/lib/utils";
+import { clamp } from "lodash";
 
 const MENU_OFFSET_Y = 50;
 
 interface EditorCanvasProps {
   page: number;
-  height: number;
   width: number;
+  height: number;
 }
 
 export function EditorCanvas(props: EditorCanvasProps) {
@@ -29,7 +30,7 @@ const CanvasBase = observer(_CanvasBase);
 function _CanvasBase({ height, width }: EditorCanvasProps) {
   const canvas = useCanvasContext();
 
-  const [menuRef, dimensions] = useMeasure();
+  const [ref, dimensions] = useMeasure();
   const [canvasRef, { isInitialized }] = useInitializeCanvas();
 
   useEffect(() => {
@@ -48,9 +49,12 @@ function _CanvasBase({ height, width }: EditorCanvasProps) {
 
     if (!selected) return undefined;
 
+    const top = offsetY + selected.getBoundingRect(true).top! * canvas.zoom - (dimensions.height / 2) * canvas.zoom - MENU_OFFSET_Y;
+    const left = offsetX + selected.getBoundingRect(true).left! * canvas.zoom - dimensions.width / 2 + ((selected.width! * selected.scaleX!) / 2) * canvas.zoom;
+
     return {
-      top: offsetY + selected.getBoundingRect(true).top! * canvas.zoom - (dimensions.height / 2) * canvas.zoom - MENU_OFFSET_Y,
-      left: offsetX + selected.getBoundingRect(true).left! * canvas.zoom - dimensions.width / 2 + ((selected.width! * selected.scaleX!) / 2) * canvas.zoom,
+      top: clamp(top, MENU_OFFSET_Y / 4, height - MENU_OFFSET_Y / 4),
+      left: left,
     };
   }, [canvas.selected, canvas.viewportTransform, canvas.height, canvas.width, canvas.zoom, dimensions]);
 
@@ -60,12 +64,12 @@ function _CanvasBase({ height, width }: EditorCanvasProps) {
         <canvas ref={canvasRef} />
       </div>
       <div
-        ref={menuRef}
+        ref={ref}
         style={style}
         className={cn(
           "absolute border bg-popover text-popover-foreground shadow rounded-lg outline-none items-center gap-0.5 p-0.5",
           "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2",
-          !canvas.selected || !canvas.hasControls ? "hidden" : "flex"
+          !canvas.selected || !canvas.hasControls ? "hidden" : "flex",
         )}
       >
         <Button size="icon" variant="ghost" className="h-7 w-7" disabled>

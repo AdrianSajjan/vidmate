@@ -1,16 +1,18 @@
 import useMeasure from "react-use-measure";
 
 import { motion, useAnimationControls } from "framer-motion";
-import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon, VideoIcon } from "lucide-react";
+import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, MinusIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon, VideoIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useEditorContext } from "@/context/editor";
 import { FabricUtils } from "@/fabric/utils";
 import { cn, createInstance } from "@/lib/utils";
 import { propertiesToInclude } from "@/fabric/constants";
+import Draggable from "react-draggable";
 
 const SEEK_TIME_WIDTH = 42;
+const HANDLE_WIDTH = 16;
 
 function _EditorTimeline() {
   const [containerRef, { width }] = useMeasure();
@@ -94,15 +96,12 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
   const editor = useEditorContext();
   const [backgroundURL, setBackgroundURL] = useState("");
 
-  const controls = useAnimationControls();
-  const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const object = editor.canvas.instance!.getItemByName(element.name);
     if (!object) return;
     object.clone((clone: fabric.Object) => {
       clone.set({ opacity: 1, visible: true, clipPath: undefined });
-      if (FabricUtils.isVideoElement(clone) && !clone.meta?.placeholder) {
+      if (FabricUtils.isVideoElement(clone) && !clone.meta!.placeholder) {
         clone.seek(1);
         setTimeout(() => {
           clone.set({ filters: [] });
@@ -113,12 +112,7 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
         setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
       }
     }, propertiesToInclude);
-  }, [element, editor.canvas.instance]);
-
-  useEffect(() => {
-    const offset = (element.meta!.offset / 1000) * SEEK_TIME_WIDTH;
-    controls.set({ x: offset });
-  }, [element.meta!.offset]);
+  }, [element]);
 
   const isSelected = useMemo(() => {
     if (!editor.canvas.selected) return false;
@@ -126,53 +120,69 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
     return editor.canvas.selected.name === element.name;
   }, [editor.canvas.selected, element]);
 
-  function onDragEnd() {
-    if (!ref.current) return;
-    const style = getComputedStyle(ref.current);
-    const matrix = createInstance(DOMMatrixReadOnly, style.transform);
-    const offset = Math.floor((matrix.m41 / SEEK_TIME_WIDTH) * 1000);
+  const handleDragTrack = (value: number) => {
+    if (editor.canvas.playing) return;
+    const offset = Math.floor((value / SEEK_TIME_WIDTH) * 1000);
     const object = editor.canvas.instance!.getItemByName(element.name);
     editor.canvas.onChangeObjectTimelineProperty(object!, "offset", offset);
-  }
+  };
 
+  const handleDragLeftBar = (value: number) => {
+    if (editor.canvas.playing) return;
+    const offset = Math.floor((value / SEEK_TIME_WIDTH) * 1000);
+    const duration = element.meta!.duration + element.meta!.offset - offset;
+    const object = editor.canvas.instance!.getItemByName(element.name);
+    editor.canvas.onChangeObjectTimelineProperty(object!, "offset", offset);
+    editor.canvas.onChangeObjectTimelineProperty(object!, "duration", duration);
+  };
+
+  const handleDragRightBar = (value: number) => {
+    if (editor.canvas.playing) return;
+    const duration = Math.floor((value / SEEK_TIME_WIDTH) * 1000);
+    const object = editor.canvas.instance!.getItemByName(element.name);
+    editor.canvas.onChangeObjectTimelineProperty(object!, "duration", duration);
+  };
+
+  const offset = (element.meta!.offset / 1000) * SEEK_TIME_WIDTH;
   const width = (element.meta!.duration / 1000) * SEEK_TIME_WIDTH;
+
   const backgroundWidth = 40 * (element.width! / element.height!) + 10;
 
   return (
-    <motion.div
-      ref={ref}
-      role="button"
-      tabIndex={0}
-      animate={controls}
-      dragElastic={false}
-      dragMomentum={false}
-      onDragEnd={onDragEnd}
-      drag={editor.canvas.playing ? false : "x"}
-      dragConstraints={{ left: 0, right: trackWidth - width }}
-      onClick={(event) => (editor.canvas.playing ? null : editor.canvas.onCreateSelection(element.name, event.shiftKey))}
-      className={cn("h-10 rounded-lg bg-card border-[3px] overflow-visible flex items-stretch relative bg-repeat-x bg-center shrink-0", isSelected ? "border-blue-600" : "border-foreground/20")}
-      style={{
-        width,
-        backgroundImage: `url(${backgroundURL})`,
-        backgroundSize: `${backgroundWidth}px 40px`,
-      }}
-    >
+    <div className="h-10 overflow-visible shrink-0 relative">
       {isSelected ? (
-        <motion.div className="pr-0.5 flex items-center justify-center bg-blue-600">
-          <ChevronLeftIcon size={16} className="text-white" strokeWidth={2.5} />
-        </motion.div>
+        <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: offset + width - HANDLE_WIDTH * 2 }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragLeftBar(data.x)}>
+          <button className="flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-l-lg" style={{ width: HANDLE_WIDTH }}>
+            {!Math.round(element.meta!.offset) ? <MinusIcon size={15} className="text-white rotate-90" strokeWidth={2.5} /> : <ChevronLeftIcon size={15} className="text-white" strokeWidth={2.5} />}
+          </button>
+        </Draggable>
       ) : null}
-      <div className="flex-1 relative">
-        <span className="absolute top-1 left-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-1.5 capitalize">
-          <ElementDescription name={element.name} type={element.type} />
-        </span>
-      </div>
+
+      <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
+        <button
+          onClick={(event) => (editor.canvas.playing ? null : editor.canvas.onCreateSelection(element.name, event.shiftKey))}
+          className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden", isSelected ? "border-blue-600" : "border-foreground/20")}
+          style={{ width, backgroundImage: `url(${backgroundURL})`, backgroundSize: `${backgroundWidth}px 40px` }}
+        >
+          <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-1.5 capitalize", isSelected ? "left-5" : "left-1")}>
+            <ElementDescription name={element.name} type={element.type} />
+          </span>
+        </button>
+      </Draggable>
+
       {isSelected ? (
-        <motion.div className="pl-0.5 flex items-center justify-center bg-blue-600">
-          <ChevronRightIcon size={16} className="text-white" strokeWidth={2.5} />
-        </motion.div>
+        <Draggable
+          axis={editor.canvas.playing ? "none" : "x"}
+          bounds={{ left: offset + HANDLE_WIDTH, right: trackWidth - HANDLE_WIDTH }}
+          position={{ y: 0, x: offset + width }}
+          onDrag={(_, data) => handleDragRightBar(data.x)}
+        >
+          <button className="flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-r-lg" style={{ width: HANDLE_WIDTH, left: -HANDLE_WIDTH }}>
+            <ChevronRightIcon size={15} className="text-white" strokeWidth={2.5} />
+          </button>
+        </Draggable>
       ) : null}
-    </motion.div>
+    </div>
   );
 }
 

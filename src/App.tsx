@@ -15,7 +15,7 @@ import { EditorCanvas } from "@/components/editor";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function App() {
-  const [ref, { height, width }] = useMeasure();
+  const [ref, dimensions] = useMeasure();
 
   return (
     <EditorProvider>
@@ -27,7 +27,7 @@ export function App() {
             <section className="flex-1 flex flex-col relative w-0">
               <EditorToolbar />
               <div className="flex-1 relative" ref={ref}>
-                <EditorCanvas page={0} height={height} width={width} />
+                <EditorCanvas page={0} {...dimensions} />
                 <EditorFAB />
                 <Toaster richColors position="bottom-right" offset={24} visibleToasts={6} />
               </div>

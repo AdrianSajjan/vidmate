@@ -116,7 +116,7 @@ function _TextToolbar() {
       <div className="flex items-center gap-2">
         <Popover>
           <PopoverTrigger asChild>
-            <Button size="sm" variant="outline" aria-label="letter-spacing" className="data-[state=open]:bg-card">
+            <Button size="icon" variant="outline" aria-label="letter-spacing" className="data-[state=open]:bg-card">
               <WholeWordIcon size={15} />
             </Button>
           </PopoverTrigger>
@@ -136,7 +136,7 @@ function _TextToolbar() {
         </Popover>
         <Popover>
           <PopoverTrigger asChild>
-            <Button size="sm" variant="outline" aria-label="line-height" className="data-[state=open]:bg-card">
+            <Button size="icon" variant="outline" aria-label="line-height" className="data-[state=open]:bg-card">
               <ArrowDownZAIcon size={15} />
             </Button>
           </PopoverTrigger>

@@ -1,4 +1,4 @@
-import { LayersIcon } from "lucide-react";
+import { GanttChartIcon, LayersIcon } from "lucide-react";
 import { observer } from "mobx-react";
 
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEditorContext } from "@/context/editor";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
 
 function _ToolbarTimelineOption() {
   const editor = useEditorContext();
@@ -22,30 +24,40 @@ function _ToolbarTimelineOption() {
         <LayersIcon size={15} />
         <span>Animations</span>
       </Button>
-      <div className="flex items-center gap-1.5">
-        <Label className="text-xs text-gray-700">Timeline</Label>
-        <div className="relative">
-          <Input
-            type="number"
-            value={selected.meta ? selected.meta.duration / 1000 : 0}
-            onChange={(event) => !isNaN(+event.target.value) && +event.target.value > 0 && editor.canvas.onChangeActiveObjectTimelineProperty("duration", +event.target.value * 1000)}
-            className="h-8 w-24 text-xs pr-7"
-          />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs">s</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <Label className="text-xs text-gray-700">Offset</Label>
-        <div className="relative">
-          <Input
-            type="number"
-            value={selected.meta ? selected.meta.offset / 1000 : 0}
-            onChange={(event) => !isNaN(+event.target.value) && +event.target.value >= 0 && editor.canvas.onChangeActiveObjectTimelineProperty("offset", +event.target.value * 1000)}
-            className="h-8 w-24 text-xs pr-7"
-          />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs">s</span>
-        </div>
-      </div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button size="sm" variant="outline" className="gap-1.5 data-[state=open]:bg-card">
+            <GanttChartIcon size={15} />
+            <span>Timeline</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="pt-3 pb-3 px-3" align="end">
+          <Label className="text-xs font-medium">Duration (s)</Label>
+          <div className="flex items-center justify-between gap-4">
+            <Slider min={1} max={editor.canvas.duration / 1000} value={[selected.meta!.duration / 1000]} onValueChange={([duration]) => editor.canvas.onChangeActiveObjectTimelineProperty("duration", duration * 1000)} />
+            <Input
+              autoFocus
+              step={0.5}
+              type="number"
+              className="h-8 w-20 text-xs"
+              value={selected.meta!.duration / 1000}
+              onChange={(event) => (+event.target.value > 0 ? editor.canvas.onChangeActiveObjectTimelineProperty("duration", +event.target.value * 1000) : null)}
+            />
+          </div>
+          <Label className="text-xs font-medium">Offset (s)</Label>
+          <div className="flex items-center justify-between gap-4">
+            <Slider min={0} max={editor.canvas.duration / 1000} value={[selected.meta!.offset / 1000]} onValueChange={([offset]) => editor.canvas.onChangeActiveObjectTimelineProperty("offset", offset * 1000)} />
+            <Input
+              autoFocus
+              step={0.5}
+              type="number"
+              className="h-8 w-20 text-xs"
+              value={selected.meta!.offset / 1000}
+              onChange={(event) => (+event.target.value >= 0 ? editor.canvas.onChangeActiveObjectTimelineProperty("offset", +event.target.value * 1000) : null)}
+            />
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

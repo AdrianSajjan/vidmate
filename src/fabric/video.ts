@@ -46,7 +46,7 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   seek: function (_seconds: number) {
     const element = this._originalElement as HTMLVideoElement;
     const seconds = _seconds + this.trimLeft;
-    element.currentTime = clamp(seconds, 0, this.duration);
+    element.currentTime = clamp(seconds, 0, this.duration(true));
     if (this.canvas) this.canvas.requestRenderAll();
   },
 

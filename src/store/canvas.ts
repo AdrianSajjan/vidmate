@@ -78,6 +78,8 @@ export class Canvas {
     if (index === -1 || !object) return;
     const element = object.toObject(propertiesToInclude);
     if (object.name === this.selected?.name) this.selected = element;
+    if (object.name === this.trim?.name) this.trim = element;
+    if (object.name === this.crop?.name) this.crop = element;
     this.elements[index] = element;
   }
 
@@ -1108,14 +1110,16 @@ export class Canvas {
   }
 
   onTrimVideoStart(video: fabric.Video) {
-    this.trim = video;
-    video.on("deselected", () => {
-      this.onTrimVideoEnd();
-    });
+    this.trim = video.toObject(propertiesToInclude);
+    video.on("deselected", () => this.onTrimVideoEnd());
   }
 
   onTrimVideoEnd() {
+    const object = this.instance?.getItemByName(this.trim?.name);
     this.trim = null;
+    if (!this.instance || !FabricUtils.isVideoElement(object)) return;
+    object.seek(this.seek);
+    this.instance.requestRenderAll();
   }
 
   onAddClipPathToImage(image: fabric.Image, clipPath: fabric.Object) {
@@ -1377,6 +1381,19 @@ export class Canvas {
     const selected = this.instance?.getActiveObject() as fabric.Image | null;
     if (!this.instance || !selected || selected.type !== "image") return;
     this.onChangeImageProperty(selected, property, value);
+  }
+
+  onChangeVideoProperty(video: fabric.Video, property: keyof fabric.Video, value: any) {
+    if (!this.instance || video.type !== "video") return;
+    video.set(property, value);
+    this.instance.fire("object:modified", { target: video });
+    this.instance.requestRenderAll();
+  }
+
+  onChangeActiveVideoProperty(property: keyof fabric.Video, value: any) {
+    const selected = this.instance?.getActiveObject() as fabric.Video | null;
+    if (!this.instance || !selected || selected.type !== "video") return;
+    this.onChangeVideoProperty(selected, property, value);
   }
 
   onChangeZoom(zoom: number) {
