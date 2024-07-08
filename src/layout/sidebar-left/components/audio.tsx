@@ -40,7 +40,7 @@ function _AudioSidebar() {
   };
 
   const handleClick = (audio: EditorAudio) => () => {
-    console.log(audio);
+    editor.canvas.onAddAudioFromSource(audio.source, audio.name);
   };
 
   return (

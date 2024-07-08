@@ -11,8 +11,12 @@ export interface EditorAudio {
 }
 
 export interface EditorAudioElement {
-  src: string;
-  volume: string;
+  id: string;
+  source: string;
+  name: string;
+  arrayBuffer: ArrayBuffer;
+  audioBuffer: AudioBuffer;
+  volume: number;
   duration: number;
   offset: number;
   trim: number;

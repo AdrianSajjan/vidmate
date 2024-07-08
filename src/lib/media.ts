@@ -33,30 +33,48 @@ interface AudioWaveform {
 
 export async function extractAudioWaveformFromAudioFile(file: File) {
   return createInstance(Promise<AudioWaveform>, (resolve, reject) => {
-    const canvas = document.createElement("canvas");
     const context = createInstance(AudioContext);
     const reader = createInstance(FileReader);
-    reader.addEventListener("load", () => {
+
+    reader.addEventListener("load", async () => {
       const result = reader.result as ArrayBuffer;
-      context.decodeAudioData(result, (buffer) => {
-        const raw = buffer.getChannelData(0);
-        const ctx = canvas.getContext("2d")!;
-        canvas.height = canvas.width = 320;
-        const step = Math.ceil(raw.length / canvas.width);
-        const amp = canvas.height / 2;
-        for (let i = 0; i < canvas.width; i++) {
-          const min = 1.0 - Math.max(...raw.subarray(i * step, (i + 1) * step));
-          const max = 1.0 - Math.min(...raw.subarray(i * step, (i + 1) * step));
-          ctx.fillStyle = "black";
-          ctx.fillRect(i, min * amp, 1, (max - min) * amp);
-        }
-        canvas.toBlob((blob) => {
-          if (!blob) return reject();
-          const url = URL.createObjectURL(blob);
-          resolve({ thumbnail: url, duration: buffer.duration });
-        });
-      });
+      const buffer = await context.decodeAudioData(result);
+      const wavefrom = await drawWavefromFromAudioBuffer(buffer);
+      resolve({ thumbnail: wavefrom, duration: buffer.duration });
     });
+
+    reader.addEventListener("error", () => {
+      reject();
+    });
+
     reader.readAsArrayBuffer(file);
+  });
+}
+
+export async function drawWavefromFromAudioBuffer(buffer: AudioBuffer, height = 320, width = 320) {
+  return createInstance(Promise<string>, (resolve, reject) => {
+    const raw = buffer.getChannelData(0);
+
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d")!;
+
+    canvas.height = height;
+    canvas.width = width;
+
+    const step = Math.ceil(raw.length / canvas.width);
+    const amp = canvas.height / 2;
+
+    for (let i = 0; i < canvas.width; i++) {
+      const min = 1.0 - Math.max(...raw.subarray(i * step, (i + 1) * step));
+      const max = 1.0 - Math.min(...raw.subarray(i * step, (i + 1) * step));
+      context.fillStyle = "black";
+      context.fillRect(i, min * amp, 1, (max - min) * amp);
+    }
+
+    canvas.toBlob((blob) => {
+      if (!blob) return reject();
+      const url = URL.createObjectURL(blob);
+      resolve(url);
+    });
   });
 }

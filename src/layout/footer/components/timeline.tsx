@@ -1,16 +1,18 @@
-import useMeasure from "react-use-measure";
 import Draggable from "react-draggable";
+import useMeasure from "react-use-measure";
 
+import { useAnimationControls } from "framer-motion";
+import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, MinusIcon, MusicIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon, VideoIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { motion, useAnimationControls } from "framer-motion";
-import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, MinusIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon, VideoIcon } from "lucide-react";
 
 import { useEditorContext } from "@/context/editor";
-import { FabricUtils } from "@/fabric/utils";
-import { cn, createInstance } from "@/lib/utils";
 import { propertiesToInclude } from "@/fabric/constants";
+import { FabricUtils } from "@/fabric/utils";
+import { drawWavefromFromAudioBuffer } from "@/lib/media";
 import { formatMediaDuration } from "@/lib/time";
+import { cn } from "@/lib/utils";
+import { EditorAudioElement } from "@/types/editor";
 
 const SEEK_TIME_WIDTH = 42;
 const HANDLE_WIDTH = 16;
@@ -48,21 +50,16 @@ function _EditorTimeline() {
   }, []);
 
   const onClickSeekTime = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (!editor.canvas.playing) return;
+    if (editor.canvas.playing) return;
     const x = event.clientX - event.currentTarget.getBoundingClientRect().left;
     const seek = x / SEEK_TIME_WIDTH;
     editor.canvas.onChangeSeekTime(seek);
   };
 
-  const onSeekHandleDrag = (event: MouseEvent | TouchEvent | PointerEvent) => {
-    const element = event.target;
-    if (element instanceof Element) {
-      const style = getComputedStyle(element);
-      const matrix = createInstance(DOMMatrixReadOnly, style.transform);
-      const x = matrix.m41;
-      const seek = x / SEEK_TIME_WIDTH;
-      editor.canvas.onChangeSeekTime(seek);
-    }
+  const onSeekHandleDrag = (x: number) => {
+    if (editor.canvas.playing) return;
+    const seek = x / SEEK_TIME_WIDTH;
+    editor.canvas.onChangeSeekTime(seek);
   };
 
   return (
@@ -74,18 +71,15 @@ function _EditorTimeline() {
         <div className="h-8 absolute bg-card/40 dark:bg-gray-900/40" style={{ width: trackBackgroundWidth }} />
         <div className="h-8 absolute bg-card dark:bg-gray-900 cursor-pointer" style={{ width: trackWidth }} onClick={onClickSeekTime} />
         <div className="h-8 absolute inset-0 flex items-center z-20 pointer-events-none">{Array.from({ length: timelineAmount }, renderTimelineTime)}</div>
-        <motion.div
-          animate={controls}
-          dragElastic={false}
-          dragMomentum={false}
-          onDragEnd={onSeekHandleDrag}
-          drag={editor.canvas.playing ? false : "x"}
-          dragConstraints={{ left: 0, right: trackWidth }}
-          className={cn("absolute h-full w-1 bg-blue-400 dark:bg-blue-600 z-10", editor.canvas.playing ? "cursor-not-allowed" : "cursor-ew-resize")}
-        />
+        <Draggable axis={editor.canvas.playing ? "none" : "x"} position={{ y: 0, x: (editor.canvas.seek / 1000) * SEEK_TIME_WIDTH }} bounds={{ left: 0, right: trackWidth }} onStop={(_, data) => onSeekHandleDrag(data.x)}>
+          <div className={cn("absolute h-full w-1 bg-blue-400 dark:bg-blue-600 z-20", editor.canvas.playing ? "cursor-not-allowed" : "cursor-ew-resize")} />
+        </Draggable>
         <div className="absolute top-8 pt-2 bottom-0 overflow-y-scroll flex flex-col gap-1" style={{ width: trackBackgroundWidth }}>
           {editor.canvas.elements.map((element) => (
-            <TimelineItem key={element.name} element={element} trackWidth={trackWidth} />
+            <TimelineElementItem key={element.name} element={element} trackWidth={trackWidth} />
+          ))}
+          {editor.canvas.audios.map((audio) => (
+            <TimelineAudioItem key={audio.id} audio={audio} trackWidth={trackWidth} />
           ))}
         </div>
       </div>
@@ -93,7 +87,7 @@ function _EditorTimeline() {
   );
 }
 
-function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackWidth: number }) {
+function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object; trackWidth: number }) {
   const editor = useEditorContext();
   const [backgroundURL, setBackgroundURL] = useState("");
 
@@ -139,9 +133,9 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
 
   const handleDragRightBar = (value: number) => {
     if (editor.canvas.playing) return;
-    const duration = Math.floor((value / SEEK_TIME_WIDTH) * 1000);
+    const duration = Math.floor((value / SEEK_TIME_WIDTH) * 1000) - element.meta!.offset;
     const object = editor.canvas.instance!.getItemByName(element.name);
-    editor.canvas.onChangeObjectTimelineProperty(object!, "duration", duration - element.meta!.offset);
+    editor.canvas.onChangeObjectTimelineProperty(object!, "duration", duration);
   };
 
   const offset = (element.meta!.offset / 1000) * SEEK_TIME_WIDTH;
@@ -179,6 +173,65 @@ function _TimelineItem({ element, trackWidth }: { element: fabric.Object; trackW
           </button>
         </Draggable>
       ) : null}
+    </div>
+  );
+}
+
+function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; trackWidth: number }) {
+  const editor = useEditorContext();
+  const [backgroundURL, setBackgroundURL] = useState("");
+
+  const offset = (audio.offset / 1000) * SEEK_TIME_WIDTH;
+  const width = (audio.timeline / 1000) * SEEK_TIME_WIDTH;
+
+  useEffect(() => {
+    drawWavefromFromAudioBuffer(audio.audioBuffer, 40, width).then(setBackgroundURL);
+  }, []);
+
+  const handleDragTrack = (value: number) => {
+    if (editor.canvas.playing) return;
+    const offset = Math.floor((value / SEEK_TIME_WIDTH) * 1000);
+  };
+
+  const handleDragLeftBar = (value: number) => {
+    if (editor.canvas.playing) return;
+    const offset = Math.floor((value / SEEK_TIME_WIDTH) * 1000);
+    const duration = audio.timeline + audio.offset - offset;
+  };
+
+  const handleDragRightBar = (value: number) => {
+    if (editor.canvas.playing) return;
+    const duration = Math.floor((value / SEEK_TIME_WIDTH) * 1000) - audio.offset;
+  };
+
+  return (
+    <div className="h-10 overflow-visible shrink-0 relative">
+      <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: offset + width - HANDLE_WIDTH * 2 }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragLeftBar(data.x)}>
+        <button className="flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-l-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH }}>
+          {!Math.round(audio.offset) ? <MinusIcon size={15} className="text-white rotate-90" strokeWidth={2.5} /> : <ChevronLeftIcon size={15} className="text-white" strokeWidth={2.5} />}
+        </button>
+      </Draggable>
+
+      <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
+        <button
+          className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing border-gray-400")}
+          style={{ width, backgroundImage: `url(${backgroundURL})`, backgroundSize: `${width}px 40px` }}
+        >
+          <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-2.5 capitalize left-5")}>
+            <span className="text-xxs">{formatMediaDuration(audio.timeline)}</span>
+            <div className="inline-flex items-center gap-1.5">
+              <MusicIcon size={12} />
+              <span className="text-xxs">Audio</span>
+            </div>
+          </span>
+        </button>
+      </Draggable>
+
+      <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: offset + HANDLE_WIDTH, right: trackWidth }} position={{ y: 0, x: offset + width }} onDrag={(_, data) => handleDragRightBar(data.x)}>
+        <button className="inline-flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-r-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH, left: -HANDLE_WIDTH }}>
+          <ChevronRightIcon size={15} className="text-white" strokeWidth={2.5} />
+        </button>
+      </Draggable>
     </div>
   );
 }
@@ -251,6 +304,6 @@ function ElementDescription({ name, type }: { type?: string; name?: string }) {
   }
 }
 
-const TimelineItem = observer(_TimelineItem);
-
+const TimelineElementItem = observer(_TimelineElementItem);
+const TimelineAudioItem = observer(_TimelineAudioItem);
 export const EditorTimeline = observer(_EditorTimeline);

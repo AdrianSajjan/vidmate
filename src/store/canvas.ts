@@ -20,23 +20,23 @@ export class Canvas {
   instance?: fabric.Canvas;
   artboard?: fabric.Rect;
 
-  elements: fabric.Object[];
+  audioContext: AudioContext;
   audios: EditorAudioElement[];
 
+  elements: fabric.Object[];
   selected?: fabric.Object | null;
+
   crop?: fabric.Image | null;
   trim?: fabric.Video | null;
 
   seek: number;
   duration: number;
-
   loop: boolean;
   playing: boolean;
   timeline?: anime.AnimeTimelineInstance | null;
 
   zoom: number;
   fill: string;
-
   width: number;
   height: number;
 
@@ -46,7 +46,9 @@ export class Canvas {
   constructor() {
     this.zoom = 0.5;
     this.elements = [];
+
     this.audios = [];
+    this.audioContext = createInstance(AudioContext);
 
     this.seek = 0;
     this.duration = 30000;
@@ -420,6 +422,7 @@ export class Canvas {
             anim.play();
           } else {
             this.onPauseTimeline(true);
+            this.onResetAudioTimeline();
           }
         } else {
           this.onChangeSeekTime(anim.currentTime / 1000);
@@ -428,6 +431,7 @@ export class Canvas {
       complete: () => {
         this.onUpdateTimelineStatus(false);
         this.onResetAnimationTimeline();
+        this.onResetAudioTimeline();
         this.onChangeSeekTime(0);
       },
     });
@@ -627,6 +631,19 @@ export class Canvas {
     this.onToggleCanvasElements(this.seek);
   }
 
+  private onInitializeAudioTimeline() {
+    for (const audio of this.audios) {
+      const source = this.audioContext.createBufferSource();
+      source.buffer = audio.audioBuffer;
+      source.connect(this.audioContext.destination);
+      source.start(audio.offset, audio.trim, audio.timeline);
+    }
+  }
+
+  private onResetAudioTimeline() {
+    // TODO: implementation
+  }
+
   onInitialize(element: HTMLCanvasElement) {
     this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
     this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
@@ -650,6 +667,7 @@ export class Canvas {
 
     this.instance.discardActiveObject();
     this.onInitializeAnimationTimeline();
+    this.onInitializeAudioTimeline();
 
     this.playing = true;
     if (last) this.timeline!.seek(this.seek);
@@ -663,6 +681,7 @@ export class Canvas {
     this.timeline!.pause();
 
     if (initial) this.seek = 0;
+    this.onResetAudioTimeline();
     this.onResetAnimationTimeline();
   }
 
@@ -720,11 +739,24 @@ export class Canvas {
     return textbox;
   }
 
-  // onAddAudio(source: string, name: string) {}
+  *onAddAudioFromSource(source: string, name: string) {
+    const response: Response = yield fetch(source);
+    const arrayBuffer: ArrayBuffer = yield response.arrayBuffer();
+    const audioBuffer: AudioBuffer = yield this.audioContext.decodeAudioData(arrayBuffer);
 
-  *onAddImageFromSource(source: string): Generator<Promise<fabric.Image>, fabric.Image | undefined, fabric.Image> {
+    const id = FabricUtils.elementID("audio");
+    const duration = audioBuffer.duration * 1000;
+    const timeline = Math.min(duration, this.duration);
+
+    const audio: EditorAudioElement = { id, arrayBuffer, audioBuffer, source, timeline, name, duration, trim: 0, offset: 0, volume: 1 };
+    this.audios.push(audio);
+
+    return audio;
+  }
+
+  *onAddImageFromSource(source: string) {
     if (!this.instance || !this.artboard) return;
-    return yield createInstance(Promise<fabric.Image>, (resolve, reject) => {
+    return createInstance(Promise<fabric.Image>, (resolve, reject) => {
       fabric.Image.fromURL(
         source,
         (image) => {
@@ -749,7 +781,7 @@ export class Canvas {
     });
   }
 
-  *onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement): Generator<Promise<fabric.Image>, fabric.Image | undefined, fabric.Image> {
+  *onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement) {
     if (!this.instance || !this.artboard) return;
 
     const id = FabricUtils.elementID("image");
@@ -783,7 +815,7 @@ export class Canvas {
     thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
     thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
 
-    return yield createInstance(Promise<fabric.Image>, (resolve, reject) => {
+    return createInstance(Promise<fabric.Image>, (resolve, reject) => {
       fabric.Image.fromURL(
         source,
         (image) => {
@@ -811,9 +843,9 @@ export class Canvas {
     });
   }
 
-  *onAddVideoFromSource(source: string): Generator<Promise<fabric.Video>, fabric.Video | undefined, fabric.Video> {
+  *onAddVideoFromSource(source: string) {
     if (!this.instance || !this.artboard) return;
-    return yield createInstance(Promise<fabric.Video>, (resolve, reject) => {
+    return createInstance(Promise<fabric.Video>, (resolve, reject) => {
       fabric.Video.fromURL(
         source,
         (video) => {
@@ -839,7 +871,7 @@ export class Canvas {
     });
   }
 
-  *onAddVideoWithThumbail(source: string, _thumbnail: HTMLImageElement): Generator<Promise<fabric.Video>, fabric.Video | undefined, fabric.Video> {
+  *onAddVideoWithThumbail(source: string, _thumbnail: HTMLImageElement) {
     if (!this.instance || !this.artboard) return;
 
     const id = FabricUtils.elementID("video");
@@ -873,7 +905,7 @@ export class Canvas {
     thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
     thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
 
-    return yield createInstance(Promise<fabric.Video>, (resolve, reject) => {
+    return createInstance(Promise<fabric.Video>, (resolve, reject) => {
       fabric.Video.fromURL(
         source,
         (video) => {
