@@ -263,7 +263,6 @@ export class Canvas {
 
     this.viewportTransform = [...viewportTransform];
     this.instance.setViewportTransform(viewportTransform);
-    this.instance.requestRenderAll();
   }
 
   private onToggleCanvasElements(ms: number) {
@@ -699,12 +698,12 @@ export class Canvas {
     if (object) this.instance.remove(object);
   }
 
-  onUpdateResponsiveCanvas({ height, width }: { height: number; width: number }) {
+  onUpdateResponsiveCanvas({ height, width, center }: { height: number; width: number; center?: boolean }) {
     if (!this.instance || !this.artboard) return;
 
     this.onDeleteGuidelines();
     this.instance.setDimensions({ width, height });
-    this.onCenterArtboard();
+    if (center) this.onCenterArtboard();
     this.onInitializeGuidelines();
 
     this.instance.requestRenderAll();

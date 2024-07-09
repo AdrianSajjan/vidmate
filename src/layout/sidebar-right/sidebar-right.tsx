@@ -1,16 +1,15 @@
-import { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react";
+import { useEffect } from "react";
 
-import { useEditorContext } from "@/context/editor";
 import { rightSidebarWidth } from "@/constants/layout";
+import { useEditorContext } from "@/context/editor";
 
+import { AnimationSidebar } from "./components/animations";
+import { ClipMaskSidebar } from "./components/clip";
 import { FillSidebar } from "./components/fill";
+import { FilterSidebar } from "./components/filters";
 import { FontSidebar } from "./components/fonts";
 import { StrokeSidebar } from "./components/stroke";
-import { ClipMaskSidebar } from "./components/clip";
-import { FilterSidebar } from "./components/filters";
-import { AnimationSidebar } from "./components/animations";
 
 interface SidebarMapValue {
   Component: () => JSX.Element;
@@ -60,15 +59,11 @@ function _EditorSidebarRight() {
     return null;
   }
 
-  return (
-    <AnimatePresence>
-      {sidebar ? (
-        <motion.aside initial={{ width: 0 }} animate={{ width: rightSidebarWidth }} exit={{ width: 0 }} className="overflow-hidden bg-card/75 dark:bg-gray-900/30 border-l shrink-0">
-          <sidebar.Component key={editor.sidebarRight} />
-        </motion.aside>
-      ) : null}
-    </AnimatePresence>
-  );
+  return sidebar ? (
+    <aside style={{ width: rightSidebarWidth }} className="overflow-hidden bg-card/75 dark:bg-gray-900/30 border-l shrink-0">
+      <sidebar.Component key={editor.sidebarRight} />
+    </aside>
+  ) : null;
 }
 
 export const EditorSidebarRight = observer(_EditorSidebarRight);

@@ -31,7 +31,7 @@ function _CanvasBase({ height, width, ...props }: EditorCanvasProps) {
 
   useEffect(() => {
     if (!height || !width || !isInitialized) return;
-    canvas.onUpdateResponsiveCanvas({ height, width });
+    canvas.onUpdateResponsiveCanvas({ height, width, center: true });
   }, [canvas, height, width, isInitialized]);
 
   return (

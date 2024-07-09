@@ -1,21 +1,20 @@
+import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { Fragment, useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useEditorContext } from "@/context/editor";
 import { leftSidebarWidth } from "@/constants/layout";
+import { useEditorContext } from "@/context/editor";
+import { cn } from "@/lib/utils";
 
+import { AudioSidebar } from "./components/audio";
+import { ElementSidebar } from "./components/element";
+import { FormatSidebar } from "./components/format";
+import { ImageSidebar } from "./components/image";
 import { TemplateSidebar } from "./components/template";
 import { TextSidebar } from "./components/text";
-import { ElementSidebar } from "./components/element";
-import { ImageSidebar } from "./components/image";
-import { VideoSidebar } from "./components/video";
-import { AudioSidebar } from "./components/audio";
 import { UploadSidebar } from "./components/upload";
-import { FormatSidebar } from "./components/format";
+import { VideoSidebar } from "./components/video";
 
 const sidebarComponentMap: Record<string, () => JSX.Element> = {
   templates: TemplateSidebar,
@@ -97,13 +96,11 @@ function _EditorSidebarLeft() {
           );
         })}
       </aside>
-      <AnimatePresence>
-        {Sidebar ? (
-          <motion.aside initial={{ width: 0 }} animate={{ width: leftSidebarWidth }} exit={{ width: 0 }} className="overflow-hidden bg-card/60 border-r shrink-0">
-            <Sidebar key={editor.sidebarLeft} />
-          </motion.aside>
-        ) : null}
-      </AnimatePresence>
+      {Sidebar ? (
+        <aside style={{ width: leftSidebarWidth }} className="overflow-hidden bg-card/60 border-r shrink-0">
+          <Sidebar key={editor.sidebarLeft} />
+        </aside>
+      ) : null}
     </Fragment>
   );
 }

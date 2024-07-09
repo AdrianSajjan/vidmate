@@ -1,25 +1,25 @@
 import { ChevronUpIcon, GanttChartIcon, PauseIcon, PlayIcon, RepeatIcon, TimerIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { useEditorContext } from "@/context/editor";
 import { formatMediaDuration } from "@/lib/time";
 
-import { EditorTimeline } from "./components/timeline";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { presetDurations } from "@/constants/editor";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
 import { Toggle } from "@/components/ui/toggle";
+import { presetDurations } from "@/constants/editor";
+import { cn } from "@/lib/utils";
+import { EditorTimeline } from "./components/timeline";
 
 function _EditorFooter() {
   const editor = useEditorContext();
 
   return (
-    <motion.footer initial={{ height: 64 }} animate={{ height: editor.isTimelineOpen ? 288 : 64 }} className="flex flex-col bg-card dark:bg-gray-900/40 border-t shrink-0 overflow-hidden">
+    <footer style={{ height: editor.isTimelineOpen ? 288 : 64 }} className="flex flex-col bg-card dark:bg-gray-900/40 border-t shrink-0 overflow-hidden">
       <div className="h-16 px-4 flex items-center gap-12 justify-between border-b shrink-0 overflow-x-scroll">
         <div className="flex gap-px">
           <Popover>
@@ -89,14 +89,14 @@ function _EditorFooter() {
           <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => editor.onToggleTimeline()}>
             <GanttChartIcon size={15} />
             <span>Timeline</span>
-            <motion.span animate={{ rotate: editor.isTimelineOpen ? 180 : 0 }}>
+            <span className={cn(editor.isTimelineOpen ? "rotate-180" : "rotate-0")}>
               <ChevronUpIcon size={15} />
-            </motion.span>
+            </span>
           </Button>
         </div>
       </div>
       <EditorTimeline />
-    </motion.footer>
+    </footer>
   );
 }
 
