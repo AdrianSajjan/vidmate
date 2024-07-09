@@ -211,12 +211,14 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
   const handleDragLeftBar = (value: number) => {
     if (editor.canvas.playing) return;
     const offset = value / SEEK_TIME_WIDTH;
-    const duration = audio.timeline + audio.offset - offset;
+    const timeline = audio.timeline + audio.offset - offset;
+    editor.canvas.onChangeAudioProperties(audio.id, { offset, timeline });
   };
 
   const handleDragRightBar = (value: number) => {
     if (editor.canvas.playing) return;
-    const duration = value / SEEK_TIME_WIDTH - audio.offset;
+    const timeline = value / SEEK_TIME_WIDTH - audio.offset;
+    editor.canvas.onChangeAudioProperties(audio.id, { timeline });
   };
 
   const style = {
@@ -241,7 +243,7 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
           style={style}
         >
           <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-2.5 capitalize left-5")}>
-            <span className="text-xxs">{formatMediaDuration(audio.timeline)}</span>
+            <span className="text-xxs">{formatMediaDuration(audio.timeline * 1000)}</span>
             <div className="inline-flex items-center gap-1.5">
               <MusicIcon size={12} />
               <span className="text-xxs">Audio</span>
@@ -252,7 +254,7 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
       {isSelected ? (
         <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: offset + HANDLE_WIDTH, right: trackWidth }} position={{ y: 0, x: offset + width }} onDrag={(_, data) => handleDragRightBar(data.x)}>
           <button className="inline-flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-r-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH, left: -HANDLE_WIDTH }}>
-            {audio.timeline === audio.duration || audio.timeline === editor.canvas.duration ? (
+            {audio.timeline === audio.duration || audio.offset + audio.timeline >= editor.canvas.duration ? (
               <MinusIcon size={15} className="text-white rotate-90" strokeWidth={4} />
             ) : (
               <ChevronRightIcon size={15} className="text-white" strokeWidth={4} />
