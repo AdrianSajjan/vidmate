@@ -3235,7 +3235,10 @@ interface IObjectOptions {
    * Not used by fabric, just for convenience
    */
   name?: string | undefined;
-
+  /**
+   * Not used by fabric, just for convenience
+   */
+  id?: string | undefined;
   /**
    * Not used by fabric, just for convenience
    */

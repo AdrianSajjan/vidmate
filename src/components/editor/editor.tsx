@@ -25,18 +25,28 @@ export function EditorCanvas(props: EditorCanvasProps) {
   );
 }
 
-const CanvasBase = observer(_CanvasBase);
-
-function _CanvasBase({ height, width }: EditorCanvasProps) {
+function _CanvasBase({ height, width, ...props }: EditorCanvasProps) {
   const canvas = useCanvasContext();
-
-  const [ref, dimensions] = useMeasure();
   const [canvasRef, { isInitialized }] = useInitializeCanvas();
 
   useEffect(() => {
     if (!height || !width || !isInitialized) return;
     canvas.onUpdateResponsiveCanvas({ height, width });
   }, [canvas, height, width, isInitialized]);
+
+  return (
+    <Fragment>
+      <div className="absolute">
+        <canvas ref={canvasRef} />
+      </div>
+      <EditorElementControls {...{ height, width, ...props }} />
+    </Fragment>
+  );
+}
+
+function _EditorElementControls({ height }: EditorCanvasProps) {
+  const canvas = useCanvasContext();
+  const [ref, dimensions] = useMeasure();
 
   const style = useMemo(() => {
     if (!canvas.instance) return undefined;
@@ -59,26 +69,24 @@ function _CanvasBase({ height, width }: EditorCanvasProps) {
   }, [canvas.selected, canvas.viewportTransform, canvas.height, canvas.width, canvas.zoom, dimensions]);
 
   return (
-    <Fragment>
-      <div className="absolute">
-        <canvas ref={canvasRef} />
-      </div>
-      <div
-        ref={ref}
-        style={style}
-        className={cn(
-          "absolute border bg-popover text-popover-foreground shadow rounded-lg outline-none items-center gap-0.5 p-0.5",
-          "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2",
-          !canvas.selected || !canvas.hasControls ? "hidden" : "flex",
-        )}
-      >
-        <Button size="icon" variant="ghost" className="h-7 w-7" disabled>
-          <CopyPlusIcon size={14} />
-        </Button>
-        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => canvas.onDeleteObjectByName(canvas.selected?.name)}>
-          <Trash2Icon size={14} />
-        </Button>
-      </div>
-    </Fragment>
+    <div
+      ref={ref}
+      style={style}
+      className={cn(
+        "absolute border bg-popover text-popover-foreground shadow rounded-lg outline-none items-center gap-0.5 p-0.5",
+        "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2",
+        !canvas.selected || canvas.selected.type === "audio" || !canvas.hasControls ? "hidden" : "flex",
+      )}
+    >
+      <Button size="icon" variant="ghost" className="h-7 w-7" disabled>
+        <CopyPlusIcon size={14} />
+      </Button>
+      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => canvas.onDeleteObjectByName(canvas.selected?.name)}>
+        <Trash2Icon size={14} />
+      </Button>
+    </div>
   );
 }
+
+const CanvasBase = observer(_CanvasBase);
+const EditorElementControls = observer(_EditorElementControls);

@@ -74,7 +74,7 @@ function _EditorTimeline() {
         <Draggable axis={editor.canvas.playing ? "none" : "x"} position={{ y: 0, x: (editor.canvas.seek / 1000) * SEEK_TIME_WIDTH }} bounds={{ left: 0, right: trackWidth }} onStop={(_, data) => onSeekHandleDrag(data.x)}>
           <div className={cn("absolute h-full w-1 bg-blue-400 dark:bg-blue-600 z-20", editor.canvas.playing ? "cursor-not-allowed" : "cursor-ew-resize")} />
         </Draggable>
-        <div className="absolute top-8 pt-2 bottom-0 overflow-y-scroll flex flex-col gap-1" style={{ width: trackBackgroundWidth }}>
+        <div className="absolute top-8 py-2.5 bottom-0 overflow-y-scroll flex flex-col gap-1" style={{ width: trackBackgroundWidth }}>
           {editor.canvas.elements.map((element) => (
             <TimelineElementItem key={element.name} element={element} trackWidth={trackWidth} />
           ))}
@@ -140,8 +140,13 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
 
   const offset = (element.meta!.offset / 1000) * SEEK_TIME_WIDTH;
   const width = (element.meta!.duration / 1000) * SEEK_TIME_WIDTH;
-
   const backgroundWidth = 40 * (element.width! / element.height!) + 10;
+
+  const style = {
+    width,
+    backgroundImage: `url(${backgroundURL})`,
+    backgroundSize: `${backgroundWidth}px 40px`,
+  };
 
   return (
     <div className="h-10 overflow-visible shrink-0 relative">
@@ -155,9 +160,9 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
 
       <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
         <button
-          onClick={(event) => (editor.canvas.playing ? null : editor.canvas.onCreateSelection(element.name, event.shiftKey))}
+          onClick={(event) => (editor.canvas.playing ? null : editor.canvas.onCreateSelection(element.name!, event.shiftKey))}
           className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-blue-600" : "border-gray-400")}
-          style={{ width, backgroundImage: `url(${backgroundURL})`, backgroundSize: `${backgroundWidth}px 40px` }}
+          style={style}
         >
           <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-2.5 capitalize", isSelected ? "left-5" : "left-1")}>
             <span className="text-xxs">{formatMediaDuration(element.meta!.duration)}</span>
@@ -169,7 +174,11 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
       {isSelected ? (
         <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: offset + HANDLE_WIDTH, right: trackWidth }} position={{ y: 0, x: offset + width }} onDrag={(_, data) => handleDragRightBar(data.x)}>
           <button className="inline-flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-r-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH, left: -HANDLE_WIDTH }}>
-            <ChevronRightIcon size={15} className="text-white" strokeWidth={2.5} />
+            {element.meta!.duration + element.meta!.offset >= editor.canvas.duration ? (
+              <MinusIcon size={15} className="text-white rotate-90" strokeWidth={2.5} />
+            ) : (
+              <ChevronRightIcon size={15} className="text-white" strokeWidth={2.5} />
+            )}
           </button>
         </Draggable>
       ) : null}
@@ -181,41 +190,55 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
   const editor = useEditorContext();
   const [backgroundURL, setBackgroundURL] = useState("");
 
-  const offset = (audio.offset / 1000) * SEEK_TIME_WIDTH;
-  const width = (audio.timeline / 1000) * SEEK_TIME_WIDTH;
+  const offset = audio.offset * SEEK_TIME_WIDTH;
+  const width = audio.timeline * SEEK_TIME_WIDTH;
 
   useEffect(() => {
-    drawWavefromFromAudioBuffer(audio.audioBuffer, 40, width).then(setBackgroundURL);
+    drawWavefromFromAudioBuffer(audio.buffer, 40, width).then(setBackgroundURL);
   }, []);
+
+  const isSelected = useMemo(() => {
+    if (!editor.canvas.selected || editor.canvas.selected.type !== "audio") return;
+    return editor.canvas.selected.id === audio.id;
+  }, [editor.canvas.selected, audio]);
 
   const handleDragTrack = (value: number) => {
     if (editor.canvas.playing) return;
-    const offset = Math.floor((value / SEEK_TIME_WIDTH) * 1000);
+    const offset = value / SEEK_TIME_WIDTH;
+    editor.canvas.onChangeAudioProperties(audio.id, { offset });
   };
 
   const handleDragLeftBar = (value: number) => {
     if (editor.canvas.playing) return;
-    const offset = Math.floor((value / SEEK_TIME_WIDTH) * 1000);
+    const offset = value / SEEK_TIME_WIDTH;
     const duration = audio.timeline + audio.offset - offset;
   };
 
   const handleDragRightBar = (value: number) => {
     if (editor.canvas.playing) return;
-    const duration = Math.floor((value / SEEK_TIME_WIDTH) * 1000) - audio.offset;
+    const duration = value / SEEK_TIME_WIDTH - audio.offset;
+  };
+
+  const style = {
+    width,
+    backgroundImage: `url(${backgroundURL})`,
+    backgroundSize: `${width}px 40px`,
   };
 
   return (
     <div className="h-10 overflow-visible shrink-0 relative">
-      <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: offset + width - HANDLE_WIDTH * 2 }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragLeftBar(data.x)}>
-        <button className="flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-l-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH }}>
-          {!Math.round(audio.offset) ? <MinusIcon size={15} className="text-white rotate-90" strokeWidth={2.5} /> : <ChevronLeftIcon size={15} className="text-white" strokeWidth={2.5} />}
-        </button>
-      </Draggable>
-
+      {isSelected ? (
+        <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: offset + width - HANDLE_WIDTH * 2 }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragLeftBar(data.x)}>
+          <button className="flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-l-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH }}>
+            {!Math.round(audio.offset) ? <MinusIcon size={15} className="text-white rotate-90" strokeWidth={4} /> : <ChevronLeftIcon size={15} className="text-white" strokeWidth={4} />}
+          </button>
+        </Draggable>
+      ) : null}
       <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
         <button
-          className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing border-gray-400")}
-          style={{ width, backgroundImage: `url(${backgroundURL})`, backgroundSize: `${width}px 40px` }}
+          onClick={() => (editor.canvas.playing ? null : editor.canvas.onSelectAudio(audio))}
+          className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-blue-600" : "border-gray-400")}
+          style={style}
         >
           <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-2.5 capitalize left-5")}>
             <span className="text-xxs">{formatMediaDuration(audio.timeline)}</span>
@@ -226,12 +249,17 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
           </span>
         </button>
       </Draggable>
-
-      <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: offset + HANDLE_WIDTH, right: trackWidth }} position={{ y: 0, x: offset + width }} onDrag={(_, data) => handleDragRightBar(data.x)}>
-        <button className="inline-flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-r-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH, left: -HANDLE_WIDTH }}>
-          <ChevronRightIcon size={15} className="text-white" strokeWidth={2.5} />
-        </button>
-      </Draggable>
+      {isSelected ? (
+        <Draggable axis={editor.canvas.playing ? "none" : "x"} bounds={{ left: offset + HANDLE_WIDTH, right: trackWidth }} position={{ y: 0, x: offset + width }} onDrag={(_, data) => handleDragRightBar(data.x)}>
+          <button className="inline-flex items-center justify-center bg-blue-600 absolute top-0 h-full z-10 rounded-r-lg cursor-ew-resize" style={{ width: HANDLE_WIDTH, left: -HANDLE_WIDTH }}>
+            {audio.timeline === audio.duration || audio.timeline === editor.canvas.duration ? (
+              <MinusIcon size={15} className="text-white rotate-90" strokeWidth={4} />
+            ) : (
+              <ChevronRightIcon size={15} className="text-white" strokeWidth={4} />
+            )}
+          </button>
+        </Draggable>
+      ) : null}
     </div>
   );
 }

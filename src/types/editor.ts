@@ -12,13 +12,14 @@ export interface EditorAudio {
 
 export interface EditorAudioElement {
   id: string;
-  source: string;
+  url: string;
   name: string;
-  arrayBuffer: ArrayBuffer;
-  audioBuffer: AudioBuffer;
+  buffer: AudioBuffer;
+  source: AudioBufferSourceNode;
   volume: number;
   duration: number;
   offset: number;
+  playing: boolean;
   trim: number;
   timeline: number;
 }
