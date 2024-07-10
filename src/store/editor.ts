@@ -1,4 +1,4 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { Canvas } from "@/store/canvas";
 import { createInstance } from "@/lib/utils";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
@@ -15,6 +15,7 @@ export class Editor {
   isTimelineOpen: boolean;
 
   ffmpeg: FFmpeg;
+  exporting: boolean;
   status: "uninitialized" | "pending" | "complete" | "error";
 
   constructor() {
@@ -22,6 +23,7 @@ export class Editor {
     this.pages = [createInstance(Canvas)];
 
     this.page = 0;
+    this.exporting = false;
     this.status = "uninitialized";
 
     this.sidebarLeft = null;
@@ -64,5 +66,51 @@ export class Editor {
 
   onAddPage() {
     this.pages.push(createInstance(Canvas));
+  }
+
+  *onExportVideo(_: "webmp" | "mp4") {
+    if (!this.canvas.instance) throw createInstance(Error, "Canvas instance not initialized");
+
+    this.exporting = true;
+
+    const canvas = this.canvas.instance.getElement();
+    const video = document.createElement("video");
+
+    this.canvas.onRecordVideo();
+    const videoStream = canvas.captureStream(30);
+
+    const audioStream = this.canvas.audioContext.createMediaStreamDestination();
+    this.canvas.onRecordAudio(audioStream);
+
+    const videoTracks = videoStream.getTracks();
+    const audioTracks = audioStream.stream.getTracks();
+
+    const chunks: Blob[] = [];
+    const stream = createInstance(MediaStream, [...videoTracks, ...audioTracks]);
+
+    video.width = this.canvas.width;
+    video.height = this.canvas.height;
+    video.srcObject = stream;
+
+    yield video.play();
+    const mediaRecorder = createInstance(MediaRecorder, stream);
+
+    return createInstance(Promise<Blob>, (resolve, reject) => {
+      mediaRecorder.addEventListener("dataavailable", (event) => {
+        chunks.push(event.data);
+      });
+      mediaRecorder.addEventListener("error", () => {
+        runInAction(() => (this.exporting = false));
+        reject("Media recorder ran into an error");
+      });
+      mediaRecorder.addEventListener("stop", () => {
+        video.remove();
+        runInAction(() => (this.exporting = false));
+        const blob = createInstance(Blob, chunks, { type: "video/webm" });
+        resolve(blob);
+      });
+      mediaRecorder.start();
+      setTimeout(() => mediaRecorder.stop(), this.canvas.duration);
+    });
   }
 }

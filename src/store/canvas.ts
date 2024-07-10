@@ -682,6 +682,34 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
+  onRecordVideo() {
+    if (!this.instance) return;
+
+    this.trim = null;
+    this.selected = null;
+    this.playing = false;
+
+    this.instance.discardActiveObject();
+    this.onInitializeAnimationTimeline();
+    this.timeline!.play();
+  }
+
+  onRecordAudio(destination: MediaStreamAudioDestinationNode) {
+    for (const audio of this.audios) {
+      const gain = this.audioContext.createGain();
+      const source = this.audioContext.createBufferSource();
+
+      source.buffer = audio.buffer;
+      gain.gain.value = audio.volume;
+
+      gain.connect(this.audioContext.destination);
+      source.connect(gain);
+      source.connect(destination);
+
+      source.start(this.audioContext.currentTime + audio.offset, audio.trim, audio.timeline);
+    }
+  }
+
   onStartTimeline(last?: boolean) {
     if (!this.instance || this.playing) return;
 

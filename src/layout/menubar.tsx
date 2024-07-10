@@ -5,9 +5,24 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { ToggleTheme } from "@/components/ui/theme-toggle";
 import { observer } from "mobx-react";
 import { useEditorContext } from "@/context/editor";
+import { flowResult } from "mobx";
+import { createInstance } from "@/lib/utils";
 
 function _EditorMenubar() {
   const editor = useEditorContext();
+
+  const handleExportVideo = async () => {
+    try {
+      const blob = await flowResult(editor.onExportVideo("webmp"));
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "video.webm";
+      anchor.click();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <header className="flex h-14 items-center px-3 bg-card dark:bg-gray-900/40 border-b shrink-0">
@@ -49,7 +64,7 @@ function _EditorMenubar() {
           </Button>
         </div>
         <div className="flex gap-px">
-          <Button size="sm" className="gap-2 rounded-r-none bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90">
+          <Button size="sm" className="gap-2 rounded-r-none bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90" onClick={() => handleExportVideo()}>
             <ImageIcon size={15} />
             <span className="font-medium">Export Template</span>
           </Button>
