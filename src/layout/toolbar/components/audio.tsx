@@ -1,5 +1,6 @@
 import { AudioWaveformIcon, GanttChartIcon, Trash2Icon, Volume2Icon } from "lucide-react";
 import { observer } from "mobx-react";
+import { floor } from "lodash";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,6 @@ import { Slider } from "@/components/ui/slider";
 
 import { useEditorContext } from "@/context/editor";
 import { EditorAudioElement } from "@/types/editor";
-import { floor } from "lodash";
 
 function _AudioToolbar() {
   const editor = useEditorContext();

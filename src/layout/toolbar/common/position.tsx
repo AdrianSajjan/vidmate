@@ -1,8 +1,9 @@
+import { BoxSelectIcon } from "lucide-react";
+import { observer } from "mobx-react";
+
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useEditorContext } from "@/context/editor";
-import { BoxSelectIcon } from "lucide-react";
-import { observer } from "mobx-react";
 
 const move = [
   { label: "Bring to Front", value: "top" },

@@ -89,7 +89,7 @@ function _VideoSidebar() {
               {store.videos.length ? (
                 store.videos.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClick(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
-                    <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110" />
+                    <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
                   </button>
                 ))
               ) : (
