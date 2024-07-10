@@ -19,7 +19,11 @@ function _ImageToolbar() {
   const handleCropStart = () => {
     const image = editor.canvas.instance?.getItemByName(selected.name) as fabric.Image | null;
     if (!image) return;
-    editor.canvas.onCropImageStart(image);
+    if (image.clipPath) {
+      editor.canvas.onModifyClipPathStart(image);
+    } else {
+      editor.canvas.onCropImageStart(image);
+    }
   };
 
   return (

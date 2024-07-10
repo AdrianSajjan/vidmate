@@ -124,6 +124,7 @@ export class Canvas {
     }
   }
 
+  // @ts-ignore
   private onRemoveElement(object?: fabric.Object) {
     if (!object) return;
     const index = this.elements.findIndex((element) => element.name === object.name);
@@ -428,6 +429,7 @@ export class Canvas {
         case "image":
           if (this.crop === event.target || event.target.meta?.placeholder) return;
           if (event.target.clipPath) {
+            this.onModifyClipPathStart(event.target as fabric.Image);
           } else {
             this.onCropImageStart(event.target as fabric.Image);
           }
@@ -1210,6 +1212,33 @@ export class Canvas {
     this.instance.renderAll();
   }
 
+  *onModifyClipPathStart(image: fabric.Image) {
+    if (!this.instance || !this.artboard || !image.clipPath) return;
+
+    const clipPath = image.clipPath;
+    const props = { selectable: false, evented: false, originX: "center", originY: "center" };
+    const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, fill: "#000000", opacity: 0.5, height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY, ...props });
+
+    image.set({ clipPath: undefined });
+    clipPath.set({ name: "clip_" + image.name, fill: "#ffffff", globalCompositeOperation: "overlay", ...props });
+
+    overlay.setPositionByOrigin(image.getCenterPoint(), "center", "center");
+    clipPath.setPositionByOrigin(image.getCenterPoint(), "center", "center");
+
+    this.instance.add(overlay, clipPath);
+
+    FabricUtils.bindObjectTransformToParent(image, [overlay]);
+    FabricUtils.updateObjectTransformToParent(image, [{ object: overlay }]);
+
+    image.on("scaling", () => FabricUtils.updateObjectTransformToParent(image, [{ object: overlay }]));
+    image.on("rotating", () => FabricUtils.updateObjectTransformToParent(image, [{ object: overlay }]));
+    image.on("moving", () => FabricUtils.updateObjectTransformToParent(image, [{ object: overlay }]));
+  }
+
+  onModifyClipPathEnd(image: fabric.Image) {
+    if (!this.instance || !this.artboard || !image.clipPath) return;
+  }
+
   onTrimAudioStart(audio: EditorAudioElement) {
     this.trim = Object.assign({ type: "audio" as "audio" }, { selected: audio });
   }
@@ -1236,44 +1265,16 @@ export class Canvas {
 
     const index = this.instance._objects.findIndex((object) => object === image);
     if (index === -1) return;
+    this.instance.remove(clipPath);
 
     const height = image.getScaledHeight();
     const width = image.getScaledWidth();
 
-    this.onRemoveElement(clipPath);
-    clipPath.moveTo(index - 1);
+    if (height > width) clipPath.scaleToWidth(width);
+    else clipPath.scaleToHeight(height);
 
-    if (height > width) clipPath.scaleToWidth(width / 2.05);
-    else clipPath.scaleToHeight(height / 2.05);
-
-    clipPath.set({ absolutePositioned: true, name: "clip_" + image.name, selectable: false, evented: false }).setPositionByOrigin(image.getCenterPoint(), "center", "center");
+    clipPath.set({ originX: "center", originY: "center", left: 0, top: 0 });
     image.set({ clipPath: clipPath });
-
-    if (!clipPath.meta) clipPath.meta = {};
-
-    clipPath.meta.offsetX = clipPath.left! - image.left!;
-    clipPath.meta.offsetY = clipPath.top! - image.top!;
-    clipPath.meta.angleOffset = clipPath.angle! - image.angle!;
-
-    clipPath.meta.widthOffset = clipPath.getScaledWidth() - image.getScaledWidth();
-    clipPath.meta.heightOffset = clipPath.getScaledHeight() - image.getScaledHeight();
-
-    image.on("moving", () => {
-      clipPath.set({ left: image.left! + clipPath.meta!.offsetX, top: image.top! + clipPath.meta!.offsetY });
-      clipPath.setCoords();
-    });
-
-    image.on("scaling", () => {
-      const scaleY = (image.getScaledHeight() + clipPath.meta!.heightOffset) / clipPath.height!;
-      const scaleX = (image.getScaledWidth() + clipPath.meta!.widthOffset) / clipPath.width!;
-      clipPath.set({ scaleX, scaleY });
-      clipPath.setCoords();
-    });
-
-    image.on("rotating", () => {
-      clipPath.rotate(image.angle! + clipPath.meta!.angleOffset);
-      clipPath.setCoords();
-    });
 
     this.instance.requestRenderAll();
   }
