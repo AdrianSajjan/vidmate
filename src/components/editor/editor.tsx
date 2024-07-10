@@ -3,7 +3,7 @@ import useMeasure from "react-use-measure";
 import { useMemo } from "react";
 import { clamp } from "lodash";
 import { observer } from "mobx-react";
-import { CopyPlusIcon, Trash2Icon } from "lucide-react";
+import { CopyPlusIcon, GroupIcon, PencilIcon, RepeatIcon, Trash2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { CanvasProvider, useCanvasContext, useInitializeCanvas } from "@/context/canvas";
@@ -58,22 +58,43 @@ function _EditorElementControls({}: EditorCanvasProps) {
     };
   }, [canvas.selected, canvas.viewportTransform, canvas.height, canvas.width, canvas.zoom, dimensions]);
 
+  if (!canvas.selected || canvas.selected.type === "audio" || !canvas.hasControls) {
+    return null;
+  }
+
   return (
-    <div
-      ref={ref}
-      style={style}
-      className={cn(
-        "absolute border bg-popover text-popover-foreground shadow rounded-lg outline-none items-center gap-0.5 p-0.5",
-        "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2",
-        !canvas.selected || canvas.selected.type === "audio" || !canvas.hasControls ? "hidden" : "flex",
-      )}
-    >
-      <Button size="icon" variant="ghost" className="h-7 w-7" disabled>
-        <CopyPlusIcon size={14} />
-      </Button>
-      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => canvas.onDeleteObjectByName(canvas.selected?.name)}>
-        <Trash2Icon size={14} />
-      </Button>
+    <div ref={ref} style={style} className={cn("absolute border bg-popover text-popover-foreground shadow rounded-md outline-none flex items-center divide-x", "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2")}>
+      {canvas.selected.meta?.group ? (
+        <div className="flex items-center p-1">
+          <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => canvas.onSelectGroup(canvas.selected!.meta?.group)}>
+            <GroupIcon size={14} />
+            <span>Select Group</span>
+          </Button>
+        </div>
+      ) : null}
+      {canvas.selected.type === "textbox" ? (
+        <div className="flex items-center p-1">
+          <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2">
+            <PencilIcon size={14} />
+            <span>Edit</span>
+          </Button>
+        </div>
+      ) : canvas.selected.type === "image" || canvas.selected.type === "video" ? (
+        <div className="flex items-center p-1">
+          <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2">
+            <RepeatIcon size={14} />
+            <span>Replace</span>
+          </Button>
+        </div>
+      ) : null}
+      <div className="flex items-center gap-1 p-1">
+        <Button size="icon" variant="ghost" className="rounded-sm h-7 w-7">
+          <CopyPlusIcon size={14} />
+        </Button>
+        <Button size="icon" variant="ghost" className="rounded-sm h-7 w-7" onClick={() => canvas.onDeleteActiveObject()}>
+          <Trash2Icon size={14} />
+        </Button>
+      </div>
     </div>
   );
 }

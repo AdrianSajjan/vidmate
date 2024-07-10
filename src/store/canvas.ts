@@ -89,48 +89,6 @@ export class Canvas {
     this.elements[index] = element;
   }
 
-  private onSwapElement(object?: fabric.Object, type?: "up" | "down" | "top" | "bottom") {
-    const index = this.elements.findIndex((element) => element.name === object?.name);
-    if (index === -1 || !object || !type) return;
-    switch (type) {
-      case "up": {
-        if (index === this.elements.length - 1) return;
-        const element = this.elements[index];
-        this.elements[index] = this.elements[index + 1];
-        this.elements[index + 1] = element;
-        break;
-      }
-      case "down": {
-        if (index === 0) return;
-        const element = this.elements[index];
-        this.elements[index] = this.elements[index - 1];
-        this.elements[index - 1] = element;
-        break;
-      }
-      case "top": {
-        if (index === this.elements.length - 1) return;
-        const element = this.elements[index];
-        this.elements.splice(index, 1);
-        this.elements.push(element);
-        break;
-      }
-      case "bottom": {
-        if (index === 0) return;
-        const element = this.elements[index];
-        this.elements.splice(index, 1);
-        this.elements.unshift(element);
-        break;
-      }
-    }
-  }
-
-  // @ts-ignore
-  private onRemoveElement(object?: fabric.Object) {
-    if (!object) return;
-    const index = this.elements.findIndex((element) => element.name === object.name);
-    if (index !== -1) this.elements.splice(index, 1);
-  }
-
   private onUpdateCrop(image?: fabric.Image | null) {
     this.crop = image ? image.toObject(propertiesToInclude) : null;
   }
@@ -260,7 +218,20 @@ export class Canvas {
   }
 
   private onUpdateSelection() {
-    this.selected = this.instance?.getActiveObject()?.toObject(propertiesToInclude);
+    const selection = this.instance?.getActiveObject();
+
+    if (FabricUtils.isActiveSelection(this.selected)) {
+      const objects = this.selected.objects.map((object) => this.instance?.getItemByName(object.name)).filter(Boolean) as fabric.Object[];
+      objects.forEach((object) => object.set({ hasBorders: true, hasControls: true }));
+    }
+
+    if (FabricUtils.isActiveSelection(selection)) {
+      const objects = selection._objects;
+      objects.forEach((object) => object.set({ hasBorders: false, hasControls: false }));
+    }
+
+    this.selected = selection?.toObject(propertiesToInclude);
+    this.instance?.requestRenderAll();
   }
 
   private onUpdateViewportTransform() {
@@ -428,11 +399,7 @@ export class Canvas {
         case "video":
         case "image":
           if (this.crop === event.target || event.target.meta?.placeholder) return;
-          if (event.target.clipPath) {
-            this.onModifyClipPathStart(event.target as fabric.Image);
-          } else {
-            this.onCropImageStart(event.target as fabric.Image);
-          }
+          this.onCropImageStart(event.target as fabric.Image);
           break;
       }
     });
@@ -741,10 +708,20 @@ export class Canvas {
     this.onResetAnimationTimeline();
   }
 
-  onDeleteObjectByName(name?: string) {
-    if (!this.instance) return;
-    const object = this.instance.getItemByName(name);
-    if (object) this.instance.remove(object);
+  onDeleteObject(object?: fabric.Object) {
+    if (!this.instance || !object) return;
+    this.instance.remove(object).requestRenderAll();
+  }
+
+  onDeleteActiveObject() {
+    const selection = this.instance?.getActiveObject();
+    if (!selection || !this.instance) return;
+    if (FabricUtils.isActiveSelection(selection)) {
+      selection.forEachObject((object) => this.onDeleteObject(object));
+    } else {
+      this.onDeleteObject(selection);
+    }
+    this.instance.discardActiveObject().requestRenderAll();
   }
 
   onUpdateDimensions({ height, width }: { height?: number; width?: number }) {
@@ -1054,11 +1031,18 @@ export class Canvas {
     if (this.trim?.selected.id === audio.id) this.trim = null;
   }
 
+  onSelectGroup(group: string[]) {
+    if (!this.instance || !group.length) return;
+    const elements = group.map((item) => this.instance!.getItemByName(item)).filter(Boolean) as fabric.Object[];
+    const activeSelection = createInstance(fabric.ActiveSelection, elements, { canvas: this.instance });
+    this.instance.setActiveObject(activeSelection);
+  }
+
   onCreateSelection(name: string, multiple?: boolean) {
     if (!this.instance) return;
 
     const selected = this.instance.getActiveObject();
-    const object = this.instance?.getItemByName(name);
+    const object = this.instance.getItemByName(name);
 
     if (!object) return;
 
@@ -1110,6 +1094,9 @@ export class Canvas {
       this.instance!.add(line);
       return line;
     });
+
+    const clipPath = image.clipPath;
+    image.set({ clipPath: undefined });
 
     const width = image.width!;
     const height = image.height!;
@@ -1191,6 +1178,7 @@ export class Canvas {
     });
 
     crop.on("deselected", () => {
+      image.set({ clipPath });
       this.onCropImageEnd(crop, image);
       this.onUpdateCrop(null);
       this.instance!.remove(overlay, ...verticals, ...horizontals).requestRenderAll();
@@ -1210,33 +1198,6 @@ export class Canvas {
 
     this.instance.remove(crop);
     this.instance.renderAll();
-  }
-
-  *onModifyClipPathStart(image: fabric.Image) {
-    if (!this.instance || !this.artboard || !image.clipPath) return;
-
-    const clipPath = image.clipPath;
-    const props = { selectable: false, evented: false, originX: "center", originY: "center" };
-    const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, fill: "#000000", opacity: 0.5, height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY, ...props });
-
-    image.set({ clipPath: undefined });
-    clipPath.set({ name: "clip_" + image.name, fill: "#ffffff", globalCompositeOperation: "overlay", ...props });
-
-    overlay.setPositionByOrigin(image.getCenterPoint(), "center", "center");
-    clipPath.setPositionByOrigin(image.getCenterPoint(), "center", "center");
-
-    this.instance.add(overlay, clipPath);
-
-    FabricUtils.bindObjectTransformToParent(image, [overlay]);
-    FabricUtils.updateObjectTransformToParent(image, [{ object: overlay }]);
-
-    image.on("scaling", () => FabricUtils.updateObjectTransformToParent(image, [{ object: overlay }]));
-    image.on("rotating", () => FabricUtils.updateObjectTransformToParent(image, [{ object: overlay }]));
-    image.on("moving", () => FabricUtils.updateObjectTransformToParent(image, [{ object: overlay }]));
-  }
-
-  onModifyClipPathEnd(image: fabric.Image) {
-    if (!this.instance || !this.artboard || !image.clipPath) return;
   }
 
   onTrimAudioStart(audio: EditorAudioElement) {
@@ -1265,18 +1226,23 @@ export class Canvas {
 
     const index = this.instance._objects.findIndex((object) => object === image);
     if (index === -1) return;
-    this.instance.remove(clipPath);
 
     const height = image.getScaledHeight();
     const width = image.getScaledWidth();
 
-    if (height > width) clipPath.scaleToWidth(width);
-    else clipPath.scaleToHeight(height);
+    if (height > width) clipPath.scaleToWidth(width / 2);
+    else clipPath.scaleToHeight(height / 2);
 
-    clipPath.set({ originX: "center", originY: "center", left: 0, top: 0 });
+    clipPath.moveTo(index - 1);
+    clipPath.set({ absolutePositioned: true }).setPositionByOrigin(image.getCenterPoint(), "center", "center");
     image.set({ clipPath: clipPath });
 
-    this.instance.requestRenderAll();
+    const group = [clipPath.name, image.name];
+    clipPath.meta!.group = group;
+    image.meta!.group = group;
+
+    this.onRefreshElements();
+    this.instance.fire("object:modified", { target: image }).fire("object:modified", { target: clipPath }).requestRenderAll();
   }
 
   onAddClipPathToActiveImage(clipPath: fabric.Object) {
@@ -1466,7 +1432,7 @@ export class Canvas {
   onChangeTextboxProperty(textbox: fabric.Textbox, property: keyof fabric.Textbox, value: any, selection = false) {
     if (!this.instance || textbox.type !== "textbox") return;
     if (selection) {
-      // TODO: Add styles for the specific selection element
+      alert("TODO: Add styles for the specific selection element");
     } else {
       textbox.set(property, value);
     }
@@ -1517,6 +1483,7 @@ export class Canvas {
 
   onChangeObjectLayer(element: fabric.Object, type: "up" | "down" | "top" | "bottom") {
     if (!element || !this.instance) return;
+
     const index = this.instance._objects.findIndex((object) => object === element);
     switch (type) {
       case "up":
@@ -1536,7 +1503,8 @@ export class Canvas {
         this.instance.moveTo(element, minLayerStack);
         break;
     }
-    this.onSwapElement(element, type);
+
+    this.onRefreshElements();
     this.instance.requestRenderAll();
   }
 
@@ -1548,8 +1516,10 @@ export class Canvas {
 
   onAlignObjectToPage(element: fabric.Object, type: "left" | "center" | "right" | "top" | "middle" | "bottom") {
     if (!element || !this.instance || !this.artboard) return;
+
     const elementCenter = element.getCenterPoint();
     const artboardCenter = this.artboard.getCenterPoint();
+
     switch (type) {
       case "left":
         element.setPositionByOrigin(createInstance(fabric.Point, this.artboard.left!, elementCenter.y), "left", "center");
@@ -1570,6 +1540,7 @@ export class Canvas {
         element.setPositionByOrigin(createInstance(fabric.Point, elementCenter.x, this.artboard.top! + this.artboard.height!), "center", "bottom");
         break;
     }
+
     element.setCoords();
     this.instance.fire("object:modified", { target: element });
     this.instance.requestRenderAll();

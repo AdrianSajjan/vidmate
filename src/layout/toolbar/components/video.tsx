@@ -19,11 +19,7 @@ function _VideoToolbar() {
   const handleCropStart = () => {
     const video = editor.canvas.instance?.getItemByName(selected.name);
     if (!FabricUtils.isVideoElement(video)) return;
-    if (video.clipPath) {
-      editor.canvas.onModifyClipPathStart(video);
-    } else {
-      editor.canvas.onCropImageStart(video);
-    }
+    editor.canvas.onCropImageStart(video);
   };
 
   const handleTrimStart = () => {
