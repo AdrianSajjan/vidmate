@@ -1,20 +1,18 @@
 import useMeasure from "react-use-measure";
 
-import { Fragment, useEffect, useMemo } from "react";
+import { useMemo } from "react";
+import { clamp } from "lodash";
 import { observer } from "mobx-react";
 import { CopyPlusIcon, Trash2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { CanvasProvider, useCanvasContext, useInitializeCanvas } from "@/context/canvas";
 import { cn } from "@/lib/utils";
-import { clamp } from "lodash";
 
 const MENU_OFFSET_Y = 50;
 
 interface EditorCanvasProps {
   page: number;
-  width: number;
-  height: number;
 }
 
 export function EditorCanvas(props: EditorCanvasProps) {
@@ -25,26 +23,18 @@ export function EditorCanvas(props: EditorCanvasProps) {
   );
 }
 
-function _CanvasBase({ height, width, ...props }: EditorCanvasProps) {
-  const canvas = useCanvasContext();
-  const [canvasRef, { isInitialized }] = useInitializeCanvas();
-
-  useEffect(() => {
-    if (!height || !width || !isInitialized) return;
-    canvas.onUpdateResponsiveCanvas({ height, width, center: true });
-  }, [canvas, height, width, isInitialized]);
+function _CanvasBase({ ...props }: EditorCanvasProps) {
+  const [canvasRef] = useInitializeCanvas();
 
   return (
-    <Fragment>
-      <div className="absolute">
-        <canvas ref={canvasRef} />
-      </div>
-      <EditorElementControls {...{ height, width, ...props }} />
-    </Fragment>
+    <div className="absolute">
+      <canvas ref={canvasRef} />
+      <EditorElementControls {...props} />
+    </div>
   );
 }
 
-function _EditorElementControls({ height }: EditorCanvasProps) {
+function _EditorElementControls({}: EditorCanvasProps) {
   const canvas = useCanvasContext();
   const [ref, dimensions] = useMeasure();
 
@@ -63,7 +53,7 @@ function _EditorElementControls({ height }: EditorCanvasProps) {
     const left = offsetX + selected.getBoundingRect(true).left! * canvas.zoom - dimensions.width / 2 + ((selected.width! * selected.scaleX!) / 2) * canvas.zoom;
 
     return {
-      top: clamp(top, MENU_OFFSET_Y / 4, height - MENU_OFFSET_Y / 4),
+      top: clamp(top, MENU_OFFSET_Y / 4, canvas.instance.height! - MENU_OFFSET_Y / 4),
       left: left,
     };
   }, [canvas.selected, canvas.viewportTransform, canvas.height, canvas.width, canvas.zoom, dimensions]);

@@ -1,7 +1,7 @@
 import anime from "animejs";
 
 import { fabric } from "fabric";
-import { floor } from "lodash";
+import { floor, throttle } from "lodash";
 import { EntryAnimation, ExitAnimation } from "canvas";
 import { makeAutoObservable } from "mobx";
 
@@ -223,20 +223,6 @@ export class Canvas {
     lineV.opacity = 0;
   }
 
-  private onDeleteGuidelines() {
-    const centerH = this.instance?.getItemByName("center_h");
-    const centerV = this.instance?.getItemByName("center_v");
-
-    const lineH = this.instance?.getItemByName("line_h");
-    const lineV = this.instance?.getItemByName("line_v");
-
-    if (centerH) this.instance?.remove(centerH);
-    if (centerV) this.instance?.remove(centerV);
-
-    if (lineH) this.instance?.remove(lineH);
-    if (lineV) this.instance?.remove(lineV);
-  }
-
   private onUpdateSelection() {
     this.selected = this.instance?.getActiveObject()?.toObject(propertiesToInclude);
   }
@@ -263,6 +249,7 @@ export class Canvas {
 
     this.viewportTransform = [...viewportTransform];
     this.instance.setViewportTransform(viewportTransform);
+    this.instance.requestRenderAll();
   }
 
   private onToggleCanvasElements(ms: number) {
@@ -286,6 +273,19 @@ export class Canvas {
     }
 
     this.instance.requestRenderAll();
+  }
+
+  private onInitializeWorkspaceObserver(workspace: HTMLDivElement) {
+    const resizeObserver = createInstance(
+      ResizeObserver,
+      throttle(() => {
+        this.instance!.setHeight(workspace.offsetHeight);
+        this.instance!.setWidth(workspace.offsetWidth);
+        this.onCenterArtboard();
+        this.instance!.requestRenderAll();
+      }, 50),
+    );
+    resizeObserver.observe(workspace);
   }
 
   private onInitializeElementMeta(object: fabric.Object, props?: Record<string, any>) {
@@ -651,8 +651,11 @@ export class Canvas {
     }
   }
 
-  onInitialize(element: HTMLCanvasElement) {
-    this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
+  onInitialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
+    const width = workspace.offsetWidth;
+    const height = workspace.offsetHeight;
+
+    this.instance = createInstance(fabric.Canvas, element, { height, width, stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
     this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
 
     this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
@@ -661,11 +664,12 @@ export class Canvas {
 
     this.instance.add(this.artboard);
     this.instance.clipPath = this.artboard;
-
     this.zoom = 0.5;
-    this.instance.setZoom(this.zoom);
 
+    this.onCenterArtboard();
+    this.onInitializeGuidelines();
     this.onInitializeEvents();
+    this.onInitializeWorkspaceObserver(workspace);
     this.instance.requestRenderAll();
   }
 
@@ -698,23 +702,12 @@ export class Canvas {
     if (object) this.instance.remove(object);
   }
 
-  onUpdateResponsiveCanvas({ height, width, center }: { height: number; width: number; center?: boolean }) {
-    if (!this.instance || !this.artboard) return;
-
-    this.onDeleteGuidelines();
-    this.instance.setDimensions({ width, height });
-    if (center) this.onCenterArtboard();
-    this.onInitializeGuidelines();
-
-    this.instance.requestRenderAll();
-  }
-
   onUpdateDimensions({ height, width }: { height?: number; width?: number }) {
     if (!this.artboard || !this.instance) return;
 
     if (height) {
       this.height = height;
-      this.artboard?.set("height", height);
+      this.artboard.set("height", height);
     }
 
     if (width) {

@@ -29,15 +29,16 @@ export function useInitializeCanvas() {
 
   const ref = useCallback(
     (element: HTMLCanvasElement) => {
+      const workspace = document.getElementById("workspace") as HTMLDivElement;
       if (!element) {
         canvas.instance?.dispose();
         setInitialized(false);
       } else {
-        canvas.onInitialize(element);
+        canvas.onInitialize(element, workspace);
         setInitialized(true);
       }
     },
-    [canvas]
+    [canvas],
   );
 
   return [ref, { isInitialized }] as const;

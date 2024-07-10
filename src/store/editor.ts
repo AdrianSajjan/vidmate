@@ -42,10 +42,8 @@ export class Editor {
         coreURL: yield toBlobURL(`${FFMPEG_BASE_URL}/ffmpeg-core.js`, "text/javascript"),
         wasmURL: yield toBlobURL(`${FFMPEG_BASE_URL}/ffmpeg-core.wasm`, "application/wasm"),
       });
-      this.ffmpeg.on("log", console.log);
       this.status = "complete";
     } catch (error) {
-      console.log(error);
       this.status = "error";
     }
   }

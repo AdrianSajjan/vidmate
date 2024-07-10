@@ -1,6 +1,5 @@
 import "@/fabric/initialize";
 
-import useMeasure from "react-use-measure";
 import { useEffect } from "react";
 
 import { EditorFAB } from "@/layout/fab";
@@ -29,7 +28,6 @@ export function App() {
 
 function _Editor() {
   const editor = useEditorContext();
-  const [ref, dimensions] = useMeasure();
 
   useEffect(() => {
     editor.onInitialize();
@@ -55,8 +53,8 @@ function _Editor() {
             <EditorSidebarLeft />
             <section className="flex-1 flex flex-col relative w-0">
               <EditorToolbar />
-              <div className="flex-1 relative" ref={ref}>
-                <EditorCanvas page={0} {...dimensions} />
+              <div className="flex-1 relative" id="workspace">
+                <EditorCanvas page={0} />
                 <EditorFAB />
                 <Toaster richColors position="bottom-right" offset={24} visibleToasts={6} />
               </div>
