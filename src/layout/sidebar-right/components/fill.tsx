@@ -89,7 +89,6 @@ function _FillSidebar() {
     const fill = selected.fill as fabric.Gradient;
     const stops = toJS(fill.colorStops!);
     stops[index].offset = offset;
-    console.log(stops);
     editor.canvas.onChangeActiveObjectFillGradient(fill.type!, stops);
   };
 

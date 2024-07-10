@@ -7,6 +7,7 @@ import { LineToolbar } from "./components/line";
 
 import { ImageToolbar } from "./components/image";
 import { VideoToolbar } from "./components/video";
+import { AudioToolbar } from "./components/audio";
 import { CropToolbar } from "./components/crop";
 import { TrimToolbar } from "./components/trim";
 
@@ -20,6 +21,7 @@ const toolbarComponentMap: Record<string, () => JSX.Element> = {
   ellipse: ShapeToolbar,
   rect: ShapeToolbar,
   line: LineToolbar,
+  audio: AudioToolbar,
 };
 
 function _EditorToolbar() {

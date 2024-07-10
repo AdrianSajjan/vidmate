@@ -8,11 +8,11 @@ import { makeAutoObservable } from "mobx";
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, isVideoElement } from "@/lib/utils";
-import { EditorAudioElement } from "@/types/editor";
+import { EditorAudioElement, EditorTrim } from "@/types/editor";
 
+export const minLayerStack = 3;
 export const artboardHeight = 1080;
 export const artboardWidth = 1080;
-
 export const canvasYPadding = 100;
 export const artboardFill = "#FFFFFF";
 
@@ -27,7 +27,7 @@ export class Canvas {
   selected?: fabric.Object | null;
 
   crop?: fabric.Image | null;
-  trim?: fabric.Video | null;
+  trim?: EditorTrim | null;
 
   seek: number;
   duration: number;
@@ -84,9 +84,44 @@ export class Canvas {
     if (index === -1 || !object) return;
     const element = object.toObject(propertiesToInclude);
     if (object.name === this.selected?.name) this.selected = element;
-    if (object.name === this.trim?.name) this.trim = element;
+    if (object.name === this.trim?.selected.name) this.trim!.selected = element;
     if (object.name === this.crop?.name) this.crop = element;
     this.elements[index] = element;
+  }
+
+  private onSwapElement(object?: fabric.Object, type?: "up" | "down" | "top" | "bottom") {
+    const index = this.elements.findIndex((element) => element.name === object?.name);
+    if (index === -1 || !object || !type) return;
+    switch (type) {
+      case "up": {
+        if (index === this.elements.length - 1) return;
+        const element = this.elements[index];
+        this.elements[index] = this.elements[index + 1];
+        this.elements[index + 1] = element;
+        break;
+      }
+      case "down": {
+        if (index === 0) return;
+        const element = this.elements[index];
+        this.elements[index] = this.elements[index - 1];
+        this.elements[index - 1] = element;
+        break;
+      }
+      case "top": {
+        if (index === this.elements.length - 1) return;
+        const element = this.elements[index];
+        this.elements.splice(index, 1);
+        this.elements.push(element);
+        break;
+      }
+      case "bottom": {
+        if (index === 0) return;
+        const element = this.elements[index];
+        this.elements.splice(index, 1);
+        this.elements.unshift(element);
+        break;
+      }
+    }
   }
 
   private onRemoveElement(object?: fabric.Object) {
@@ -632,9 +667,14 @@ export class Canvas {
 
   private onInitializeAudioTimeline() {
     for (const audio of this.audios) {
+      const gain = this.audioContext.createGain();
       const source = this.audioContext.createBufferSource();
+
       source.buffer = audio.buffer;
-      source.connect(this.audioContext.destination);
+      gain.gain.value = audio.volume;
+
+      gain.connect(this.audioContext.destination);
+      source.connect(gain);
 
       audio.playing = true;
       audio.source = source;
@@ -680,7 +720,10 @@ export class Canvas {
     this.onInitializeAnimationTimeline();
     this.onInitializeAudioTimeline();
 
+    this.trim = null;
+    this.selected = null;
     this.playing = true;
+
     if (last) this.timeline!.seek(this.seek);
     this.timeline!.play();
   }
@@ -994,9 +1037,19 @@ export class Canvas {
     return line;
   }
 
-  onSelectAudio(audio: EditorAudioElement) {
+  onSelectAudio(audio: EditorAudioElement | null) {
+    if (!audio) return (this.selected = null);
     this.instance!.discardActiveObject().requestRenderAll();
     this.selected = Object.assign({ type: "audio" }, audio) as unknown as fabric.Object;
+  }
+
+  onDeleteAudio(id: string) {
+    const index = this.audios.findIndex((audio) => audio.id === id);
+    if (index === -1) return;
+    const audio = this.audios[index];
+    this.audios.splice(index, 1);
+    if (this.selected?.id === audio.id) this.selected = null;
+    if (this.trim?.selected.id === audio.id) this.trim = null;
   }
 
   onCreateSelection(name: string, multiple?: boolean) {
@@ -1157,13 +1210,21 @@ export class Canvas {
     this.instance.renderAll();
   }
 
+  onTrimAudioStart(audio: EditorAudioElement) {
+    this.trim = Object.assign({ type: "audio" as "audio" }, { selected: audio });
+  }
+
+  onTrimAudioEnd() {
+    this.trim = null;
+  }
+
   onTrimVideoStart(video: fabric.Video) {
-    this.trim = video.toObject(propertiesToInclude);
+    this.trim = Object.assign({ type: "video" as "video" }, { selected: video.toObject(propertiesToInclude) });
     video.on("deselected", () => this.onTrimVideoEnd());
   }
 
   onTrimVideoEnd() {
-    const object = this.instance?.getItemByName(this.trim?.name);
+    const object = this.instance?.getItemByName(this.trim?.selected.name);
     this.trim = null;
     if (!this.instance || !FabricUtils.isVideoElement(object)) return;
     object.seek(this.seek);
@@ -1451,6 +1512,72 @@ export class Canvas {
     this.audios[index] = updated;
     if (!this.selected || this.selected.type !== "audio" || this.selected.id !== id) return;
     this.selected = Object.assign({ type: "audio" }, updated) as unknown as fabric.Object;
+  }
+
+  onChangeObjectLayer(element: fabric.Object, type: "up" | "down" | "top" | "bottom") {
+    if (!element || !this.instance) return;
+    const index = this.instance._objects.findIndex((object) => object === element);
+    switch (type) {
+      case "up":
+        if (index === this.instance._objects.length - 1) return;
+        const top = [...this.instance._objects].slice(index + 1).findIndex((object) => !elementsToExclude.includes(object.name!));
+        this.instance.moveTo(element, index + top + 1);
+        break;
+      case "down":
+        if (index === minLayerStack) return;
+        const bottom = [...this.instance._objects].slice(minLayerStack + 1, index).findIndex((object) => !elementsToExclude.includes(object.name!));
+        this.instance.moveTo(element, minLayerStack + bottom);
+        break;
+      case "top":
+        this.instance.moveTo(element, this.instance._objects.length);
+        break;
+      case "bottom":
+        this.instance.moveTo(element, minLayerStack);
+        break;
+    }
+    this.onSwapElement(element, type);
+    this.instance.requestRenderAll();
+  }
+
+  onChangeActiveObjectLayer(type: "up" | "down" | "top" | "bottom") {
+    const selected = this.instance?.getActiveObject();
+    if (!this.instance || !selected) return;
+    this.onChangeObjectLayer(selected, type);
+  }
+
+  onAlignObjectToPage(element: fabric.Object, type: "left" | "center" | "right" | "top" | "middle" | "bottom") {
+    if (!element || !this.instance || !this.artboard) return;
+    const elementCenter = element.getCenterPoint();
+    const artboardCenter = this.artboard.getCenterPoint();
+    switch (type) {
+      case "left":
+        element.setPositionByOrigin(createInstance(fabric.Point, this.artboard.left!, elementCenter.y), "left", "center");
+        break;
+      case "center":
+        element.setPositionByOrigin(createInstance(fabric.Point, artboardCenter.x!, elementCenter.y), "center", "center");
+        break;
+      case "right":
+        element.setPositionByOrigin(createInstance(fabric.Point, this.artboard.left! + this.artboard.width!, elementCenter.y), "right", "center");
+        break;
+      case "top":
+        element.setPositionByOrigin(createInstance(fabric.Point, elementCenter.x, this.artboard.top!), "center", "top");
+        break;
+      case "middle":
+        element.setPositionByOrigin(createInstance(fabric.Point, elementCenter.x, artboardCenter.y), "center", "center");
+        break;
+      case "bottom":
+        element.setPositionByOrigin(createInstance(fabric.Point, elementCenter.x, this.artboard.top! + this.artboard.height!), "center", "bottom");
+        break;
+    }
+    element.setCoords();
+    this.instance.fire("object:modified", { target: element });
+    this.instance.requestRenderAll();
+  }
+
+  onAlignActiveObjectToPage(type: "left" | "center" | "right" | "top" | "middle" | "bottom") {
+    const selected = this.instance?.getActiveObject();
+    if (!this.instance || !selected) return;
+    this.onAlignObjectToPage(selected, type);
   }
 
   onChangeZoom(zoom: number) {

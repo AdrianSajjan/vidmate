@@ -19,6 +19,7 @@ function _EditorFAB() {
         </TabsList>
       </Tabs>
       <Button
+        disabled
         size="default"
         className="text-xs rounded-lg shadow-sm gap-1.5 border bg-card dark:bg-blue-300  border-blue-600 dark:border-blue-300  text-blue-600 dark:text-black hover:bg-blue-600 dark:hover:bg-blue-300/90 hover:text-white dark:hover:text-black"
       >

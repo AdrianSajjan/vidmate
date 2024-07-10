@@ -23,3 +23,15 @@ export interface EditorAudioElement {
   trim: number;
   timeline: number;
 }
+
+export interface EditorTrimVideo {
+  selected: fabric.Video;
+  type: "video";
+}
+
+export interface EditorTrimAudio {
+  selected: EditorAudioElement;
+  type: "audio";
+}
+
+export type EditorTrim = EditorTrimAudio | EditorTrimVideo;
