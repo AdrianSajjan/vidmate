@@ -78,3 +78,17 @@ export async function drawWavefromFromAudioBuffer(buffer: AudioBuffer, height = 
     });
   });
 }
+
+export function dataURLToUInt8Array(dataURL: string) {
+  const base64String = dataURL.split(",")[1];
+  const binaryString = atob(base64String);
+
+  const binaryLength = binaryString.length;
+  const bytes = new Uint8Array(binaryLength);
+
+  for (let i = 0; i < binaryLength; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  return bytes;
+}

@@ -11,14 +11,16 @@ import { createInstance, isVideoElement } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
 
 export const minLayerStack = 3;
+export const timelineDuration = 5000;
 export const artboardHeight = 1080;
 export const artboardWidth = 1080;
 export const canvasYPadding = 100;
 export const artboardFill = "#FFFFFF";
 
 export class Canvas {
-  instance?: fabric.Canvas;
   artboard?: fabric.Rect;
+  instance?: fabric.Canvas;
+  recorder?: fabric.StaticCanvas;
 
   audioContext: AudioContext;
   audios: EditorAudioElement[];
@@ -51,9 +53,9 @@ export class Canvas {
     this.audioContext = createInstance(AudioContext);
 
     this.seek = 0;
-    this.duration = 30000;
-    this.playing = false;
     this.loop = false;
+    this.playing = false;
+    this.duration = timelineDuration;
 
     this.hasControls = true;
     this.viewportTransform = [];
@@ -259,29 +261,6 @@ export class Canvas {
     this.instance.requestRenderAll();
   }
 
-  private onToggleCanvasElements(ms: number) {
-    if (!this.instance) return;
-
-    for (const object of this.instance._objects) {
-      if (this.isElementExcluded(object)) continue;
-
-      const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
-      object.visible = !hidden;
-
-      if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder) {
-        if (this.playing) {
-          if (hidden && object.playing) object.pause();
-          if (!hidden && !object.playing) object.play();
-        } else {
-          if (object.playing) object.pause();
-          object.seek((ms - object.meta!.offset) / 1000);
-        }
-      }
-    }
-
-    this.instance.requestRenderAll();
-  }
-
   private onInitializeWorkspaceObserver(workspace: HTMLDivElement) {
     const resizeObserver = createInstance(
       ResizeObserver,
@@ -405,9 +384,81 @@ export class Canvas {
     });
   }
 
-  private onInitializeAnimationTimeline() {
-    if (!this.instance || !this.artboard) return;
+  onInitializeMainCanvas(element: HTMLCanvasElement, workspace: HTMLDivElement) {
+    const width = workspace.offsetWidth;
+    const height = workspace.offsetHeight;
 
+    this.instance = createInstance(fabric.Canvas, element, { height, width, stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
+    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
+
+    this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
+    this.instance.selectionBorderColor = "rgba(98, 155, 255, 0.81)";
+    this.instance.selectionLineWidth = 1.5;
+
+    this.instance.add(this.artboard);
+    this.instance.clipPath = this.artboard;
+    this.zoom = 0.5;
+
+    this.onCenterArtboard();
+    this.onInitializeGuidelines();
+    this.onInitializeEvents();
+    this.onInitializeWorkspaceObserver(workspace);
+    this.instance.requestRenderAll();
+  }
+
+  onInitializeRecorderCanvas(element: HTMLCanvasElement) {
+    this.recorder = createInstance(fabric.StaticCanvas, element, { height: this.height, width: this.width, backgroundColor: this.fill });
+  }
+
+  onToggleCanvasElements(ms: number, canvas = this.instance as fabric.Canvas | fabric.StaticCanvas) {
+    if (!canvas) return;
+
+    for (const object of canvas._objects) {
+      if (this.isElementExcluded(object)) continue;
+
+      const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
+      object.visible = !hidden;
+
+      if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder) {
+        if (this.playing) {
+          if (hidden && object.playing) object.pause();
+          if (!hidden && !object.playing) object.play();
+        } else {
+          if (object.playing) object.pause();
+          object.seek((ms - object.meta!.offset) / 1000);
+        }
+      }
+    }
+
+    canvas.requestRenderAll();
+  }
+
+  *onInitializeRecordTimeline() {
+    if (!this.instance || !this.recorder || !this.artboard) return;
+
+    this.recorder.setDimensions({ height: this.height, width: this.width });
+    this.recorder.clear();
+
+    const artboard: fabric.Object = yield createInstance(Promise, (resolve) => this.artboard!.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
+    this.recorder.add(artboard);
+
+    for (const object of this.instance._objects) {
+      if (this.isElementExcluded(object)) continue;
+      const clone: fabric.Object = yield createInstance(Promise, (resolve) => object.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
+      this.recorder.add(clone);
+    }
+
+    this.recorder.renderAll();
+
+    this.timeline = anime.timeline({
+      duration: this.duration,
+      loop: false,
+      autoplay: false,
+      update: this.recorder!.requestRenderAll.bind(this.recorder),
+    });
+  }
+
+  onInitializeAnimationTimeline() {
     this.timeline = anime.timeline({
       duration: this.duration,
       autoplay: false,
@@ -438,13 +489,17 @@ export class Canvas {
         this.onChangeSeekTime(0);
       },
     });
+  }
+
+  onInitializeTimelineAnimations(canvas = this.instance as fabric.Canvas | fabric.StaticCanvas) {
+    if (!canvas || !this.timeline) return;
 
     this.timeline.add({
-      targets: this.artboard,
+      targets: canvas,
       duration: this.duration,
     });
 
-    for (const object of this.instance._objects) {
+    for (const object of canvas._objects) {
       if (this.isElementExcluded(object)) continue;
 
       object.anim!.state = { opacity: object.opacity, left: object.left, top: object.top, scaleX: object.scaleX, scaleY: object.scaleY, fill: object.fill, selectable: object.selectable };
@@ -614,12 +669,10 @@ export class Canvas {
         }
       }
     }
-
-    this.instance.requestRenderAll();
   }
 
-  private onResetAnimationTimeline() {
-    if (!this.instance || !this.artboard) return;
+  onResetAnimationTimeline() {
+    if (!this.instance) return;
 
     if (this.timeline) {
       anime.remove(this.timeline);
@@ -630,11 +683,9 @@ export class Canvas {
       if (this.isElementExcluded(object)) continue;
       object.set({ ...(object.anim?.state || {}) });
     }
-
-    this.onToggleCanvasElements(this.seek);
   }
 
-  private onInitializeAudioTimeline() {
+  onInitializeAudioTimeline() {
     for (const audio of this.audios) {
       const gain = this.audioContext.createGain();
       const source = this.audioContext.createBufferSource();
@@ -653,36 +704,14 @@ export class Canvas {
     }
   }
 
-  private onResetAudioTimeline() {
+  onResetAudioTimeline() {
     for (const audio of this.audios) {
       audio.playing = false;
       audio.source.stop();
     }
   }
 
-  onInitialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
-    const width = workspace.offsetWidth;
-    const height = workspace.offsetHeight;
-
-    this.instance = createInstance(fabric.Canvas, element, { height, width, stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
-    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
-
-    this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
-    this.instance.selectionBorderColor = "rgba(98, 155, 255, 0.81)";
-    this.instance.selectionLineWidth = 1.5;
-
-    this.instance.add(this.artboard);
-    this.instance.clipPath = this.artboard;
-    this.zoom = 0.5;
-
-    this.onCenterArtboard();
-    this.onInitializeGuidelines();
-    this.onInitializeEvents();
-    this.onInitializeWorkspaceObserver(workspace);
-    this.instance.requestRenderAll();
-  }
-
-  onRecordVideo() {
+  *onStartRecordVideo() {
     if (!this.instance) return;
 
     this.trim = null;
@@ -690,11 +719,22 @@ export class Canvas {
     this.playing = false;
 
     this.instance.discardActiveObject();
-    this.onInitializeAnimationTimeline();
-    this.timeline!.play();
+    yield this.onInitializeRecordTimeline();
+    this.onInitializeTimelineAnimations(this.recorder);
   }
 
-  onRecordAudio(destination: MediaStreamAudioDestinationNode) {
+  onStopRecordVideo() {
+    if (!this.recorder) return;
+
+    if (this.timeline) {
+      anime.remove(this.timeline);
+      this.timeline = null;
+    }
+
+    this.recorder.clear();
+  }
+
+  onStartRecordAudio(destination: MediaStreamAudioDestinationNode) {
     for (const audio of this.audios) {
       const gain = this.audioContext.createGain();
       const source = this.audioContext.createBufferSource();
@@ -715,6 +755,7 @@ export class Canvas {
 
     this.instance.discardActiveObject();
     this.onInitializeAnimationTimeline();
+    this.onInitializeTimelineAnimations();
     this.onInitializeAudioTimeline();
 
     this.trim = null;
@@ -729,11 +770,12 @@ export class Canvas {
     if (!this.instance || !this.playing) return;
 
     this.playing = false;
+    if (initial) this.seek = 0;
     this.timeline!.pause();
 
-    if (initial) this.seek = 0;
     this.onResetAudioTimeline();
     this.onResetAnimationTimeline();
+    this.onToggleCanvasElements(this.seek);
   }
 
   onDeleteObject(object?: fabric.Object) {

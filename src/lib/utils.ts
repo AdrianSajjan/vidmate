@@ -9,6 +9,10 @@ export function createInstance<T, R extends any[]>(_class: new (...args: R) => T
   return new _class(...args);
 }
 
+export function createUint8Array(buffer: ArrayBufferLike) {
+  return new Uint8Array(buffer);
+}
+
 export function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

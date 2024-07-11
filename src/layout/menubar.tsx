@@ -1,24 +1,19 @@
 import { ChevronDownIcon, ImageIcon, RedoIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { observer } from "mobx-react";
+import { flowResult } from "mobx";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ToggleTheme } from "@/components/ui/theme-toggle";
-import { observer } from "mobx-react";
 import { useEditorContext } from "@/context/editor";
-import { flowResult } from "mobx";
-import { createInstance } from "@/lib/utils";
 
 function _EditorMenubar() {
   const editor = useEditorContext();
 
   const handleExportVideo = async () => {
     try {
-      const blob = await flowResult(editor.onExportVideo("webmp"));
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = "video.webm";
-      anchor.click();
+      editor.onTogglePreviewModal("open");
+      await flowResult(editor.onExportVideo("mp4", 60));
     } catch (error) {
       console.log(error);
     }

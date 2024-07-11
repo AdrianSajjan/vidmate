@@ -15,6 +15,7 @@ import { EditorCanvas } from "@/components/editor";
 import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { observer } from "mobx-react";
+import { EditorPreviewModal } from "./layout/modals/preview";
 
 export function App() {
   return (
@@ -56,6 +57,7 @@ function _Editor() {
               <div className="flex-1 relative" id="workspace">
                 <EditorCanvas page={0} />
                 <EditorFAB />
+                <EditorPreviewModal />
                 <Toaster richColors position="bottom-right" offset={24} visibleToasts={6} />
               </div>
               <EditorFooter />

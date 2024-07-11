@@ -6,7 +6,7 @@ import { observer } from "mobx-react";
 import { CopyPlusIcon, GroupIcon, PencilIcon, RepeatIcon, Trash2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { CanvasProvider, useCanvasContext, useInitializeCanvas } from "@/context/canvas";
+import { CanvasProvider, useCanvasContext, useInitializeMainCanvas, useInitializeRecorderCanvas } from "@/context/canvas";
 import { cn } from "@/lib/utils";
 
 const MENU_OFFSET_Y = 50;
@@ -24,11 +24,16 @@ export function EditorCanvas(props: EditorCanvasProps) {
 }
 
 function _CanvasBase({ ...props }: EditorCanvasProps) {
-  const [canvasRef] = useInitializeCanvas();
+  const [main] = useInitializeMainCanvas();
+  const [recorder] = useInitializeRecorderCanvas();
+
+  const mainID = `main-canvas-${props.page}`;
+  const recorderID = `recorder-canvas-${props.page}`;
 
   return (
     <div className="absolute">
-      <canvas ref={canvasRef} />
+      <canvas ref={main} id={mainID} />
+      <canvas ref={recorder} id={recorderID} className="hidden" />
       <EditorElementControls {...props} />
     </div>
   );

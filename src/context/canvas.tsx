@@ -23,7 +23,7 @@ export function useCanvasContext() {
   return context;
 }
 
-export function useInitializeCanvas() {
+export function useInitializeMainCanvas() {
   const canvas = useCanvasContext();
   const [isInitialized, setInitialized] = useState(false);
 
@@ -34,7 +34,27 @@ export function useInitializeCanvas() {
         canvas.instance?.dispose();
         setInitialized(false);
       } else {
-        canvas.onInitialize(element, workspace);
+        canvas.onInitializeMainCanvas(element, workspace);
+        setInitialized(true);
+      }
+    },
+    [canvas],
+  );
+
+  return [ref, { isInitialized }] as const;
+}
+
+export function useInitializeRecorderCanvas() {
+  const canvas = useCanvasContext();
+  const [isInitialized, setInitialized] = useState(false);
+
+  const ref = useCallback(
+    (element: HTMLCanvasElement) => {
+      if (!element) {
+        canvas.recorder?.dispose();
+        setInitialized(false);
+      } else {
+        canvas.onInitializeRecorderCanvas(element);
         setInitialized(true);
       }
     },
