@@ -92,3 +92,57 @@ export function dataURLToUInt8Array(dataURL: string) {
 
   return bytes;
 }
+
+export function convertBufferToWaveBlob(_buffer: AudioBuffer, _length: number) {
+  let numOfChannels = _buffer.numberOfChannels;
+  let length = _length * numOfChannels * 2 + 44;
+
+  let buffer = createInstance(ArrayBuffer, length);
+  let view = createInstance(DataView, buffer);
+
+  let channels = [];
+  let offset = 0;
+  let pos = 0;
+
+  let i, sample;
+
+  setUint32(0x46464952);
+  setUint32(length - 8);
+  setUint32(0x45564157);
+
+  setUint32(0x20746d66);
+  setUint32(16);
+  setUint16(1);
+  setUint16(numOfChannels);
+  setUint32(_buffer.sampleRate);
+  setUint32(_buffer.sampleRate * 2 * numOfChannels);
+  setUint16(numOfChannels * 2);
+  setUint16(16);
+
+  setUint32(0x61746164);
+  setUint32(length - pos - 4);
+
+  for (i = 0; i < _buffer.numberOfChannels; i++) channels.push(_buffer.getChannelData(i));
+
+  while (pos < length) {
+    for (i = 0; i < numOfChannels; i++) {
+      sample = Math.max(-1, Math.min(1, channels[i][offset]));
+      sample = (sample < 0 ? sample * 0x8000 : sample * 0x7fff) | 0;
+      view.setInt16(pos, sample, true);
+      pos += 2;
+    }
+    offset++;
+  }
+
+  function setUint16(data: number) {
+    view.setUint16(pos, data, true);
+    pos += 2;
+  }
+
+  function setUint32(data: number) {
+    view.setUint32(pos, data, true);
+    pos += 4;
+  }
+
+  return createInstance(Blob, [buffer], { type: "audio/wav" });
+}

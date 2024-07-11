@@ -734,19 +734,24 @@ export class Canvas {
     this.recorder.clear();
   }
 
-  onStartRecordAudio(destination: MediaStreamAudioDestinationNode) {
+  onStartRecordAudio(context: OfflineAudioContext) {
     for (const audio of this.audios) {
-      const gain = this.audioContext.createGain();
-      const source = this.audioContext.createBufferSource();
+      const gain = context.createGain();
+      const source = context.createBufferSource();
 
       source.buffer = audio.buffer;
       gain.gain.value = audio.volume;
+      audio.source = source;
 
-      gain.connect(this.audioContext.destination);
+      gain.connect(context.destination);
       source.connect(gain);
-      source.connect(destination);
+      source.start(context.currentTime + audio.offset, audio.trim, audio.timeline);
+    }
+  }
 
-      source.start(this.audioContext.currentTime + audio.offset, audio.trim, audio.timeline);
+  onStopRecordAudio() {
+    for (const audio of this.audios) {
+      audio.source.stop();
     }
   }
 

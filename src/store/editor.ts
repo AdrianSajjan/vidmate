@@ -2,13 +2,23 @@ import { makeAutoObservable } from "mobx";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL } from "@ffmpeg/util";
 
-import { dataURLToUInt8Array } from "@/lib/media";
-import { createInstance, wait } from "@/lib/utils";
+import { convertBufferToWaveBlob, dataURLToUInt8Array } from "@/lib/media";
+import { createInstance, createUint8Array, wait } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
 
-export type VideoCodec = "webm" | "mp4";
-export type AudioCodec = "wav" | "mp3";
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
+
+export interface ExportAudio {
+  fps?: number;
+  audio?: boolean;
+}
+
+export interface CompileFrames {
+  fps: number;
+  frames: Uint8Array[];
+  audio?: Blob | null;
+  dimensions?: Record<"height" | "width", number>;
+}
 
 export enum ExportProgress {
   None = 0,
@@ -78,30 +88,95 @@ export class Editor {
     return this.canvas.recorder!.toDataURL({ format: "image/png" });
   }
 
-  *onCompileFrames(frames: Uint8Array[], fps: number, width: number, height: number) {
+  *onCompileFrames({ frames, fps, audio, dimensions }: CompileFrames) {
     if (!this.ffmpeg.loaded) throw createInstance(Error, "Ffmpeg is not loaded");
 
-    for (let frame = 0; frame < frames.length; frame++) {
-      this.controller.signal.throwIfAborted();
-      const name = "frame_" + String(frame) + ".png";
-      yield this.ffmpeg.writeFile(name, frames[frame]);
+    let cleanup = 0;
+
+    try {
+      for (let frame = 0; frame < frames.length; frame++) {
+        this.controller.signal.throwIfAborted();
+        const name = "frame_" + String(frame) + ".png";
+        yield this.ffmpeg.writeFile(name, frames[frame], { signal: this.controller.signal });
+        cleanup = frame;
+      }
+
+      if (dimensions) {
+        const { height, width } = dimensions;
+        yield this.ffmpeg.exec(["-framerate", String(fps), "-i", "frame_%d.png", "-vf", `scale=${width}:${height}`, "-c:v", "libx264", "-pix_fmt", "yuv420p", "output.mp4"], undefined, { signal: this.controller.signal });
+      } else {
+        yield this.ffmpeg.exec(["-framerate", String(fps), "-i", "frame_%d.png", "-c:v", "libx264", "-pix_fmt", "yuv420p", "output.mp4"], undefined, { signal: this.controller.signal });
+      }
+
+      if (audio) {
+        this.onChangeExportStatus(ExportProgress.CombineMedia);
+        const buffer: ArrayBuffer = yield audio.arrayBuffer();
+        yield this.ffmpeg.writeFile("audio.wav", createUint8Array(buffer), { signal: this.controller.signal });
+        yield this.ffmpeg.exec(["-i", "output.mp4", "-i", "audio.wav", "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", "output_with_audio.mp4"], undefined, { signal: this.controller.signal });
+        const data: Uint8Array = yield this.ffmpeg.readFile("output_with_audio.mp4", undefined, { signal: this.controller.signal });
+        this.controller.signal.throwIfAborted();
+        const blob = createInstance(Blob, [data.buffer], { type: "video/mp4" });
+        return blob;
+      } else {
+        const data: Uint8Array = yield this.ffmpeg.readFile("output.mp4", undefined, { signal: this.controller.signal });
+        this.controller.signal.throwIfAborted();
+        const blob = createInstance(Blob, [data.buffer], { type: "video/mp4" });
+        return blob;
+      }
+    } finally {
+      try {
+        yield this.ffmpeg.deleteFile("output.mp4");
+        if (audio) {
+          yield this.ffmpeg.deleteFile("audio.wav");
+          yield this.ffmpeg.deleteFile("output_with_audio.mp4");
+        }
+        for (let frame = 0; frame <= cleanup; frame++) {
+          const name = "frame_" + String(frame) + ".png";
+          yield this.ffmpeg.deleteFile(name);
+        }
+      } catch {
+        console.warn("FFMPEG - Failed to perform cleanup");
+      }
     }
+  }
 
-    yield this.ffmpeg.exec(["-framerate", String(fps), "-i", "frame_%d.png", "-vf", `scale=${width}:${height}`, "-c:v", "libx264", "-pix_fmt", "yuv420p", "output.mp4"], undefined, { signal: this.controller.signal });
-    const data: Uint8Array = yield this.ffmpeg.readFile("output.mp4");
-    const blob = createInstance(Blob, [data.buffer], { type: "video/mp4" });
+  *onExportAudio(video?: boolean) {
+    if (!this.canvas.audios.length) return null;
 
+    this.controller = createInstance(AbortController);
+    this.onChangeExportStatus(ExportProgress.CaptureAudio);
+
+    const sampleRate = this.canvas.audios[0].buffer.sampleRate;
+    const duration = this.canvas.audios.reduce((duration, audio) => (audio.timeline + audio.offset > duration ? audio.timeline + audio.offset : duration), 0);
+    const length = Math.min(duration, this.canvas.duration / 1000) * sampleRate;
+
+    const context = createInstance(OfflineAudioContext, 2, length, sampleRate);
+    this.canvas.onStartRecordAudio(context);
+
+    this.controller.signal.addEventListener("abort", this.canvas.onStopRecordAudio.bind(this.canvas));
+    const buffer: AudioBuffer = yield context.startRendering();
+    this.controller.signal.throwIfAborted();
+
+    this.controller.signal.removeEventListener("abort", this.canvas.onStopRecordAudio.bind(this.canvas));
+    const blob = convertBufferToWaveBlob(buffer, buffer.length);
+
+    if (!video) this.onChangeExportStatus(ExportProgress.Completed);
     return blob;
   }
 
-  *onExportVideo(_codec: VideoCodec = "mp4", fps = 30) {
+  *onExportVideo(props?: ExportAudio) {
     this.blob = undefined;
     this.frame = undefined;
+
+    const fps = props?.fps || 30;
+    const sound = props?.audio || true;
 
     try {
       const interval = 1000 / fps;
       const frames: Uint8Array[] = [];
       const count = this.canvas.duration / interval;
+
+      const audio: Blob | null = sound ? yield this.onExportAudio() : null;
 
       this.controller = createInstance(AbortController);
       this.onChangeExportStatus(ExportProgress.StaticCanvas);
@@ -129,13 +204,16 @@ export class Editor {
       this.onChangeExportStatus(ExportProgress.CompileVideo);
       this.canvas.onStopRecordVideo();
 
-      const blob: Blob = yield this.onCompileFrames(frames, fps, this.canvas.width, this.canvas.height);
+      const blob: Blob = yield this.onCompileFrames({ frames, fps, audio });
+      this.controller.signal.throwIfAborted();
       this.blob = blob;
 
       this.onChangeExportStatus(ExportProgress.Completed);
       return blob;
     } catch (error) {
       this.canvas.onStopRecordVideo();
+      this.onChangeExportStatus(ExportProgress.Error);
+
       throw error;
     }
   }
@@ -151,7 +229,7 @@ export class Editor {
         break;
       case "close":
         this.preview = false;
-        if (this.exporting > 3) this.controller.abort("Action cancelled by user");
+        if (this.exporting > 2) this.controller.abort({ message: "Video export interrupted by user" });
         break;
     }
   }

@@ -1,6 +1,7 @@
 import { ChevronDownIcon, ImageIcon, RedoIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { flowResult } from "mobx";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,9 +14,10 @@ function _EditorMenubar() {
   const handleExportVideo = async () => {
     try {
       editor.onTogglePreviewModal("open");
-      await flowResult(editor.onExportVideo("mp4", 60));
-    } catch (error) {
-      console.log(error);
+      await flowResult(editor.onExportVideo());
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message || "Failed to export video");
     }
   };
 
@@ -63,9 +65,21 @@ function _EditorMenubar() {
             <ImageIcon size={15} />
             <span className="font-medium">Export Template</span>
           </Button>
-          <Button size="icon" className="rounded-l-none bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90">
-            <ChevronDownIcon size={15} />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" className="rounded-l-none bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90">
+                <ChevronDownIcon size={15} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-48">
+              <DropdownMenuItem className="text-xs h-8 font-medium">Export Video - 24FPS</DropdownMenuItem>
+              <DropdownMenuItem className="text-xs h-8 font-medium">Export Video - 30FPS</DropdownMenuItem>
+              <DropdownMenuItem className="text-xs h-8 font-medium">Export Video - 60FPS</DropdownMenuItem>
+              <DropdownMenuItem className="text-xs h-8 font-medium" disabled={!editor.blob} onClick={() => editor.onTogglePreviewModal("open")}>
+                Exported Video Preview
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <ToggleTheme />
       </section>

@@ -1,13 +1,16 @@
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@radix-ui/react-dialog";
 import { observer } from "mobx-react";
+import { BanIcon, CircleCheckBig } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
+import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+
 import { useEditorContext } from "@/context/editor";
-import { cn } from "@/lib/utils";
 import { ExportProgress } from "@/store/editor";
-import { BanIcon, CircleCheckBig } from "lucide-react";
+
+import TransparentBackground from "@/assets/editor/ui/transparent-background.avif";
 
 function _EditorPreviewModal() {
   const editor = useEditorContext();
@@ -16,11 +19,9 @@ function _EditorPreviewModal() {
     <Dialog open={editor.preview}>
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <DialogContent
-          className={cn(
-            "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
-          )}
-        >
+        <DialogContent className="fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+          <DialogTitle className="sr-only">Preview Modal</DialogTitle>
+          <DialogDescription className="sr-only">See your video rendering and export preview here</DialogDescription>
           <PreviewModalContent />
         </DialogContent>
       </DialogPortal>
@@ -39,8 +40,12 @@ function _PreviewModalContent() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="relative flex items-center justify-center h-64 w-full">
-        <img src={editor.frame} className="h-full w-full object-contain" />
+      <div className="relative flex items-center justify-center h-72 p-3 w-full" style={{ background: `url(${TransparentBackground})`, backgroundSize: "120%" }}>
+        {editor.blob ? (
+          <video controls src={URL.createObjectURL(editor.blob)} className="h-full w-full object-contain" />
+        ) : editor.frame ? (
+          <img src={editor.frame} alt="preview" className="h-full w-full object-contain" />
+        ) : null}
       </div>
       <div className="flex flex-col relative">
         <Progress value={editor.progress} className="h-7 rounded-md bg-primary/40" />
@@ -51,7 +56,7 @@ function _PreviewModalContent() {
       </div>
       <div className="flex flex-row gap-4">
         <Button variant="outline" className="flex-1 text-xs" onClick={() => editor.onTogglePreviewModal("close")}>
-          Cancel Export
+          {editor.exporting > 2 ? <span>Cancel Export</span> : <span>Close Preview</span>}
         </Button>
         <Button disabled={!editor.blob} onClick={handleDownloadVideo} variant="default" className="flex-1 text-xs bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90">
           Download Video
@@ -81,11 +86,11 @@ function _ProgressText({ progress }: { progress: ExportProgress }) {
     case ExportProgress.Completed:
       return <span className="text-xxs text-primary-foreground">Completed</span>;
     case ExportProgress.StaticCanvas:
-      return <span className="text-xxs text-primary-foreground">In Progress - Rendering Scene</span>;
+      return <span className="text-xxs text-primary-foreground">In Progress - Rendering Video Scene</span>;
     case ExportProgress.CaptureVideo:
-      return <span className="text-xxs text-primary-foreground">In Progress - Capturing Frames</span>;
+      return <span className="text-xxs text-primary-foreground">In Progress - Capturing Video Frames</span>;
     case ExportProgress.CompileVideo:
-      return <span className="text-xxs text-primary-foreground">In Progress - Compiling Frames</span>;
+      return <span className="text-xxs text-primary-foreground">In Progress - Compiling Video Frames</span>;
     case ExportProgress.CaptureAudio:
       return <span className="text-xxs text-primary-foreground">In Progress - Compiling Audio</span>;
     case ExportProgress.CombineMedia:
