@@ -1,14 +1,13 @@
 import { XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { useState } from "react";
+import { flowResult } from "mobx";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { rightSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
 import { backgroundRemover } from "@/plugins/background-remover";
-import { Spinner } from "@/components/ui/spinner";
-import { toast } from "sonner";
-import { flowResult } from "mobx";
 
 interface SelectPluginProps {
   plugin: string;

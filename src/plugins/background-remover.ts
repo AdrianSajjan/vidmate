@@ -15,11 +15,7 @@ interface ProcessorResponse {
   pixel_values: any;
 }
 
-const modelConfig = {
-  model_type: "custom",
-};
-
-const processorConfig = {
+const config = {
   do_normalize: true,
   do_pad: false,
   do_rescale: true,
@@ -49,9 +45,14 @@ export class BackgroundRemover {
 
   *onInitialize() {
     this.initialized = "pending";
-    this.model = yield AutoModel.from_pretrained("briaai/RMBG-1.4", { config: modelConfig });
-    this.processor = yield AutoProcessor.from_pretrained("briaai/RMBG-1.4", { config: processorConfig });
-    this.initialized = "initialized";
+    try {
+      this.model = yield AutoModel.from_pretrained("RMBG-1.4");
+      this.processor = yield AutoProcessor.from_pretrained("RMBG-1.4", { config });
+      this.initialized = "initialized";
+    } catch (error) {
+      this.initialized = "uninitialized";
+      throw error;
+    }
   }
 
   *onRemoveBackground(url: string) {

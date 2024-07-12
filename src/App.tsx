@@ -1,4 +1,5 @@
 import "@/fabric/initialize";
+import "@/config/transformers";
 
 import { useEffect } from "react";
 import { observer } from "mobx-react";
