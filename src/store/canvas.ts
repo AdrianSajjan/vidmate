@@ -68,7 +68,9 @@ export class Canvas {
   }
 
   private isElementExcluded(object: fabric.Object) {
-    return elementsToExclude.includes(object.name!) || object.name!.startsWith("crop") || object.name!.startsWith("clone") || object.name!.startsWith("clip") || object.name!.startsWith("overlay");
+    return (
+      elementsToExclude.includes(object.name!) || object.name!.startsWith("crop") || object.name!.startsWith("clone") || object.name!.startsWith("clip") || object.name!.startsWith("overlay") || object.meta?.placeholder
+    );
   }
 
   private onRefreshElements() {
@@ -1299,6 +1301,60 @@ export class Canvas {
     if (!this.instance || !FabricUtils.isVideoElement(object)) return;
     object.seek(this.seek);
     this.instance.requestRenderAll();
+  }
+
+  *onReplaceImageSource(image: fabric.Image, source: string) {
+    if (!this.instance) return;
+
+    const props = { evented: false, selectable: false, originX: "center", originY: "center" };
+    const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY, fill: "#000000", opacity: 0.25, ...props });
+    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + image.name, fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
+
+    overlay.setPositionByOrigin(image.getCenterPoint(), "center", "center");
+    spinner.scaleToWidth(48).setPositionByOrigin(image.getCenterPoint(), "center", "center");
+
+    image.meta!.placeholder = true;
+    this.instance.add(overlay, spinner);
+    this.instance.requestRenderAll();
+
+    FabricUtils.objectSpinningAnimation(spinner);
+    FabricUtils.bindObjectTransformToParent(image, [overlay, spinner]);
+
+    const children = [{ object: overlay }, { object: spinner, skip: ["angle", "scaleX", "scaleY"] }];
+
+    image.on("moving", () => FabricUtils.updateObjectTransformToParent(image, children));
+    image.on("scaling", () => FabricUtils.updateObjectTransformToParent(image, children));
+    image.on("rotating", () => FabricUtils.updateObjectTransformToParent(image, children));
+
+    return createPromise<fabric.Image>((resolve, reject) => {
+      fabric.util.loadImage(
+        source,
+        (element) => {
+          if (!element || !element.height || !element.width) return reject();
+
+          image.setElement(element);
+          image.meta!.placeholder = false;
+          image.set({ scaleX: image.scaleX, scaleY: image.scaleY, left: image.left, top: image.top, angle: image.angle, cropX: image.cropX, cropY: image.cropY });
+
+          image.off("moving");
+          image.off("scaling");
+          image.off("rotating");
+
+          this.instance!.remove(overlay, spinner);
+          this.instance!.requestRenderAll();
+
+          resolve(image);
+        },
+        null,
+        "anonymous",
+      );
+    });
+  }
+
+  *onReplaceActiveImageSource(source: string) {
+    const object = this.instance?.getActiveObject() as fabric.Image;
+    if (!object || object.type !== "image") return;
+    this.onReplaceImageSource(object, source);
   }
 
   onAddClipPathToImage(image: fabric.Image, clipPath: fabric.Object) {

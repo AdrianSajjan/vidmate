@@ -2,9 +2,12 @@ import { createInstance, createMap, createPromise } from "@/lib/utils";
 import { makeAutoObservable } from "mobx";
 import { AutoModel, AutoProcessor, PreTrainedModel, Processor, RawImage } from "@xenova/transformers";
 
-export interface BackgroundRemoverCache {
+type CacheUsage = "original" | "modified";
+
+interface BackgroundRemoverCache {
   original: string;
   modified: string;
+  usage: CacheUsage;
 }
 
 interface ModelResponse {
@@ -68,30 +71,30 @@ export class BackgroundRemover {
       context.drawImage(image.toCanvas(), 0, 0);
       const pixels = context.getImageData(0, 0, image.width, image.height);
 
+      mask.toBlob().then((blob) => console.log(URL.createObjectURL(blob)));
+
       for (let i = 0; i < mask.data.length; ++i) pixels.data[4 * i + 3] = mask.data[i];
       context.putImageData(pixels, 0, 0);
 
-      const blob: Blob = yield createPromise<Blob>((resolve, reject) => {
+      return createPromise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (!blob) return reject();
           resolve(blob);
         });
       });
-
-      return blob;
     } finally {
       this.pending.delete(id);
     }
   }
 
-  onCacheEntryAdd(id: string, original: string, modified: string) {
-    this.cache.set(id, { original, modified });
+  onCacheEntryAdd(id: string, original: string, modified: string, usage: CacheUsage) {
+    this.cache.set(id, { original, modified, usage });
   }
 
-  onCacheEntryUpdate(id: string, modified: string) {
+  onCacheEntryUpdate(id: string, data: Partial<BackgroundRemoverCache>) {
     const entry = this.cache.get(id);
     if (!entry) return;
-    this.cache.set(id, { original: entry.original, modified });
+    this.cache.set(id, { ...entry, ...data });
   }
 
   onCacheEntryRemove(id: string) {

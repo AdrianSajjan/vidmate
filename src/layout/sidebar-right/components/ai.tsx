@@ -121,14 +121,14 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
       const original = entry ? entry.original : selected.src;
       const blob = await flowResult(backgroundRemover.onRemoveBackground(original, selected.name!));
       const modified = URL.createObjectURL(blob);
-      entry ? backgroundRemover.onCacheEntryUpdate(selected.name!, modified) : backgroundRemover.onCacheEntryAdd(selected.name!, original, modified);
+      entry ? backgroundRemover.onCacheEntryUpdate(selected.name!, { modified }) : backgroundRemover.onCacheEntryAdd(selected.name!, original, modified, "original");
     } catch (error) {
       toast.error("Unable to remove background from image");
       console.warn(error);
     }
   };
 
-  const handleAddNewImage = () => {
+  const handleAdd = () => {
     if (!entry) return;
     const { scaleX, scaleY, cropX, cropY, angle, height, width, top = 0, left = 0 } = selected;
     const promise = flowResult(editor.canvas.onAddImageFromSource(entry.modified, { top: top + 50, left: left + 50, scaleX, scaleY, cropX, cropY, angle, height, width }, true));
@@ -137,6 +137,18 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
       success: () => "The modified image has been added to your artboard",
       error: () => "Failed to add the modified image to the artboard",
     });
+  };
+
+  const handleReplaceOriginal = () => {
+    if (!entry) return;
+    editor.canvas.onReplaceActiveImageSource(entry.modified);
+    backgroundRemover.onCacheEntryUpdate(selected.name!, { usage: "modified" });
+  };
+
+  const handleRestoreOriginal = () => {
+    if (!entry) return;
+    editor.canvas.onReplaceActiveImageSource(entry.original);
+    backgroundRemover.onCacheEntryUpdate(selected.name!, { usage: "original" });
   };
 
   return (
@@ -173,12 +185,18 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <Button size="sm" className="w-full" onClick={handleAddNewImage}>
+          <Button size="sm" className="w-full" onClick={handleAdd}>
             Add as New Image
           </Button>
-          <Button size="sm" className="w-full" variant="outline">
-            Replace Original Image
-          </Button>
+          {entry.usage === "original" ? (
+            <Button size="sm" className="w-full" variant="outline" onClick={handleReplaceOriginal}>
+              Replace Original Image
+            </Button>
+          ) : (
+            <Button size="sm" className="w-full" variant="outline" onClick={handleRestoreOriginal}>
+              Restore Original Image
+            </Button>
+          )}
         </div>
       )}
     </div>
