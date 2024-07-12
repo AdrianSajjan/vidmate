@@ -412,15 +412,12 @@ export class Canvas {
     this.recorder = createInstance(fabric.StaticCanvas, element, { height: this.height, width: this.width, backgroundColor: this.fill });
   }
 
-  onToggleCanvasElements(ms: number, canvas = this.instance as fabric.Canvas | fabric.StaticCanvas) {
-    if (!canvas) return;
-
-    for (const object of canvas._objects) {
+  onToggleMainCanvasElements(ms: number) {
+    if (!this.instance) return;
+    for (const object of this.instance._objects) {
       if (this.isElementExcluded(object)) continue;
-
       const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
       object.visible = !hidden;
-
       if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder) {
         if (this.playing) {
           if (hidden && object.playing) object.pause();
@@ -431,8 +428,20 @@ export class Canvas {
         }
       }
     }
+    this.instance.requestRenderAll();
+  }
 
-    canvas.requestRenderAll();
+  *onToggleRecorderCanvasElements(ms: number) {
+    if (!this.recorder) return;
+    for (const object of this.recorder._objects) {
+      if (this.isElementExcluded(object)) continue;
+      const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
+      object.visible = !hidden;
+      if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder && !hidden) {
+        yield object.seek((ms - object.meta!.offset) / 1000);
+      }
+    }
+    this.recorder.requestRenderAll();
   }
 
   *onInitializeRecordTimeline() {
@@ -782,7 +791,7 @@ export class Canvas {
 
     this.onResetAudioTimeline();
     this.onResetAnimationTimeline();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
   }
 
   onDeleteObject(object?: fabric.Object) {
@@ -834,7 +843,7 @@ export class Canvas {
     this.instance.setActiveObject(textbox);
 
     this.instance.requestRenderAll();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
 
     return textbox;
   }
@@ -878,7 +887,7 @@ export class Canvas {
           this.instance!.setActiveObject(image);
 
           this.instance!.requestRenderAll();
-          this.onToggleCanvasElements(this.seek);
+          this.onToggleMainCanvasElements(this.seek);
 
           resolve(image);
         },
@@ -909,7 +918,7 @@ export class Canvas {
     this.instance.setActiveObject(thumbnail);
 
     this.instance.requestRenderAll();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
 
     FabricUtils.objectSpinningAnimation(spinner);
     FabricUtils.bindObjectTransformToParent(thumbnail, [overlay, spinner]);
@@ -941,7 +950,7 @@ export class Canvas {
           this.instance!.add(image).remove(thumbnail, overlay, spinner);
           this.instance!.setActiveObject(image).requestRenderAll();
 
-          this.onToggleCanvasElements(this.seek);
+          this.onToggleMainCanvasElements(this.seek);
           resolve(image);
         },
         { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
@@ -970,7 +979,7 @@ export class Canvas {
           this.instance!.setActiveObject(video);
 
           this.instance!.requestRenderAll();
-          this.onToggleCanvasElements(this.seek);
+          this.onToggleMainCanvasElements(this.seek);
 
           resolve(video);
         },
@@ -1001,7 +1010,7 @@ export class Canvas {
     this.instance.setActiveObject(thumbnail);
 
     this.instance.requestRenderAll();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
 
     FabricUtils.objectSpinningAnimation(spinner);
     FabricUtils.bindObjectTransformToParent(thumbnail, [overlay, spinner]);
@@ -1034,7 +1043,7 @@ export class Canvas {
           this.instance!.add(video).remove(thumbnail, overlay, spinner);
           this.instance!.setActiveObject(video).requestRenderAll();
 
-          this.onToggleCanvasElements(this.seek);
+          this.onToggleMainCanvasElements(this.seek);
           resolve(video);
         },
         { name: id, crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
@@ -1054,7 +1063,7 @@ export class Canvas {
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
     this.instance.requestRenderAll();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
 
     return shape;
   }
@@ -1074,7 +1083,7 @@ export class Canvas {
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
     this.instance.requestRenderAll();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
 
     return shape;
   }
@@ -1093,7 +1102,7 @@ export class Canvas {
 
     this.instance.add(line);
     this.instance.setActiveObject(line).requestRenderAll();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
 
     return line;
   }
@@ -1485,7 +1494,7 @@ export class Canvas {
 
     if (!object.meta) object.meta = {};
     object.meta[property] = value;
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
 
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
@@ -1530,7 +1539,7 @@ export class Canvas {
     if (!this.instance || !object) return;
     object.anim![type].name = animation;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
   }
 
   onChangActiveObjectAnimation(type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
@@ -1543,14 +1552,14 @@ export class Canvas {
     if (!this.instance || !object) return;
     object.anim![type].duration = duration;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
   }
 
   onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out", easing: any) {
     if (!this.instance || !object) return;
     object.anim![type].easing = easing;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
   }
 
   onChangActiveObjectAnimationEasing(type: "in" | "out", easing: any) {
@@ -1697,7 +1706,7 @@ export class Canvas {
 
   onChangeSeekTime(seek: number) {
     this.seek = seek * 1000;
-    this.onToggleCanvasElements(this.seek);
+    this.onToggleMainCanvasElements(this.seek);
   }
 
   onToggleLoop(loop: boolean) {

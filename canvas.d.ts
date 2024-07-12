@@ -2580,7 +2580,7 @@ export class Video extends Image {
    * Changes the current seek time of video
    * * @param [seek] The seek time in seconds
    */
-  seek(seek: number): void;
+  seek(seek: number): Promise<void>;
   /**
    * Creates an instance of fabric.Image from an URL string
    * @param url URL to create an image from

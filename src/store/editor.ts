@@ -186,10 +186,10 @@ export class Editor {
 
       for (let frame = 0; frame < count; frame++) {
         this.controller.signal.throwIfAborted();
-        const seek = (frame / count) * this.canvas.duration;
+        const seek = frame === count - 1 ? this.canvas.duration : (frame / count) * this.canvas.duration;
 
         this.canvas.timeline!.seek(seek);
-        this.canvas.onToggleCanvasElements(seek, this.canvas.recorder);
+        yield this.canvas.onToggleRecorderCanvasElements(seek);
 
         const base64 = this.onCaptureFrame();
         const buffer = dataURLToUInt8Array(base64);
@@ -198,7 +198,6 @@ export class Editor {
         this.progress = Math.ceil((frame / count) * 100);
 
         frames.push(buffer);
-        yield wait(interval);
       }
 
       this.onChangeExportStatus(ExportProgress.CompileVideo);
