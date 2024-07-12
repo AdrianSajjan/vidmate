@@ -1,7 +1,7 @@
 import useMeasure from "react-use-measure";
 
 import { clamp } from "lodash";
-import { CopyPlusIcon, GroupIcon, PencilIcon, RepeatIcon, Trash2Icon } from "lucide-react";
+import { CopyPlusIcon, GroupIcon, PencilIcon, RepeatIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 import { observer } from "mobx-react";
 import { useMemo } from "react";
 
@@ -46,6 +46,14 @@ function _EditorElementControls() {
           <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.canvas.onSelectGroup(editor.canvas.selected!.meta?.group)}>
             <GroupIcon size={14} />
             <span>Select Group</span>
+          </Button>
+        </div>
+      ) : null}
+      {editor.canvas.selected.type === "textbox" || editor.canvas.selected.type === "image" ? (
+        <div className="flex items-center p-1">
+          <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.setActiveSidebarRight("ai")}>
+            <SparklesIcon size={14} />
+            <span>AI Magic</span>
           </Button>
         </div>
       ) : null}

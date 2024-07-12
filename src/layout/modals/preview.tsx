@@ -10,8 +10,6 @@ import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useEditorContext } from "@/context/editor";
 import { ExportProgress } from "@/store/editor";
 
-import TransparentBackground from "@/assets/editor/ui/transparent-background.avif";
-
 function _EditorPreviewModal() {
   const editor = useEditorContext();
 
@@ -40,7 +38,7 @@ function _PreviewModalContent() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="relative flex items-center justify-center h-72 p-3 w-full" style={{ background: `url(${TransparentBackground})`, backgroundSize: "120%" }}>
+      <div className="relative flex items-center justify-center h-72 p-3 w-full bg-transparent-pattern bg-[length:120%]">
         {editor.blob ? (
           <video controls src={URL.createObjectURL(editor.blob)} className="h-full w-full object-contain" />
         ) : editor.frame ? (

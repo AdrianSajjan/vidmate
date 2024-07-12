@@ -10,6 +10,7 @@ import { FillSidebar } from "./components/fill";
 import { FilterSidebar } from "./components/filters";
 import { FontSidebar } from "./components/fonts";
 import { StrokeSidebar } from "./components/stroke";
+import { AISidebar } from "./components/ai";
 
 interface SidebarMapValue {
   Component: () => JSX.Element;
@@ -40,6 +41,10 @@ const sidebarComponentMap: Record<string, SidebarMapValue> = {
   fonts: {
     Component: FontSidebar,
     close: (selected) => !selected || selected.type !== "textbox",
+  },
+  ai: {
+    Component: AISidebar,
+    close: (selected) => !selected || !(selected.type === "image" || selected.type === "textbox"),
   },
 };
 

@@ -33,7 +33,7 @@ const processorConfig = {
 };
 
 export class BackgroundRemover {
-  initialized: boolean;
+  initialized: "initialized" | "uninitialized" | "pending";
   status: "idle" | "pending" | "completed" | "rejected";
 
   model?: PreTrainedModel;
@@ -42,15 +42,16 @@ export class BackgroundRemover {
 
   constructor() {
     this.status = "idle";
-    this.initialized = false;
+    this.initialized = "uninitialized";
     this.cache = createMap<string, BackgroundRemoverCache>();
     makeAutoObservable(this);
   }
 
   *onInitialize() {
+    this.initialized = "pending";
     this.model = yield AutoModel.from_pretrained("briaai/RMBG-1.4", { config: modelConfig });
     this.processor = yield AutoProcessor.from_pretrained("briaai/RMBG-1.4", { config: processorConfig });
-    this.initialized = true;
+    this.initialized = "initialized";
   }
 
   *onRemoveBackground(url: string) {
@@ -73,12 +74,28 @@ export class BackgroundRemover {
     for (let i = 0; i < mask.data.length; ++i) pixels.data[4 * i + 3] = mask.data[i];
     context.putImageData(pixels, 0, 0);
 
-    return createPromise<Blob>((resolve, reject) => {
+    const blob: Blob = yield createPromise<Blob>((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (!blob) return reject();
         resolve(blob);
       });
     });
+
+    return blob;
+  }
+
+  onCacheEntryAdd(id: string, original: string, modified: string) {
+    this.cache.set(id, { original, modified });
+  }
+
+  onCacheEntryUpdate(id: string, modified: string) {
+    const entry = this.cache.get(id);
+    if (!entry) return;
+    this.cache.set(id, { original: entry.original, modified });
+  }
+
+  onCacheEntryRemove(id: string) {
+    this.cache.delete(id);
   }
 
   onInitializeCache(entries: [string, BackgroundRemoverCache][]) {
@@ -89,3 +106,5 @@ export class BackgroundRemover {
     return Array.from(this.cache.entries());
   }
 }
+
+export const backgroundRemover = createInstance(BackgroundRemover);

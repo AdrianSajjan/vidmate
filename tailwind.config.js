@@ -22,6 +22,9 @@ module.exports = {
       borderWidth: {
         3: "3px",
       },
+      backgroundImage: {
+        "transparent-pattern": "url('/images/transparent-background.avif)'",
+      },
       fontSize: {
         xxs: ["0.625rem", "0.75rem"],
       },

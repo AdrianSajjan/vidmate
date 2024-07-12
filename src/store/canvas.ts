@@ -855,7 +855,7 @@ export class Canvas {
     return audio;
   }
 
-  *onAddImageFromSource(source: string) {
+  *onAddImageFromSource(source: string, options?: fabric.IImageOptions, skip?: boolean) {
     if (!this.instance || !this.artboard) return;
     return createPromise<fabric.Image>((resolve, reject) => {
       fabric.Image.fromURL(
@@ -863,8 +863,10 @@ export class Canvas {
         (image) => {
           if (!image._originalElement) return reject();
 
-          image.scaleToHeight(500);
-          image.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
+          if (!skip) {
+            image.scaleToHeight(500);
+            image.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
+          }
 
           this.onInitializeElementMeta(image);
           this.onInitializeElementAnimation(image);
@@ -877,7 +879,7 @@ export class Canvas {
 
           resolve(image);
         },
-        { name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
+        { ...options, name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
       );
     });
   }
@@ -944,7 +946,7 @@ export class Canvas {
     });
   }
 
-  *onAddVideoFromSource(source: string) {
+  *onAddVideoFromSource(source: string, options?: fabric.IVideoOptions, skip?: boolean) {
     if (!this.instance || !this.artboard) return;
     return createPromise<fabric.Video>((resolve, reject) => {
       fabric.Video.fromURL(
@@ -953,8 +955,10 @@ export class Canvas {
           if (!video || !video._originalElement) return reject();
           const element = video._originalElement as HTMLVideoElement;
 
-          video.scaleToHeight(500);
-          video.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
+          if (!skip) {
+            video.scaleToHeight(500);
+            video.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
+          }
 
           this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.duration) });
           this.onInitializeElementAnimation(video);
@@ -967,7 +971,7 @@ export class Canvas {
 
           resolve(video);
         },
-        { name: FabricUtils.elementID("video"), crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
+        { ...options, name: FabricUtils.elementID("video"), crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
       );
     });
   }
