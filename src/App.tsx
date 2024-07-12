@@ -1,6 +1,7 @@
 import "@/fabric/initialize";
 
 import { useEffect } from "react";
+import { observer } from "mobx-react";
 
 import { EditorFAB } from "@/layout/fab";
 import { EditorFooter } from "@/layout/footer";
@@ -8,14 +9,13 @@ import { EditorMenubar } from "@/layout/menubar";
 import { EditorToolbar } from "@/layout/toolbar";
 import { EditorSidebarLeft } from "@/layout/sidebar-left";
 import { EditorSidebarRight } from "@/layout/sidebar-right";
+import { EditorPreviewModal } from "@/layout/modals/preview";
 import { EditorProvider, useEditorContext } from "@/context/editor";
 
 import { Toaster } from "@/components/ui/sonner";
 import { EditorCanvas } from "@/components/editor";
 import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { observer } from "mobx-react";
-import { EditorPreviewModal } from "./layout/modals/preview";
 
 export function App() {
   return (

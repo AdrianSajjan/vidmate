@@ -9,6 +9,14 @@ export function createInstance<T, R extends any[]>(_class: new (...args: R) => T
   return new _class(...args);
 }
 
+export function createMap<K, V>(iterable?: Iterable<readonly [K, V]> | null | undefined) {
+  return new Map<K, V>(iterable);
+}
+
+export function createPromise<T>(callback: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void) {
+  return new Promise<T>(callback);
+}
+
 export function createUint8Array(buffer: ArrayBufferLike) {
   return new Uint8Array(buffer);
 }

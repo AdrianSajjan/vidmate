@@ -7,7 +7,7 @@ import { makeAutoObservable } from "mobx";
 
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
-import { createInstance, isVideoElement } from "@/lib/utils";
+import { createInstance, createPromise, isVideoElement } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
 
 export const minLayerStack = 3;
@@ -439,12 +439,12 @@ export class Canvas {
     this.recorder.setDimensions({ height: this.height, width: this.width });
     this.recorder.clear();
 
-    const artboard: fabric.Object = yield createInstance(Promise, (resolve) => this.artboard!.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
+    const artboard: fabric.Object = yield createPromise<fabric.Object>((resolve) => this.artboard!.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
     this.recorder.add(artboard);
 
     for (const object of this.instance._objects) {
       if (this.isElementExcluded(object)) continue;
-      const clone: fabric.Object = yield createInstance(Promise, (resolve) => object.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
+      const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
       this.recorder.add(clone);
     }
 
@@ -857,7 +857,7 @@ export class Canvas {
 
   *onAddImageFromSource(source: string) {
     if (!this.instance || !this.artboard) return;
-    return createInstance(Promise<fabric.Image>, (resolve, reject) => {
+    return createPromise<fabric.Image>((resolve, reject) => {
       fabric.Image.fromURL(
         source,
         (image) => {
@@ -916,7 +916,7 @@ export class Canvas {
     thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
     thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
 
-    return createInstance(Promise<fabric.Image>, (resolve, reject) => {
+    return createPromise<fabric.Image>((resolve, reject) => {
       fabric.Image.fromURL(
         source,
         (image) => {
@@ -946,7 +946,7 @@ export class Canvas {
 
   *onAddVideoFromSource(source: string) {
     if (!this.instance || !this.artboard) return;
-    return createInstance(Promise<fabric.Video>, (resolve, reject) => {
+    return createPromise<fabric.Video>((resolve, reject) => {
       fabric.Video.fromURL(
         source,
         (video) => {
@@ -1006,7 +1006,7 @@ export class Canvas {
     thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
     thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
 
-    return createInstance(Promise<fabric.Video>, (resolve, reject) => {
+    return createPromise<fabric.Video>((resolve, reject) => {
       fabric.Video.fromURL(
         source,
         (video) => {
