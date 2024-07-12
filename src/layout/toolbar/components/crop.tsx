@@ -24,7 +24,7 @@ function _CropToolbar() {
 
   return (
     <div className="flex items-center h-full w-full overflow-x-scroll scrollbar-hidden">
-      <Button size="sm" className="gap-1.5 pl-2.5 bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90" onClick={handleCropEnd}>
+      <Button size="sm" className="gap-1.5 pl-2.5 bg-primary hover:bg-primary/90" onClick={handleCropEnd}>
         <CheckIcon size={15} />
         <span>Done</span>
       </Button>

@@ -15,6 +15,11 @@ interface ProcessorResponse {
   pixel_values: any;
 }
 
+interface InitializationResponse {
+  model: PreTrainedModel;
+  processor: Processor;
+}
+
 const config = {
   do_normalize: true,
   do_pad: false,
@@ -29,60 +34,54 @@ const config = {
 };
 
 export class BackgroundRemover {
-  initialized: "initialized" | "uninitialized" | "pending";
-  status: "idle" | "pending" | "completed" | "rejected";
-
-  model?: PreTrainedModel;
-  processor?: Processor;
   cache: Map<string, BackgroundRemoverCache>;
+  pending: Map<string, boolean>;
 
   constructor() {
-    this.status = "idle";
-    this.initialized = "uninitialized";
     this.cache = createMap<string, BackgroundRemoverCache>();
+    this.pending = createMap<string, boolean>();
     makeAutoObservable(this);
   }
 
   *onInitialize() {
-    this.initialized = "pending";
-    try {
-      this.model = yield AutoModel.from_pretrained("RMBG-1.4");
-      this.processor = yield AutoProcessor.from_pretrained("RMBG-1.4", { config });
-      this.initialized = "initialized";
-    } catch (error) {
-      this.initialized = "uninitialized";
-      throw error;
-    }
+    const model: PreTrainedModel = yield AutoModel.from_pretrained("RMBG-1.4");
+    const processor: Processor = yield AutoProcessor.from_pretrained("RMBG-1.4", { config });
+    return { model, processor };
   }
 
-  *onRemoveBackground(url: string) {
-    if (!this.model || !this.processor) throw createInstance(Error, "Plugin is not initialized yet");
+  *onRemoveBackground(url: string, id: string) {
+    try {
+      this.pending.set(id, true);
+      const initialize: InitializationResponse = yield this.onInitialize();
 
-    const image: RawImage = yield RawImage.fromURL(url);
-    const processed: ProcessorResponse = yield this.processor(image);
+      const image: RawImage = yield RawImage.fromURL(url);
+      const processed: ProcessorResponse = yield initialize.processor(image);
 
-    const data: ModelResponse = yield this.model({ input: processed.pixel_values });
-    const mask: RawImage = yield RawImage.fromTensor(data.output[0].mul(255).to("uint8")).resize(image.width, image.height);
+      const data: ModelResponse = yield initialize.model({ input: processed.pixel_values });
+      const mask: RawImage = yield RawImage.fromTensor(data.output[0].mul(255).to("uint8")).resize(image.width, image.height);
 
-    const canvas = document.createElement("canvas");
-    canvas.width = image.width;
-    canvas.height = image.height;
-    const context = canvas.getContext("2d")!;
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d")!;
 
-    context.drawImage(image.toCanvas(), 0, 0);
-    const pixels = context.getImageData(0, 0, image.width, image.height);
+      context.drawImage(image.toCanvas(), 0, 0);
+      const pixels = context.getImageData(0, 0, image.width, image.height);
 
-    for (let i = 0; i < mask.data.length; ++i) pixels.data[4 * i + 3] = mask.data[i];
-    context.putImageData(pixels, 0, 0);
+      for (let i = 0; i < mask.data.length; ++i) pixels.data[4 * i + 3] = mask.data[i];
+      context.putImageData(pixels, 0, 0);
 
-    const blob: Blob = yield createPromise<Blob>((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (!blob) return reject();
-        resolve(blob);
+      const blob: Blob = yield createPromise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) return reject();
+          resolve(blob);
+        });
       });
-    });
 
-    return blob;
+      return blob;
+    } finally {
+      this.pending.delete(id);
+    }
   }
 
   onCacheEntryAdd(id: string, original: string, modified: string) {

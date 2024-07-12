@@ -56,7 +56,7 @@ function _PreviewModalContent() {
         <Button variant="outline" className="flex-1 text-xs" onClick={() => editor.onTogglePreviewModal("close")}>
           {editor.exporting > 2 ? <span>Cancel Export</span> : <span>Close Preview</span>}
         </Button>
-        <Button disabled={!editor.blob} onClick={handleDownloadVideo} variant="default" className="flex-1 text-xs bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90">
+        <Button disabled={!editor.blob} onClick={handleDownloadVideo} variant="default" className="flex-1 text-xs bg-primary hover:bg-primary/90">
           Download Video
         </Button>
       </div>

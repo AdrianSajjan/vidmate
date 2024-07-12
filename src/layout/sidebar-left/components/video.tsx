@@ -81,7 +81,7 @@ function _VideoSidebar() {
                   <input hidden type="file" accept="video/*" onChange={(event) => handleUpload(event.target.files)} />
                 </label>
               </Button>
-              <Button size="sm" variant="link" className="text-blue-600 h-6 font-medium line-clamp-1 px-1.5">
+              <Button size="sm" variant="link" className="text-primary h-6 font-medium line-clamp-1 px-1.5">
                 See All
               </Button>
             </div>
@@ -105,7 +105,7 @@ function _VideoSidebar() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-4">
               <h4 className="text-xs font-semibold line-clamp-1">Videos</h4>
-              <Button size="sm" variant="link" className="text-blue-600 font-medium line-clamp-1 px-1.5">
+              <Button size="sm" variant="link" className="text-primary font-medium line-clamp-1 px-1.5">
                 See All
               </Button>
             </div>

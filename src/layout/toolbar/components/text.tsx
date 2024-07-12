@@ -70,7 +70,7 @@ function _TextToolbar() {
           size="sm"
           value="bold"
           aria-label="bold"
-          className="data-[state=on]:bg-card data-[state=on]:text-blue-600"
+          className="data-[state=on]:bg-card data-[state=on]:text-primary"
         >
           <BoldIcon size={15} />
         </Toggle>
@@ -78,7 +78,7 @@ function _TextToolbar() {
           pressed={selected.fontStyle === "italic"}
           onPressedChange={(pressed) => editor.canvas.onChangeActiveTextboxProperty("fontStyle", pressed ? "italic" : "normal")}
           variant="outline"
-          className="data-[state=on]:bg-card data-[state=on]:text-blue-600"
+          className="data-[state=on]:bg-card data-[state=on]:text-primary"
           size="sm"
           value="italic"
           aria-label="italic"
@@ -92,23 +92,23 @@ function _TextToolbar() {
           size="sm"
           value="underline"
           aria-label="underline"
-          className="data-[state=on]:bg-card data-[state=on]:text-blue-600"
+          className="data-[state=on]:bg-card data-[state=on]:text-primary"
         >
           <UnderlineIcon size={15} />
         </Toggle>
       </div>
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToggleGroup type="single" value={selected.textAlign} onValueChange={(value) => editor.canvas.onChangeActiveTextboxProperty("textAlign", value)} className="flex items-center gap-1">
-        <ToggleGroupItem variant="outline" size="sm" value="left" aria-label="left" className="data-[state=on]:bg-card data-[state=on]:text-blue-600">
+        <ToggleGroupItem variant="outline" size="sm" value="left" aria-label="left" className="data-[state=on]:bg-card data-[state=on]:text-primary">
           <AlignLeftIcon size={15} />
         </ToggleGroupItem>
-        <ToggleGroupItem variant="outline" size="sm" value="center" aria-label="center" className="data-[state=on]:bg-card data-[state=on]:text-blue-600">
+        <ToggleGroupItem variant="outline" size="sm" value="center" aria-label="center" className="data-[state=on]:bg-card data-[state=on]:text-primary">
           <AlignCenterIcon size={15} />
         </ToggleGroupItem>
-        <ToggleGroupItem variant="outline" size="sm" value="right" aria-label="right" className="data-[state=on]:bg-card data-[state=on]:text-blue-600">
+        <ToggleGroupItem variant="outline" size="sm" value="right" aria-label="right" className="data-[state=on]:bg-card data-[state=on]:text-primary">
           <AlignRightIcon size={15} />
         </ToggleGroupItem>
-        <ToggleGroupItem variant="outline" size="sm" value="justify" aria-label="justify" className="data-[state=on]:bg-card data-[state=on]:text-blue-600">
+        <ToggleGroupItem variant="outline" size="sm" value="justify" aria-label="justify" className="data-[state=on]:bg-card data-[state=on]:text-primary">
           <AlignJustifyIcon size={15} />
         </ToggleGroupItem>
       </ToggleGroup>

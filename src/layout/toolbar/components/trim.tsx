@@ -97,19 +97,19 @@ function _TrimToolbarVideo() {
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute h-full top-0 flex">
           <Draggable axis="x" bounds={{ left: 0, right: data.trimRightX - handleWidth }} position={{ x: data.trimLeftX, y: 0 }} onDrag={(_, data) => handleDragChange("trimLeftX", data.x)}>
-            <button className="absolute grid place-items-center h-full bg-blue-600 rounded-l-md z-20" style={{ width: handleWidth }}>
+            <button className="absolute grid place-items-center h-full bg-primary rounded-l-md z-20" style={{ width: handleWidth }}>
               <ChevronLeftIcon size={14} strokeWidth={2.5} stroke="#ffffff" />
             </button>
           </Draggable>
-          <div className="h-full absolute border-t-2 border-b-2 border-blue-600 mix-blend-overlay bg-gray-300 z-10" style={{ left: data.trimLeftX + handleWidth, width: trackWidth }}></div>
+          <div className="h-full absolute border-t-2 border-b-2 border-primary mix-blend-overlay bg-gray-300 z-10" style={{ left: data.trimLeftX + handleWidth, width: trackWidth }}></div>
           <Draggable axis="x" bounds={{ left: data.trimLeftX + handleWidth, right: containerWidth }} position={{ x: data.trimRightX, y: 0 }} onDrag={(_, data) => handleDragChange("trimRightX", data.x)}>
-            <button className="absolute grid place-items-center h-full bg-blue-600 rounded-r-md z-20" style={{ width: handleWidth }}>
+            <button className="absolute grid place-items-center h-full bg-primary rounded-r-md z-20" style={{ width: handleWidth }}>
               <ChevronRightIcon size={14} strokeWidth={2.5} stroke="#ffffff" />
             </button>
           </Draggable>
         </div>
       </div>
-      <Button size="sm" className="gap-1.5 pl-2.5 bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90" onClick={handleChanges}>
+      <Button size="sm" className="gap-1.5 pl-2.5 bg-primary hover:bg-primary/90" onClick={handleChanges}>
         <CheckIcon size={15} />
         <span>Done</span>
       </Button>
@@ -168,19 +168,19 @@ function _TrimToolbarAudio() {
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute h-full top-0 flex">
           <Draggable axis="x" bounds={{ left: 0, right: timeline - handleWidth }} position={{ x: trim, y: 0 }} onDrag={(_, data) => setTrim(data.x)}>
-            <button className="absolute grid place-items-center h-full bg-blue-600 rounded-l-md z-20" style={{ width: handleWidth }}>
+            <button className="absolute grid place-items-center h-full bg-primary rounded-l-md z-20" style={{ width: handleWidth }}>
               <ChevronLeftIcon size={14} strokeWidth={2.5} stroke="#ffffff" />
             </button>
           </Draggable>
-          <div className="h-full absolute border-t-2 border-b-2 border-blue-600 mix-blend-overlay bg-gray-300 z-10" style={{ left: trim + handleWidth, width: trackWidth }} />
+          <div className="h-full absolute border-t-2 border-b-2 border-primary mix-blend-overlay bg-gray-300 z-10" style={{ left: trim + handleWidth, width: trackWidth }} />
           <Draggable axis="x" bounds={{ left: trim + handleWidth, right: containerWidth }} position={{ x: timeline, y: 0 }} onDrag={(_, data) => setTimeline(data.x)}>
-            <button className="absolute grid place-items-center h-full bg-blue-600 rounded-r-md z-20" style={{ width: handleWidth }}>
+            <button className="absolute grid place-items-center h-full bg-primary rounded-r-md z-20" style={{ width: handleWidth }}>
               <ChevronRightIcon size={14} strokeWidth={2.5} stroke="#ffffff" />
             </button>
           </Draggable>
         </div>
       </div>
-      <Button size="sm" className="gap-1.5 pl-2.5 bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90" onClick={handleChanges}>
+      <Button size="sm" className="gap-1.5 pl-2.5 bg-primary hover:bg-primary/90" onClick={handleChanges}>
         <CheckIcon size={15} />
         <span>Done</span>
       </Button>

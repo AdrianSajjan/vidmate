@@ -1,12 +1,17 @@
-import { XIcon } from "lucide-react";
+import useMeasure from "react-use-measure";
+import Draggable from "react-draggable";
+
+import { ChevronsLeftRightIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { flowResult } from "mobx";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { rightSidebarWidth } from "@/constants/layout";
+import { Spinner } from "@/components/ui/spinner";
+
 import { useEditorContext } from "@/context/editor";
+import { rightSidebarWidth } from "@/constants/layout";
 import { backgroundRemover } from "@/plugins/background-remover";
 
 interface SelectPluginProps {
@@ -100,35 +105,82 @@ function _AIPlugin({ plugin, onSelectPlugin }: SelectPluginProps) {
 function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
   const editor = useEditorContext();
 
+  const [position, setPosition] = useState(0);
+  const [ref, dimensions] = useMeasure();
+
   const selected = editor.canvas.selected! as fabric.Image;
   const entry = backgroundRemover.cache.get(selected.name!);
+  const pending = backgroundRemover.pending.get(selected.name!);
 
-  const handleLoadPlugin = () => {
-    toast.promise(flowResult(backgroundRemover.onInitialize()), {
-      loading: "Background removal plugin is being loaded...",
-      success: "Background removal plugin is loaded",
-      error: (error) => {
-        console.log(error);
-        return "Failed to load background removal plugin";
-      },
+  useEffect(() => {
+    setPosition(dimensions.width / 2);
+  }, [dimensions.width]);
+
+  const handleRemoveBackground = async () => {
+    try {
+      const original = entry ? entry.original : selected.src;
+      const blob = await flowResult(backgroundRemover.onRemoveBackground(original, selected.name!));
+      const modified = URL.createObjectURL(blob);
+      entry ? backgroundRemover.onCacheEntryUpdate(selected.name!, modified) : backgroundRemover.onCacheEntryAdd(selected.name!, original, modified);
+    } catch (error) {
+      toast.error("Unable to remove background from image");
+      console.warn(error);
+    }
+  };
+
+  const handleAddNewImage = () => {
+    if (!entry) return;
+    const { scaleX, scaleY, cropX, cropY, angle, height, width, top = 0, left = 0 } = selected;
+    const promise = flowResult(editor.canvas.onAddImageFromSource(entry.modified, { top: top + 50, left: left + 50, scaleX, scaleY, cropX, cropY, angle, height, width }, true));
+    toast.promise(promise, {
+      loading: "Adding the modified image to your artboard...",
+      success: () => "The modified image has been added to your artboard",
+      error: () => "Failed to add the modified image to the artboard",
     });
   };
 
-  const disabled = backgroundRemover.initialized === "pending" || backgroundRemover.initialized === "initialized";
-
   return (
-    <div className="flex flex-col">
-      <Button size="sm" variant="outline" className="font-medium" disabled={disabled} onClick={handleLoadPlugin}>
-        {backgroundRemover.initialized === "initialized" ? <span>Plugin Loaded</span> : <span>Load Plugin</span>}
-      </Button>
-      <div className="w-full h-auto rounded-md overflow-hidden relative mt-4">
-        <img src={entry ? entry.original : selected.src} className="w-full h-auto" />
+    <div className="flex flex-col gap-3">
+      <div className="w-full h-auto relative" ref={ref}>
         {entry ? (
-          <div className="bg-transparent-pattern bg-[length:120%] absolute top-0 left-0">
-            <img src={entry.modified} className="h-full w-auto" />
+          <Fragment>
+            <div className="bg-transparent-pattern">
+              <img src={entry.modified} className="w-full h-auto" />
+            </div>
+            <div className="bg-transparent-pattern absolute inset-0 overflow-hidden" style={{ width: position }}>
+              <img src={entry.original} className="w-full h-full object-cover object-left-top" />
+            </div>
+            <Draggable axis="x" bounds={{ left: 0, right: dimensions.width }} position={{ x: position, y: 0 }} onDrag={(_, data) => setPosition(data.x)}>
+              <div className="h-full w-0.5 bg-primary rounded-xl absolute top-0 grid place-items-center cursor-ew-resize">
+                <div className="absolute h-6 w-6 rounded-full bg-primary grid place-items-center text-primary-foreground">
+                  <ChevronsLeftRightIcon size={14} />
+                </div>
+              </div>
+            </Draggable>
+          </Fragment>
+        ) : (
+          <div className="bg-transparent-pattern">
+            <img src={selected.src} className="w-full h-auto" />
           </div>
-        ) : null}
+        )}
       </div>
+      {!entry ? (
+        <div className="flex">
+          <Button size="sm" className="w-full gap-2.5" variant="outline" disabled={pending} onClick={handleRemoveBackground}>
+            {pending ? <Spinner className="h-4 w-4" /> : null}
+            <span>Remove Background</span>
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <Button size="sm" className="w-full" onClick={handleAddNewImage}>
+            Add as New Image
+          </Button>
+          <Button size="sm" className="w-full" variant="outline">
+            Replace Original Image
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

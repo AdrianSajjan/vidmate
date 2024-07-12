@@ -785,7 +785,7 @@ export class Canvas {
 
   onDeleteObject(object?: fabric.Object) {
     if (!this.instance || !object) return;
-    this.instance.remove(object).requestRenderAll();
+    this.instance.remove(object).fire("").requestRenderAll();
   }
 
   onDeleteActiveObject() {
@@ -796,6 +796,7 @@ export class Canvas {
     } else {
       this.onDeleteObject(selection);
     }
+    this.onRefreshElements();
     this.instance.discardActiveObject().requestRenderAll();
   }
 

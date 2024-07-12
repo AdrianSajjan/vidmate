@@ -11,10 +11,10 @@ import { useEditorContext } from "@/context/editor";
 function _EditorMenubar() {
   const editor = useEditorContext();
 
-  const handleExportVideo = async () => {
+  const handleExportVideo = async (fps?: number) => {
     try {
       editor.onTogglePreviewModal("open");
-      await flowResult(editor.onExportVideo());
+      await flowResult(editor.onExportVideo({ fps }));
     } catch (e) {
       const error = e as Error;
       toast.error(error.message || "Failed to export video");
@@ -61,20 +61,26 @@ function _EditorMenubar() {
           </Button>
         </div>
         <div className="flex gap-px">
-          <Button size="sm" className="gap-2 rounded-r-none bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90" onClick={() => handleExportVideo()}>
+          <Button size="sm" className="gap-2 rounded-r-none bg-primary hover:bg-primary/90" onClick={() => handleExportVideo()}>
             <ImageIcon size={15} />
             <span className="font-medium">Export Template</span>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" className="rounded-l-none bg-blue-600 hover:bg-blue-600/90 dark:bg-blue-300 dark:hover:bg-blue-300/90">
+              <Button size="icon" className="rounded-l-none bg-primary hover:bg-primary/90">
                 <ChevronDownIcon size={15} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-48">
-              <DropdownMenuItem className="text-xs h-8 font-medium">Export Video - 24FPS</DropdownMenuItem>
-              <DropdownMenuItem className="text-xs h-8 font-medium">Export Video - 30FPS</DropdownMenuItem>
-              <DropdownMenuItem className="text-xs h-8 font-medium">Export Video - 60FPS</DropdownMenuItem>
+              <DropdownMenuItem className="text-xs h-8 font-medium" onClick={() => handleExportVideo(24)}>
+                Export Video - 24FPS
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs h-8 font-medium" onClick={() => handleExportVideo(30)}>
+                Export Video - 30FPS
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs h-8 font-medium" onClick={() => handleExportVideo(60)}>
+                Export Video - 60FPS
+              </DropdownMenuItem>
               <DropdownMenuItem className="text-xs h-8 font-medium" disabled={!editor.blob} onClick={() => editor.onTogglePreviewModal("open")}>
                 Exported Video Preview
               </DropdownMenuItem>

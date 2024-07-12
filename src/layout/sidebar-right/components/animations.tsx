@@ -101,7 +101,7 @@ function _EntryAnimations() {
       </div>
       <div className="grid grid-cols-2 gap-5 pt-6">
         {entry.map((animation) => (
-          <AnimationItem key={animation.label} animation={animation} className={selected.anim?.in.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
+          <AnimationItem key={animation.label} animation={animation} className={selected.anim?.in.name === animation.value ? "ring-2 ring-primary/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
         ))}
       </div>
     </div>
@@ -154,7 +154,7 @@ function _ExitAnimations() {
       </div>
       <div className="grid grid-cols-2 gap-5 pt-6">
         {exit.map((animation) => (
-          <AnimationItem key={animation.label} animation={animation} className={selected.anim?.out.name === animation.value ? "ring-2 ring-blue-600/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
+          <AnimationItem key={animation.label} animation={animation} className={selected.anim?.out.name === animation.value ? "ring-2 ring-primary/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
         ))}
       </div>
     </div>

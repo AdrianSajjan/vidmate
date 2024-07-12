@@ -38,7 +38,7 @@ function _ImageToolbar() {
           onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "filters" ? null : "filters")}
           size="sm"
           variant="outline"
-          className={cn("gap-1.5", editor.sidebarRight === "filters" ? "bg-card" : "bg-transparent", !selected.filters?.length ? "text-foreground" : "text-blue-600")}
+          className={cn("gap-1.5", editor.sidebarRight === "filters" ? "bg-card" : "bg-transparent", !selected.filters?.length ? "text-foreground" : "text-primary")}
         >
           <WandIcon size={15} />
           <span>Filters</span>

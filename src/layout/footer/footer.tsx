@@ -80,7 +80,7 @@ function _EditorFooter() {
             size="sm"
             value="repeat"
             aria-label="repeat"
-            className="data-[state=on]:text-blue-600 data-[state=off]:text-gray-500 hover:bg-transparent data-[state=on]:bg-transparent"
+            className="data-[state=on]:text-primary data-[state=off]:text-gray-500 hover:bg-transparent data-[state=on]:bg-transparent"
           >
             <RepeatIcon size={14} />
           </Toggle>

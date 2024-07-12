@@ -11,6 +11,10 @@ const images: EditorMedia[] = [
     source: "https://plus.unsplash.com/premium_photo-1710119487743-48959c984d45?q=100&w=1080&auto=format",
     thumbnail: "https://plus.unsplash.com/premium_photo-1710119487743-48959c984d45?q=75&w=256&auto=format",
   },
+  {
+    source: "https://images.unsplash.com/photo-1709704878349-6489691c0bd6?q=100&w=1080&auto=format",
+    thumbnail: "https://images.unsplash.com/photo-1709704878349-6489691c0bd6?q=75&w=256&auto=format",
+  },
 ];
 
 const videos: EditorMedia[] = [

@@ -141,7 +141,7 @@ function _UploadSidebar() {
                   <input hidden type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files, "image")} />
                 </label>
               </Button>
-              <Button size="sm" variant="link" className="text-blue-600 h-6 font-medium line-clamp-1 px-1.5">
+              <Button size="sm" variant="link" className="text-primary h-6 font-medium line-clamp-1 px-1.5">
                 See All
               </Button>
             </div>
@@ -172,7 +172,7 @@ function _UploadSidebar() {
                   <input hidden type="file" accept="video/*" onChange={(event) => handleUpload(event.target.files, "video")} />
                 </label>
               </Button>
-              <Button size="sm" variant="link" className="text-blue-600 h-6 font-medium line-clamp-1 px-1.5">
+              <Button size="sm" variant="link" className="text-primary h-6 font-medium line-clamp-1 px-1.5">
                 See All
               </Button>
             </div>
@@ -203,7 +203,7 @@ function _UploadSidebar() {
                   <input hidden type="file" accept="audio/*" onChange={(event) => handleUpload(event.target.files, "audio")} />
                 </label>
               </Button>
-              <Button size="sm" variant="link" className="text-blue-600 h-6 font-medium line-clamp-1 px-1.5">
+              <Button size="sm" variant="link" className="text-primary h-6 font-medium line-clamp-1 px-1.5">
                 See All
               </Button>
             </div>

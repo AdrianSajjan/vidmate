@@ -12,7 +12,7 @@ function _EditorFAB() {
       <Tabs value={String(editor.page)}>
         <TabsList className="shadow-sm bg-card dark:bg-muted">
           {editor.pages.map((_, index) => (
-            <TabsTrigger key={index} value={String(index)} className=" data-[state=active]:bg-blue-600 dark:data-[state=active]:bg-blue-300 data-[state=active]:text-primary-foreground  text-xs h-full px-4">
+            <TabsTrigger key={index} value={String(index)} className=" data-[state=active]:bg-primary  data-[state=active]:text-primary-foreground  text-xs h-full px-4">
               Page {index + 1}
             </TabsTrigger>
           ))}
@@ -21,7 +21,7 @@ function _EditorFAB() {
       <Button
         disabled
         size="default"
-        className="text-xs rounded-lg shadow-sm gap-1.5 border bg-card dark:bg-blue-300  border-blue-600 dark:border-blue-300  text-blue-600 dark:text-black hover:bg-blue-600 dark:hover:bg-blue-300/90 hover:text-white dark:hover:text-black"
+        className="text-xs rounded-lg shadow-sm gap-1.5 border bg-card dark:bg-primary  border-primary dark:border-blue-primary  text-primary dark:text-black hover:bg-primary dark:hover:bg-blue-primary/90 hover:text-white dark:hover:text-black"
       >
         <PlusIcon size={15} />
         <span className="font-medium">Add Page</span>
