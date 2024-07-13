@@ -101,10 +101,10 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
         setTimeout(() => {
           clone.set({ filters: [] });
           clone.applyFilters();
-          setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
+          setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true }));
         }, 1000);
       } else {
-        setBackgroundURL(clone.toDataURL({ format: "jpeg", quality: 0.1, withoutShadow: true, withoutTransform: true }));
+        setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true }));
       }
     }, propertiesToInclude);
   }, [element]);

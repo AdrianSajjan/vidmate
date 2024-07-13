@@ -55,7 +55,9 @@ function _PreviewModalContent() {
       <div className="col-span-7">
         <div className="relative flex items-center justify-center h-96 p-3 w-full bg-transparent-pattern">
           {editor.blob ? (
-            <video controls src={URL.createObjectURL(editor.blob)} className="h-full w-full object-contain" />
+            <video controls className="h-full w-full object-contain">
+              <source src={URL.createObjectURL(editor.blob)} type={codec.mimetype} />
+            </video>
           ) : editor.frame ? (
             <img src={editor.frame} alt="preview" className="h-full w-full object-contain" />
           ) : null}

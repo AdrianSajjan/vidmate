@@ -84,6 +84,10 @@ export class Editor {
     return this.pages[this.page];
   }
 
+  private onFFmpegExecProgress({ progress }: { progress: number }) {
+    console.log(progress);
+  }
+
   *onInitialize() {
     this.status = "pending";
     try {
@@ -91,6 +95,7 @@ export class Editor {
         coreURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js", "text/javascript"),
         wasmURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm", "application/wasm"),
       });
+      this.ffmpeg.on("progress", this.onFFmpegExecProgress);
       this.status = "complete";
     } catch (error) {
       this.status = "error";
@@ -136,7 +141,7 @@ export class Editor {
     const codec = fetchExtensionByCodec(this.codec);
 
     const music = "output_audio.wav";
-    const temporary = "output." + codec.extension;
+    const temporary = "output_temporary." + codec.extension;
     const output = audio ? "output_with_audio." + codec.extension : "output_without_audio." + codec.extension;
 
     try {
