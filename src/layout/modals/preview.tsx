@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 
 import { useEditorContext } from "@/context/editor";
-import { ExportProgress } from "@/store/editor";
+import { ExportMode, ExportProgress } from "@/store/editor";
 import { codecs, fetchExtensionByCodec, fps } from "@/constants/recorder";
 import { createFileDownload } from "@/lib/utils";
 
@@ -38,6 +38,7 @@ function _PreviewModalContent() {
   const editor = useEditorContext();
 
   const codec = fetchExtensionByCodec(editor.codec);
+  const progress = editor.progress.audio * 0.1 + editor.progress.capture * 0.4 + editor.progress.compile * 0.4 + editor.progress.combine * 0.1;
 
   const handleExportVideo = async () => {
     try {
@@ -75,7 +76,7 @@ function _PreviewModalContent() {
                 </SelectTrigger>
                 <SelectContent>
                   {fps.map((fps) => (
-                    <SelectItem value={fps} className="text-xs">
+                    <SelectItem key={fps} value={fps} className="text-xs">
                       {fps}
                     </SelectItem>
                   ))}
@@ -100,8 +101,26 @@ function _PreviewModalContent() {
             <div className="grid grid-cols-12 items-center">
               <Label className="text-xs col-span-3">File Name</Label>
               <div className="flex col-span-9">
-                <Input className="flex-1 text-xs h-8 rounded-r-none" placeholder="output" />
-                <div className="shrink-0 text-xs h-8 px-3 border grid place-items-center rounded-md rounded-l-none shadow-sm text-muted-foreground">.{codec.extension}</div>
+                <Input value={editor.file} onChange={(event) => editor.onChangeFileName(event.target.value)} className="flex-1 text-xs h-8 rounded-r-none" placeholder="output" />
+                <div className="shrink-0 text-xs h-8 px-3 border grid place-items-center rounded-md rounded-l-none shadow-sm text-muted-foreground w-16">.{codec.extension}</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-12 items-center">
+              <Label className="text-xs col-span-3">Exports</Label>
+              <div className="flex col-span-9">
+                <Select value={editor.exports} onValueChange={(model) => editor.onChangeExportMode(model as ExportMode)}>
+                  <SelectTrigger className="text-xs w-44 col-span-9 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="both" className="text-xs">
+                      Video with Audio
+                    </SelectItem>
+                    <SelectItem value="video" className="text-xs">
+                      Video Only
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -109,7 +128,7 @@ function _PreviewModalContent() {
         <div className="flex flex-col gap-4 mt-auto">
           {editor.exporting > ExportProgress.None ? (
             <div className="flex flex-col relative">
-              <Progress value={editor.progress} className="h-7 rounded-md bg-gray-300" />
+              <Progress value={progress} className="h-7 rounded-md bg-gray-300" />
               <div className="text-xxs absolute top-1/2 -translate-y-1/2 left-2 flex items-center gap-2">
                 <ProgressIcon progress={editor.exporting} />
                 <ProgressText progress={editor.exporting} />
@@ -149,7 +168,7 @@ function _ProgressText({ progress }: { progress: ExportProgress }) {
       return <span className="text-xxs text-primary-foreground">Error</span>;
     case ExportProgress.Completed:
       return <span className="text-xxs text-primary-foreground">Completed</span>;
-    case ExportProgress.StaticCanvas:
+    case ExportProgress.RenderScene:
       return <span className="text-xxs text-primary-foreground">In Progress - Rendering Video Scene</span>;
     case ExportProgress.CaptureVideo:
       return <span className="text-xxs text-primary-foreground">In Progress - Capturing Video Frames</span>;

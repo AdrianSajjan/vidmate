@@ -90,7 +90,7 @@ function _EntryAnimations() {
           <SelectTrigger className="h-8 text-xs w-40">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent position="item-aligned">
+          <SelectContent>
             {easings.map((easing) => (
               <SelectItem key={easing.value} className="text-xs" value={easing.value}>
                 {easing.label}
@@ -143,7 +143,7 @@ function _ExitAnimations() {
           <SelectTrigger className="h-8 text-xs w-40">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent position="item-aligned">
+          <SelectContent>
             {easings.map((easing) => (
               <SelectItem key={easing.value} className="text-xs" value={easing.value}>
                 {easing.label}

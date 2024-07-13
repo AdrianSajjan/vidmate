@@ -10,14 +10,13 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   initialize: function (element: HTMLVideoElement, options?: fabric.IVideoOptions) {
     options = options || {};
 
-    this.callSuper("initialize", element, options);
-    this.set({ left: options.left ?? 0, top: options.top ?? 0, trimStart: options.trimStart ?? 0, trimEnd: options.trimEnd ?? 0, hasAudio: options.hasAudio ?? false, objectCaching: false });
-
     element.loop = false;
     element.currentTime = 0;
-    element.muted = options.muted ?? true;
+    element.muted = options.muted ?? false;
     element.crossOrigin = options.crossOrigin ?? null;
 
+    this.callSuper("initialize", element, options);
+    this.set({ left: options.left ?? 0, top: options.top ?? 0, trimStart: options.trimStart ?? 0, trimEnd: options.trimEnd ?? 0, hasAudio: options.hasAudio ?? false, objectCaching: false });
     this.on("added", () => fabric.util.requestAnimFrame(this.update.bind(this)));
   },
 
@@ -71,29 +70,20 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
 
 FabricVideo.fromURL = function (url: string, callback: (video: fabric.Video | null) => void, options?: fabric.IVideoOptions) {
   const element = document.createElement("video");
-
-  element.src = url;
   element.currentTime = 0;
   element.crossOrigin = options?.crossOrigin ?? null;
-
   element.addEventListener(
     "loadeddata",
-    () => {
+    async () => {
       element.height = element.videoHeight;
       element.width = element.videoWidth;
-      const hasAudio = checkForAudioInVideo(element);
+      const hasAudio = await checkForAudioInVideo(url);
       callback(createInstance(FabricVideo, element, Object.assign({ hasAudio }, options)));
     },
     { once: true },
   );
-  element.addEventListener(
-    "error",
-    () => {
-      callback(null);
-    },
-    { once: true },
-  );
-
+  element.addEventListener("error", () => callback(null), { once: true });
+  element.src = url;
   element.load();
 };
 

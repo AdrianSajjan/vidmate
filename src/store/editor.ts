@@ -9,6 +9,8 @@ import { fetchExtensionByCodec } from "@/constants/recorder";
 
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
 
+export type ExportMode = "video" | "both";
+
 export interface EditorProgress {
   audio: number;
   capture: number;
@@ -20,7 +22,7 @@ export enum ExportProgress {
   None = 0,
   Error = 1,
   Completed = 2,
-  StaticCanvas = 3,
+  RenderScene = 3,
   CaptureVideo = 4,
   CompileVideo = 5,
   CaptureAudio = 6,
@@ -42,12 +44,10 @@ export class Editor {
   file: string;
   fps: string;
   codec: string;
-
-  audio: boolean;
-  video: boolean;
+  exports: ExportMode;
 
   preview: boolean;
-  progress: number;
+  progress: EditorProgress;
 
   ffmpeg: FFmpeg;
   exporting: ExportProgress;
@@ -60,15 +60,13 @@ export class Editor {
     this.pages = [createInstance(Canvas)];
     this.controller = createInstance(AbortController);
 
-    this.progress = 0;
     this.preview = false;
+    this.progress = { audio: 0, capture: 0, combine: 0, compile: 0 };
 
     this.file = "";
     this.fps = "30";
     this.codec = "H.264";
-
-    this.video = true;
-    this.audio = true;
+    this.exports = "both";
 
     this.exporting = ExportProgress.None;
     this.ffmpeg = createInstance(FFmpeg);
@@ -85,7 +83,13 @@ export class Editor {
   }
 
   private onFFmpegExecProgress({ progress }: { progress: number }) {
-    console.log(progress);
+    switch (this.exporting) {
+      case ExportProgress.CompileVideo:
+        this.progress.compile = progress * 100;
+        break;
+      case ExportProgress.CombineMedia:
+        this.progress.combine = progress * 100;
+    }
   }
 
   *onInitialize() {
@@ -95,7 +99,7 @@ export class Editor {
         coreURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js", "text/javascript"),
         wasmURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm", "application/wasm"),
       });
-      this.ffmpeg.on("progress", this.onFFmpegExecProgress);
+      this.ffmpeg.on("progress", this.onFFmpegExecProgress.bind(this));
       this.status = "complete";
     } catch (error) {
       this.status = "error";
@@ -124,7 +128,7 @@ export class Editor {
       const buffer = dataURLToUInt8Array(base64);
 
       this.frame = base64;
-      this.progress = Math.ceil((frame / count) * 100);
+      this.progress.capture = ((frame + 1) / count) * 100;
 
       frames.push(buffer);
     }
@@ -154,7 +158,7 @@ export class Editor {
         cleanup = frame;
       }
 
-      yield this.ffmpeg.exec(["-framerate", this.fps, "-i", pattern, "-c:v", codec.command, "-pix_fmt", "yuv420p", temporary], undefined, { signal: this.controller.signal });
+      yield this.ffmpeg.exec(["-framerate", this.fps, "-i", pattern, "-c:v", codec.command, "-preset", "ultrafast", "-pix_fmt", "yuv420p", temporary], undefined, { signal: this.controller.signal });
 
       if (audio) {
         this.onChangeExportStatus(ExportProgress.CombineMedia);
@@ -166,29 +170,31 @@ export class Editor {
 
         this.controller.signal.throwIfAborted();
         this.onChangeExportStatus(ExportProgress.Completed);
-
         const blob = createInstance(Blob, [data.buffer], { type: codec.mimetype });
+
         return blob;
       } else {
         yield this.ffmpeg.rename(temporary, output, { signal: this.controller.signal });
         const data: Uint8Array = yield this.ffmpeg.readFile(output, undefined, { signal: this.controller.signal });
 
+        this.progress.combine = 100;
         this.controller.signal.throwIfAborted();
-        this.onChangeExportStatus(ExportProgress.Completed);
 
+        this.onChangeExportStatus(ExportProgress.Completed);
         const blob = createInstance(Blob, [data.buffer], { type: codec.mimetype });
+
         return blob;
       }
     } finally {
       try {
-        yield this.ffmpeg.deleteFile(output);
-        if (audio) {
-          yield this.ffmpeg.deleteFile(music);
-          yield this.ffmpeg.deleteFile(temporary);
-        }
         for (let frame = 0; frame <= cleanup; frame++) {
           const name = pattern.replace("%d", String(frame));
           yield this.ffmpeg.deleteFile(name);
+        }
+        yield this.ffmpeg.deleteFile(output);
+        if (audio) {
+          yield this.ffmpeg.deleteFile(temporary);
+          yield this.ffmpeg.deleteFile(music);
         }
       } catch {
         console.warn("FFMPEG - Failed to perform cleanup");
@@ -197,7 +203,10 @@ export class Editor {
   }
 
   *onExportAudio() {
-    if (!this.canvas.audios.length) return null;
+    if (!this.canvas.audios.length || this.exports === "video") {
+      this.progress.audio = 100;
+      return null;
+    }
 
     this.controller = createInstance(AbortController);
     this.onChangeExportStatus(ExportProgress.CaptureAudio);
@@ -215,8 +224,8 @@ export class Editor {
 
     this.controller.signal.removeEventListener("abort", this.canvas.onStopRecordAudio.bind(this.canvas));
     const blob = convertBufferToWaveBlob(buffer, buffer.length);
+    this.progress.audio = 100;
 
-    if (!this.video) this.onChangeExportStatus(ExportProgress.Completed);
     return blob;
   }
 
@@ -225,10 +234,12 @@ export class Editor {
     this.frame = undefined;
 
     try {
-      const audio: Blob = this.audio ? yield this.onExportAudio() : null;
+      this.onResetProgress();
+
+      const audio: Blob = yield this.onExportAudio();
       this.controller = createInstance(AbortController);
 
-      this.onChangeExportStatus(ExportProgress.StaticCanvas);
+      this.onChangeExportStatus(ExportProgress.RenderScene);
       yield this.canvas.onStartRecordVideo();
 
       const frames: Uint8Array[] = yield this.onCaptureFrames();
@@ -236,14 +247,18 @@ export class Editor {
 
       const blob: Blob = yield this.onCompileFrames(frames, audio);
       this.controller.signal.throwIfAborted();
-
       this.blob = blob;
+
       return blob;
     } catch (error) {
       this.canvas.onStopRecordVideo();
       this.onChangeExportStatus(ExportProgress.Error);
       throw error;
     }
+  }
+
+  onResetProgress() {
+    this.progress = { audio: 0, capture: 0, combine: 0, compile: 0 };
   }
 
   onChangeExportStatus(status: ExportProgress) {
@@ -256,6 +271,14 @@ export class Editor {
 
   onChangeExportFPS(fps: string) {
     this.fps = fps;
+  }
+
+  onChangeExportMode(mode: ExportMode) {
+    this.exports = mode;
+  }
+
+  onChangeFileName(name: string) {
+    this.file = name;
   }
 
   onTogglePreviewModal(mode: "open" | "close") {

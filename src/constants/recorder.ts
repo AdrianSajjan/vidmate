@@ -4,6 +4,8 @@ export interface CodecExtension {
   mimetype: string;
 }
 
+export const fps = ["24", "30", "60"];
+
 export const codecs = ["H.264", "H.265", "MPEG-4", "VP8", "VP9", "AV1", "MPEG-2", "Theora", "ProRes", "DNxHD"];
 
 export const codecsExtensionsMap: Record<string, CodecExtension> = {
@@ -22,5 +24,3 @@ export const codecsExtensionsMap: Record<string, CodecExtension> = {
 export function fetchExtensionByCodec(label: string) {
   return codecsExtensionsMap[label] || codecsExtensionsMap["H.264"];
 }
-
-export const fps = ["24", "30", "60"];

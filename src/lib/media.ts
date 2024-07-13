@@ -1,7 +1,19 @@
-import { createInstance } from "@/lib/utils";
+import { createInstance, createPromise } from "@/lib/utils";
 
-export function checkForAudioInVideo(element: any) {
-  return Boolean(element.mozHasAudio) || element.webkitAudioDecodedByteCount > 0 || Boolean(element.audioTracks?.length);
+export function checkForAudioInVideo(source: string) {
+  const video = document.createElement("video");
+
+  video.muted = true;
+  video.crossOrigin = "anonymous";
+  video.preload = "auto";
+
+  return createPromise<boolean>((resolve, reject) => {
+    video.addEventListener("error", reject);
+    video.addEventListener("canplay", () => (video.currentTime = 0.99), { once: true });
+    // @ts-ignore
+    video.addEventListener("seeked", () => resolve(Boolean(video.mozHasAudio) || Boolean(video.webkitAudioDecodedByteCount) || Boolean(video.audioTracks?.length)), { once: true });
+    video.src = source;
+  });
 }
 
 export async function extractThumbnailFromVideoURL(url: string) {
