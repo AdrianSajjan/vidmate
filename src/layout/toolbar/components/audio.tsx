@@ -1,4 +1,4 @@
-import { AudioWaveformIcon, GanttChartIcon, Trash2Icon, Volume2Icon } from "lucide-react";
+import { AudioWaveformIcon, ChevronDownIcon, GanttChartIcon, Trash2Icon, Volume2Icon, VolumeXIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { floor } from "lodash";
 
@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider";
 
 import { useEditorContext } from "@/context/editor";
 import { EditorAudioElement } from "@/types/editor";
+import { Toggle } from "@/components/ui/toggle";
 
 function _AudioToolbar() {
   const editor = useEditorContext();
@@ -25,24 +26,29 @@ function _AudioToolbar() {
         </Button>
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5 data-[state=open]:bg-card">
+            <Button variant="outline" size="sm" className="data-[state=open]:bg-card">
               <Volume2Icon size={15} />
-              <span className="text-xs font-normal">Volume</span>
+              <span className="text-xs font-normal ml-1.5 mr-2.5">Volume</span>
+              <ChevronDownIcon size={15} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="pt-3 pb-3 px-3" align="start">
+          <PopoverContent className="pt-3 pb-3 px-3 w-80" align="start">
             <Label className="text-xs font-medium">Volume (%)</Label>
-            <div className="flex items-center justify-between gap-4">
-              <Slider min={0} max={100} value={[selected.volume * 100]} onValueChange={([volume]) => editor.canvas.onChangeAudioProperties(selected.id, { volume: volume / 100 })} />
+            <div className="flex items-center justify-between">
+              <Slider min={0} max={100} value={[selected.volume * 100]} disabled={selected.muted} onValueChange={([volume]) => editor.canvas.onChangeAudioProperties(selected.id, { volume: volume / 100 })} />
               <Input
                 min={1}
                 autoFocus
                 max={100}
-                value={selected.volume * 100}
                 type="number"
-                className="h-8 w-20 text-xs"
+                disabled={selected.muted}
+                value={selected.volume * 100}
+                className="h-8 w-20 text-xs ml-4 mr-2"
                 onChange={(event) => (+event.target.value < 0 || +event.target.value > 100 ? null : editor.canvas.onChangeAudioProperties(selected.id, { volume: +event.target.value / 100 }))}
               />
+              <Toggle pressed={selected.muted} onPressedChange={(muted) => editor.canvas.onChangeAudioProperties(selected.id, { muted })} size="sm" className="text-gray-400 data-[state=on]:text-primary">
+                <VolumeXIcon size={15} />
+              </Toggle>
             </div>
           </PopoverContent>
         </Popover>

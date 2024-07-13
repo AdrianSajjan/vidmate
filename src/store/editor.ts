@@ -6,6 +6,7 @@ import { convertBufferToWaveBlob, dataURLToUInt8Array } from "@/lib/media";
 import { createInstance, createUint8Array } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
 import { fetchExtensionByCodec } from "@/constants/recorder";
+import { EditorAudioElement } from "@/types/editor";
 
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
 
@@ -203,6 +204,10 @@ export class Editor {
   }
 
   *onExportAudio() {
+    const tracks = [] as any[]; // TODO: Extract audio tracks from videos
+    const audios = this.canvas.audios.filter((audio) => audio.muted); // TODO: Don't record muted audios
+    console.log(([] as EditorAudioElement[]).concat(audios, tracks)); // TODO: Combine the two and use them
+
     if (!this.canvas.audios.length || this.exports === "video") {
       this.progress.audio = 100;
       return null;

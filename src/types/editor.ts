@@ -17,6 +17,7 @@ export interface EditorAudioElement {
   buffer: AudioBuffer;
   source: AudioBufferSourceNode;
   volume: number;
+  muted: boolean;
   duration: number;
   offset: number;
   playing: boolean;

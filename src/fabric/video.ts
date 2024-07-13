@@ -1,7 +1,7 @@
 import { checkForAudioInVideo } from "@/lib/media";
 import { createInstance, createPromise, waitUntilEvent } from "@/lib/utils";
 import { fabric } from "fabric";
-import { clamp } from "lodash";
+import { clamp, isUndefined } from "lodash";
 
 const FabricVideo = fabric.util.createClass(fabric.Image, {
   type: "video",
@@ -20,9 +20,20 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
     this.on("added", () => fabric.util.requestAnimFrame(this.update.bind(this)));
   },
 
-  muted: function () {
+  muted: function (value?: boolean) {
     const element = this._originalElement as HTMLVideoElement;
-    return element ? element.muted : true;
+    if (!element) return true;
+    if (isUndefined(value)) return element.muted;
+    element.muted = value;
+    return value;
+  },
+
+  volume: function (value?: number) {
+    const element = this._originalElement as HTMLVideoElement;
+    if (!this.hasAudio || !element) return 0;
+    if (isUndefined(value)) return element.volume;
+    element.volume = value;
+    return value;
   },
 
   duration: function (trim?: boolean) {
@@ -30,11 +41,11 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
     return element ? (trim ? element.duration - this.trimStart - this.trimEnd : element.duration) : 0;
   },
 
-  play: function () {
+  play: async function () {
     this.playing = true;
     const element = this._originalElement as HTMLVideoElement;
     element.currentTime = this.trimStart;
-    element.play();
+    await element.play();
   },
 
   pause: function () {

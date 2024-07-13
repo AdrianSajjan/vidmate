@@ -698,6 +698,8 @@ export class Canvas {
 
   onInitializeAudioTimeline() {
     for (const audio of this.audios) {
+      if (audio.muted) continue;
+
       const gain = this.audioContext.createGain();
       const source = this.audioContext.createBufferSource();
 
@@ -717,6 +719,7 @@ export class Canvas {
 
   onResetAudioTimeline() {
     for (const audio of this.audios) {
+      if (!audio.playing) continue;
       audio.playing = false;
       audio.source.stop();
     }
@@ -747,6 +750,8 @@ export class Canvas {
 
   onStartRecordAudio(context: OfflineAudioContext) {
     for (const audio of this.audios) {
+      if (audio.muted) continue;
+
       const gain = context.createGain();
       const source = context.createBufferSource();
 
@@ -762,6 +767,7 @@ export class Canvas {
 
   onStopRecordAudio() {
     for (const audio of this.audios) {
+      if (!audio.muted) continue;
       audio.source.stop();
     }
   }
@@ -861,7 +867,7 @@ export class Canvas {
     source.buffer = buffer;
     source.connect(this.audioContext.destination);
 
-    const audio: EditorAudioElement = { id, buffer, url, timeline, name, duration, source, playing: false, trim: 0, offset: 0, volume: 1 };
+    const audio: EditorAudioElement = { id, buffer, url, timeline, name, duration, source, muted: false, playing: false, trim: 0, offset: 0, volume: 1 };
     this.audios.push(audio);
 
     return audio;
