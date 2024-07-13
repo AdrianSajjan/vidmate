@@ -36,14 +36,14 @@ function _TrimToolbarVideo() {
   const containerWidth = dimensions.width - handleWidth;
 
   const [background, setBackground] = useState("");
-  const [data, setData] = useState({ trimLeftX: 0, trimRightX: 0, duration: 0 });
+  const [data, setData] = useState({ trimStartX: 0, trimEndX: 0, duration: 0 });
 
   useEffect(() => {
     if (containerWidth <= 0) return;
     const object = editor.canvas.instance!.getItemByName(trim.name) as fabric.Video;
-    const trimLeftX = (containerWidth / object.duration(false)) * object.trimLeft!;
-    const trimRightX = containerWidth - (containerWidth / object.duration(false)) * object.trimRight!;
-    setData({ trimLeftX: trimLeftX, trimRightX: trimRightX, duration: object.duration(false) });
+    const trimStartX = (containerWidth / object.duration(false)) * object.trimStart!;
+    const trimEndX = containerWidth - (containerWidth / object.duration(false)) * object.trimEnd!;
+    setData({ trimStartX: trimStartX, trimEndX: trimEndX, duration: object.duration(false) });
   }, [containerWidth]);
 
   useEffect(() => {
@@ -61,18 +61,18 @@ function _TrimToolbarVideo() {
   }, []);
 
   const backgroundWidth = 40 * (trim.width! / trim.height!) + 10;
-  const trackWidth = containerWidth - data.trimLeftX - (containerWidth - data.trimRightX) - handleWidth;
-  const absoluteDuration = data.duration - (data.trimLeftX / containerWidth) * data.duration - ((containerWidth - data.trimRightX) / containerWidth) * data.duration;
+  const trackWidth = containerWidth - data.trimStartX - (containerWidth - data.trimEndX) - handleWidth;
+  const absoluteDuration = data.duration - (data.trimStartX / containerWidth) * data.duration - ((containerWidth - data.trimEndX) / containerWidth) * data.duration;
 
-  const handleDragChange = (key: "trimLeftX" | "trimRightX", value: number) => {
+  const handleDragChange = (key: "trimStartX" | "trimEndX", value: number) => {
     setData((state) => ({ ...state, [key]: value }));
   };
 
   const handleChanges = () => {
-    const trimLeft = (data.trimLeftX / containerWidth) * data.duration;
-    const trimRight = ((containerWidth - data.trimRightX) / containerWidth) * data.duration;
-    editor.canvas.onChangeActiveVideoProperty("trimLeft", trimLeft);
-    editor.canvas.onChangeActiveVideoProperty("trimRight", trimRight);
+    const trimStart = (data.trimStartX / containerWidth) * data.duration;
+    const trimEnd = ((containerWidth - data.trimEndX) / containerWidth) * data.duration;
+    editor.canvas.onChangeActiveVideoProperty("trimStart", trimStart);
+    editor.canvas.onChangeActiveVideoProperty("trimEnd", trimEnd);
     editor.canvas.onTrimVideoEnd();
   };
 
@@ -96,13 +96,13 @@ function _TrimToolbarVideo() {
         <div className={cn("bg-background items-stretch bg-repeat-x bg-center shrink-0 h-full w-full")} style={style} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute h-full top-0 flex">
-          <Draggable axis="x" bounds={{ left: 0, right: data.trimRightX - handleWidth }} position={{ x: data.trimLeftX, y: 0 }} onDrag={(_, data) => handleDragChange("trimLeftX", data.x)}>
+          <Draggable axis="x" bounds={{ left: 0, right: data.trimEndX - handleWidth }} position={{ x: data.trimStartX, y: 0 }} onDrag={(_, data) => handleDragChange("trimStartX", data.x)}>
             <button className="absolute grid place-items-center h-full bg-primary rounded-l-md z-20" style={{ width: handleWidth }}>
               <ChevronLeftIcon size={14} strokeWidth={2.5} stroke="#ffffff" />
             </button>
           </Draggable>
-          <div className="h-full absolute border-t-2 border-b-2 border-primary mix-blend-overlay bg-gray-300 z-10" style={{ left: data.trimLeftX + handleWidth, width: trackWidth }}></div>
-          <Draggable axis="x" bounds={{ left: data.trimLeftX + handleWidth, right: containerWidth }} position={{ x: data.trimRightX, y: 0 }} onDrag={(_, data) => handleDragChange("trimRightX", data.x)}>
+          <div className="h-full absolute border-t-2 border-b-2 border-primary mix-blend-overlay bg-gray-300 z-10" style={{ left: data.trimStartX + handleWidth, width: trackWidth }}></div>
+          <Draggable axis="x" bounds={{ left: data.trimStartX + handleWidth, right: containerWidth }} position={{ x: data.trimEndX, y: 0 }} onDrag={(_, data) => handleDragChange("trimEndX", data.x)}>
             <button className="absolute grid place-items-center h-full bg-primary rounded-r-md z-20" style={{ width: handleWidth }}>
               <ChevronRightIcon size={14} strokeWidth={2.5} stroke="#ffffff" />
             </button>

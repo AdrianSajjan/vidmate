@@ -1042,8 +1042,8 @@ export class Canvas {
 
           this.instance!.add(video).remove(thumbnail, overlay, spinner);
           this.instance!.setActiveObject(video).requestRenderAll();
-
           this.onToggleMainCanvasElements(this.seek);
+
           resolve(video);
         },
         { name: id, crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },

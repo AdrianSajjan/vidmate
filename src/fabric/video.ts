@@ -1,4 +1,5 @@
-import { createInstance, waitUntilEvent } from "@/lib/utils";
+import { checkForAudioInVideo } from "@/lib/media";
+import { createInstance, createPromise, waitUntilEvent } from "@/lib/utils";
 import { fabric } from "fabric";
 import { clamp } from "lodash";
 
@@ -6,33 +7,34 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   type: "video",
   playing: false,
 
-  trimLeft: 0,
-  trimRight: 0,
-
-  initialize: function (element: HTMLVideoElement, options?: any) {
+  initialize: function (element: HTMLVideoElement, options?: fabric.IVideoOptions) {
     options = options || {};
 
     this.callSuper("initialize", element, options);
-    this.set({ left: options.left ?? 0, top: options.top ?? 0, objectCaching: false });
+    this.set({ left: options.left ?? 0, top: options.top ?? 0, trimStart: options.trimStart ?? 0, trimEnd: options.trimEnd ?? 0, hasAudio: options.hasAudio ?? false, objectCaching: false });
 
     element.loop = false;
     element.currentTime = 0;
-
     element.muted = options.muted ?? true;
-    element.crossOrigin = options.crossOrigin;
+    element.crossOrigin = options.crossOrigin ?? null;
 
     this.on("added", () => fabric.util.requestAnimFrame(this.update.bind(this)));
   },
 
+  muted: function () {
+    const element = this._originalElement as HTMLVideoElement;
+    return element ? element.muted : true;
+  },
+
   duration: function (trim?: boolean) {
     const element = this._originalElement as HTMLVideoElement;
-    return element ? (trim ? element.duration - this.trimLeft - this.trimRight : element.duration) : 0;
+    return element ? (trim ? element.duration - this.trimStart - this.trimEnd : element.duration) : 0;
   },
 
   play: function () {
     this.playing = true;
     const element = this._originalElement as HTMLVideoElement;
-    element.currentTime = this.trimLeft;
+    element.currentTime = this.trimStart;
     element.play();
   },
 
@@ -44,7 +46,7 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
 
   seek: async function (_seconds: number) {
     const element = this._originalElement as HTMLVideoElement;
-    const seconds = _seconds + this.trimLeft;
+    const seconds = _seconds + this.trimStart;
     element.currentTime = clamp(seconds, 0, this.duration(true));
     await waitUntilEvent(element, "seeked");
   },
@@ -67,25 +69,37 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   },
 });
 
-FabricVideo.fromURL = function (url: string, callback: (video: fabric.Video | null) => void, options?: any) {
+FabricVideo.fromURL = function (url: string, callback: (video: fabric.Video | null) => void, options?: fabric.IVideoOptions) {
   const element = document.createElement("video");
+
   element.src = url;
   element.currentTime = 0;
-  element.crossOrigin = options.crossOrigin;
-  element.addEventListener("loadeddata", () => {
-    element.height = element.videoHeight;
-    element.width = element.videoWidth;
-    callback(createInstance(FabricVideo, element, options));
-  });
-  element.addEventListener("error", () => {
-    callback(null);
-  });
+  element.crossOrigin = options?.crossOrigin ?? null;
+
+  element.addEventListener(
+    "loadeddata",
+    () => {
+      element.height = element.videoHeight;
+      element.width = element.videoWidth;
+      const hasAudio = checkForAudioInVideo(element);
+      callback(createInstance(FabricVideo, element, Object.assign({ hasAudio }, options)));
+    },
+    { once: true },
+  );
+  element.addEventListener(
+    "error",
+    () => {
+      callback(null);
+    },
+    { once: true },
+  );
+
   element.load();
 };
 
 FabricVideo.fromObject = function (object: any, callback: (video: fabric.Video) => void) {
   Promise.all([
-    createInstance(Promise<fabric.IBaseFilter[]>, (resolve) => {
+    createPromise<fabric.IBaseFilter[]>((resolve) => {
       if (!object.filters?.length) {
         resolve([]);
       } else {
@@ -107,10 +121,6 @@ FabricVideo.fromObject = function (object: any, callback: (video: fabric.Video) 
       { ...object, filters },
     );
   });
-};
-
-FabricVideo.toObject = function (properties: any[]) {
-  return fabric.Object.prototype.toObject.call(this, ["trimLeft", "trimRight"].concat(properties));
 };
 
 fabric.Video = FabricVideo;

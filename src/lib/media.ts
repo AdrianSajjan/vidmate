@@ -1,5 +1,9 @@
 import { createInstance } from "@/lib/utils";
 
+export function checkForAudioInVideo(element: any) {
+  return Boolean(element.mozHasAudio) || element.webkitAudioDecodedByteCount > 0 || Boolean(element.audioTracks?.length);
+}
+
 export async function extractThumbnailFromVideoURL(url: string) {
   return createInstance(Promise<string>, (resolve, reject) => {
     const video = document.createElement("video");

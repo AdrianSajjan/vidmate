@@ -2485,8 +2485,10 @@ export class ActiveSelection {
 }
 
 interface IVideoOptions extends IImageOptions {
-  trimLeft?: number;
-  trimRight?: number;
+  muted?: boolean;
+  trimStart?: number;
+  trimEnd?: number;
+  hasAudio?: boolean;
 }
 interface IImageOptions extends IObjectOptions {
   /**
@@ -2541,11 +2543,11 @@ export class Video extends Image {
   /**
    * Returns the current video playback status
    */
-  trimLeft: number;
+  trimStart: number;
   /**
    * Returns the current video playback status
    */
-  trimRight: number;
+  trimEnd: number;
   /**
    * Returns the video element which this instance is based on
    * @return the Video element
