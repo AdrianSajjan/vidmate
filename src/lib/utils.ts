@@ -21,6 +21,13 @@ export function createUint8Array(buffer: ArrayBufferLike) {
   return new Uint8Array(buffer);
 }
 
+export function waitUntilEvent<K extends HTMLElement>(element: K, success: keyof HTMLElementEventMap, failure?: keyof HTMLElementEventMap) {
+  return createPromise((resolve, reject) => {
+    element.addEventListener(success, resolve, { once: true });
+    if (failure) element.addEventListener(failure, reject, { once: true });
+  });
+}
+
 export function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -31,4 +38,13 @@ export function isVideoElement(element: HTMLElement): element is HTMLVideoElemen
 
 export function isImageLoaded(element: HTMLImageElement) {
   return element.complete && !!element.naturalWidth;
+}
+
+export function createFileDownload(file: File | Blob, name: string) {
+  const anchor = document.createElement("a");
+  const href = URL.createObjectURL(file);
+  anchor.download = name;
+  anchor.href = href;
+  anchor.click();
+  URL.revokeObjectURL(href);
 }

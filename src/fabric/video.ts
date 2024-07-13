@@ -1,4 +1,4 @@
-import { createInstance, createPromise } from "@/lib/utils";
+import { createInstance, waitUntilEvent } from "@/lib/utils";
 import { fabric } from "fabric";
 import { clamp } from "lodash";
 
@@ -14,19 +14,14 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
 
     this.callSuper("initialize", element, options);
     this.set({ left: options.left ?? 0, top: options.top ?? 0, objectCaching: false });
-    this.on("added", () => fabric.util.requestAnimFrame(this.update.bind(this)));
 
     element.loop = false;
     element.currentTime = 0;
+
     element.muted = options.muted ?? true;
     element.crossOrigin = options.crossOrigin;
-    element.addEventListener("seeked", () => this.seeked());
-  },
 
-  seeked: function () {
-    this.canvas?.renderAll();
-    this.resolve?.();
-    this.resolve = null;
+    this.on("added", () => fabric.util.requestAnimFrame(this.update.bind(this)));
   },
 
   duration: function (trim?: boolean) {
@@ -47,13 +42,11 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
     element.pause();
   },
 
-  seek: function (_seconds: number) {
-    return createPromise<void>((resolve) => {
-      this.resolve = resolve;
-      const element = this._originalElement as HTMLVideoElement;
-      const seconds = _seconds + this.trimLeft;
-      element.currentTime = clamp(seconds, 0, this.duration(true));
-    });
+  seek: async function (_seconds: number) {
+    const element = this._originalElement as HTMLVideoElement;
+    const seconds = _seconds + this.trimLeft;
+    element.currentTime = clamp(seconds, 0, this.duration(true));
+    await waitUntilEvent(element, "seeked");
   },
 
   update: function () {

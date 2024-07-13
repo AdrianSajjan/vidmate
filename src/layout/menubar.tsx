@@ -6,15 +6,21 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ToggleTheme } from "@/components/ui/theme-toggle";
+
 import { useEditorContext } from "@/context/editor";
+import { createFileDownload } from "@/lib/utils";
+import { fetchExtensionByCodec } from "@/constants/recorder";
 
 function _EditorMenubar() {
   const editor = useEditorContext();
+  const codec = fetchExtensionByCodec(editor.codec);
 
-  const handleExportVideo = async (fps?: number) => {
+  const handleExportVideo = async () => {
     try {
       editor.onTogglePreviewModal("open");
-      await flowResult(editor.onExportVideo({ fps }));
+      const blob = await flowResult(editor.onExportVideo());
+      const file = (editor.file || "output") + "." + codec.extension;
+      createFileDownload(blob, file);
     } catch (e) {
       const error = e as Error;
       toast.error(error.message || "Failed to export video");
@@ -61,31 +67,13 @@ function _EditorMenubar() {
           </Button>
         </div>
         <div className="flex gap-px">
-          <Button size="sm" className="gap-2 rounded-r-none bg-primary hover:bg-primary/90" onClick={() => handleExportVideo()}>
+          <Button size="sm" className="gap-2 rounded-r-none bg-primary hover:bg-primary/90 w-36" onClick={() => handleExportVideo()}>
             <ImageIcon size={15} />
-            <span className="font-medium">Export Template</span>
+            <span className="font-medium">Export Video</span>
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" className="rounded-l-none bg-primary hover:bg-primary/90">
-                <ChevronDownIcon size={15} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-48">
-              <DropdownMenuItem className="text-xs h-8 font-medium" onClick={() => handleExportVideo(24)}>
-                Export Video - 24FPS
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs h-8 font-medium" onClick={() => handleExportVideo(30)}>
-                Export Video - 30FPS
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs h-8 font-medium" onClick={() => handleExportVideo(60)}>
-                Export Video - 60FPS
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs h-8 font-medium" disabled={!editor.blob} onClick={() => editor.onTogglePreviewModal("open")}>
-                Exported Video Preview
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button size="icon" className="rounded-l-none bg-primary hover:bg-primary/90" onClick={() => editor.onTogglePreviewModal("open")}>
+            <ChevronDownIcon size={15} />
+          </Button>
         </div>
         <ToggleTheme />
       </section>

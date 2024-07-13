@@ -3,21 +3,17 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL } from "@ffmpeg/util";
 
 import { convertBufferToWaveBlob, dataURLToUInt8Array } from "@/lib/media";
-import { createInstance, createUint8Array, wait } from "@/lib/utils";
+import { createInstance, createUint8Array } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
+import { fetchExtensionByCodec } from "@/constants/recorder";
 
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
 
-export interface ExportAudio {
-  fps?: number;
-  audio?: boolean;
-}
-
-export interface CompileFrames {
-  fps: number;
-  frames: Uint8Array[];
-  audio?: Blob | null;
-  dimensions?: Record<"height" | "width", number>;
+export interface EditorProgress {
+  audio: number;
+  capture: number;
+  compile: number;
+  combine: number;
 }
 
 export enum ExportProgress {
@@ -42,6 +38,14 @@ export class Editor {
 
   blob?: Blob;
   frame?: string;
+
+  file: string;
+  fps: string;
+  codec: string;
+
+  audio: boolean;
+  video: boolean;
+
   preview: boolean;
   progress: number;
 
@@ -52,11 +56,20 @@ export class Editor {
   constructor() {
     this.page = 0;
     this.status = "uninitialized";
+
     this.pages = [createInstance(Canvas)];
     this.controller = createInstance(AbortController);
 
     this.progress = 0;
     this.preview = false;
+
+    this.file = "";
+    this.fps = "30";
+    this.codec = "H.264";
+
+    this.video = true;
+    this.audio = true;
+
     this.exporting = ExportProgress.None;
     this.ffmpeg = createInstance(FFmpeg);
 
@@ -88,50 +101,88 @@ export class Editor {
     return this.canvas.recorder!.toDataURL({ format: "image/png" });
   }
 
-  *onCompileFrames({ frames, fps, audio, dimensions }: CompileFrames) {
+  *onCaptureFrames() {
+    const frames: Uint8Array[] = [];
+    const interval = 1000 / +this.fps;
+    const count = this.canvas.duration / interval;
+
+    this.onChangeExportStatus(ExportProgress.CaptureVideo);
+
+    for (let frame = 0; frame < count; frame++) {
+      this.controller.signal.throwIfAborted();
+      const seek = frame === count - 1 ? this.canvas.duration : (frame / count) * this.canvas.duration;
+
+      this.canvas.timeline!.seek(seek);
+      yield this.canvas.onToggleRecorderCanvasElements(seek);
+
+      const base64 = this.onCaptureFrame();
+      const buffer = dataURLToUInt8Array(base64);
+
+      this.frame = base64;
+      this.progress = Math.ceil((frame / count) * 100);
+
+      frames.push(buffer);
+    }
+
+    return frames;
+  }
+
+  *onCompileFrames(frames: Uint8Array[], audio?: Blob) {
     if (!this.ffmpeg.loaded) throw createInstance(Error, "Ffmpeg is not loaded");
 
     let cleanup = 0;
 
+    const pattern = "output_frame_%d.png";
+    const codec = fetchExtensionByCodec(this.codec);
+
+    const music = "output_audio.wav";
+    const temporary = "output." + codec.extension;
+    const output = audio ? "output_with_audio." + codec.extension : "output_without_audio." + codec.extension;
+
     try {
+      this.onChangeExportStatus(ExportProgress.CompileVideo);
+
       for (let frame = 0; frame < frames.length; frame++) {
         this.controller.signal.throwIfAborted();
-        const name = "frame_" + String(frame) + ".png";
+        const name = pattern.replace("%d", String(frame));
         yield this.ffmpeg.writeFile(name, frames[frame], { signal: this.controller.signal });
         cleanup = frame;
       }
 
-      if (dimensions) {
-        const { height, width } = dimensions;
-        yield this.ffmpeg.exec(["-framerate", String(fps), "-i", "frame_%d.png", "-vf", `scale=${width}:${height}`, "-c:v", "libx264", "-pix_fmt", "yuv420p", "output.mp4"], undefined, { signal: this.controller.signal });
-      } else {
-        yield this.ffmpeg.exec(["-framerate", String(fps), "-i", "frame_%d.png", "-c:v", "libx264", "-pix_fmt", "yuv420p", "output.mp4"], undefined, { signal: this.controller.signal });
-      }
+      yield this.ffmpeg.exec(["-framerate", this.fps, "-i", pattern, "-c:v", codec.command, "-pix_fmt", "yuv420p", temporary], undefined, { signal: this.controller.signal });
 
       if (audio) {
         this.onChangeExportStatus(ExportProgress.CombineMedia);
         const buffer: ArrayBuffer = yield audio.arrayBuffer();
-        yield this.ffmpeg.writeFile("audio.wav", createUint8Array(buffer), { signal: this.controller.signal });
-        yield this.ffmpeg.exec(["-i", "output.mp4", "-i", "audio.wav", "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", "output_with_audio.mp4"], undefined, { signal: this.controller.signal });
-        const data: Uint8Array = yield this.ffmpeg.readFile("output_with_audio.mp4", undefined, { signal: this.controller.signal });
+
+        yield this.ffmpeg.writeFile(music, createUint8Array(buffer), { signal: this.controller.signal });
+        yield this.ffmpeg.exec(["-i", temporary, "-i", music, "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", output], undefined, { signal: this.controller.signal });
+        const data: Uint8Array = yield this.ffmpeg.readFile(output, undefined, { signal: this.controller.signal });
+
         this.controller.signal.throwIfAborted();
-        const blob = createInstance(Blob, [data.buffer], { type: "video/mp4" });
+        this.onChangeExportStatus(ExportProgress.Completed);
+
+        const blob = createInstance(Blob, [data.buffer], { type: codec.mimetype });
         return blob;
       } else {
-        const data: Uint8Array = yield this.ffmpeg.readFile("output.mp4", undefined, { signal: this.controller.signal });
+        yield this.ffmpeg.rename(temporary, output, { signal: this.controller.signal });
+        const data: Uint8Array = yield this.ffmpeg.readFile(output, undefined, { signal: this.controller.signal });
+
         this.controller.signal.throwIfAborted();
-        const blob = createInstance(Blob, [data.buffer], { type: "video/mp4" });
+        this.onChangeExportStatus(ExportProgress.Completed);
+
+        const blob = createInstance(Blob, [data.buffer], { type: codec.mimetype });
         return blob;
       }
     } finally {
       try {
-        yield this.ffmpeg.deleteFile("output.mp4");
+        yield this.ffmpeg.deleteFile(output);
         if (audio) {
-          yield this.ffmpeg.deleteFile("audio.wav");
-          yield this.ffmpeg.deleteFile("output_with_audio.mp4");
+          yield this.ffmpeg.deleteFile(music);
+          yield this.ffmpeg.deleteFile(temporary);
         }
         for (let frame = 0; frame <= cleanup; frame++) {
-          const name = "frame_" + String(frame) + ".png";
+          const name = pattern.replace("%d", String(frame));
           yield this.ffmpeg.deleteFile(name);
         }
       } catch {
@@ -140,7 +191,7 @@ export class Editor {
     }
   }
 
-  *onExportAudio(video?: boolean) {
+  *onExportAudio() {
     if (!this.canvas.audios.length) return null;
 
     this.controller = createInstance(AbortController);
@@ -160,65 +211,46 @@ export class Editor {
     this.controller.signal.removeEventListener("abort", this.canvas.onStopRecordAudio.bind(this.canvas));
     const blob = convertBufferToWaveBlob(buffer, buffer.length);
 
-    if (!video) this.onChangeExportStatus(ExportProgress.Completed);
+    if (!this.video) this.onChangeExportStatus(ExportProgress.Completed);
     return blob;
   }
 
-  *onExportVideo(props?: ExportAudio) {
+  *onExportVideo() {
     this.blob = undefined;
     this.frame = undefined;
 
-    const fps = props?.fps || 30;
-    const sound = props?.audio || true;
-
     try {
-      const interval = 1000 / fps;
-      const frames: Uint8Array[] = [];
-      const count = this.canvas.duration / interval;
-
-      const audio: Blob | null = sound ? yield this.onExportAudio() : null;
-
+      const audio: Blob = this.audio ? yield this.onExportAudio() : null;
       this.controller = createInstance(AbortController);
+
       this.onChangeExportStatus(ExportProgress.StaticCanvas);
-
       yield this.canvas.onStartRecordVideo();
-      this.onChangeExportStatus(ExportProgress.CaptureVideo);
 
-      for (let frame = 0; frame < count; frame++) {
-        this.controller.signal.throwIfAborted();
-        const seek = frame === count - 1 ? this.canvas.duration : (frame / count) * this.canvas.duration;
-
-        this.canvas.timeline!.seek(seek);
-        yield this.canvas.onToggleRecorderCanvasElements(seek);
-
-        const base64 = this.onCaptureFrame();
-        const buffer = dataURLToUInt8Array(base64);
-
-        this.frame = base64;
-        this.progress = Math.ceil((frame / count) * 100);
-
-        frames.push(buffer);
-      }
-
-      this.onChangeExportStatus(ExportProgress.CompileVideo);
+      const frames: Uint8Array[] = yield this.onCaptureFrames();
       this.canvas.onStopRecordVideo();
 
-      const blob: Blob = yield this.onCompileFrames({ frames, fps, audio });
+      const blob: Blob = yield this.onCompileFrames(frames, audio);
       this.controller.signal.throwIfAborted();
-      this.blob = blob;
 
-      this.onChangeExportStatus(ExportProgress.Completed);
+      this.blob = blob;
       return blob;
     } catch (error) {
       this.canvas.onStopRecordVideo();
       this.onChangeExportStatus(ExportProgress.Error);
-
       throw error;
     }
   }
 
   onChangeExportStatus(status: ExportProgress) {
     this.exporting = status;
+  }
+
+  onChangeExportCodec(codec: string) {
+    this.codec = codec;
+  }
+
+  onChangeExportFPS(fps: string) {
+    this.fps = fps;
   }
 
   onTogglePreviewModal(mode: "open" | "close") {
@@ -228,17 +260,9 @@ export class Editor {
         break;
       case "close":
         this.preview = false;
-        if (this.exporting > 2) this.controller.abort({ message: "Video export interrupted by user" });
+        if (this.exporting > 2) this.controller.abort({ message: "Export process cancelled by user" });
         break;
     }
-  }
-
-  setActiveSidebarLeft(sidebar: string | null) {
-    this.sidebarLeft = sidebar;
-  }
-
-  setActiveSidebarRight(sidebar: string | null) {
-    this.sidebarRight = sidebar;
   }
 
   onToggleTimeline(mode?: "open" | "close") {
@@ -253,6 +277,14 @@ export class Editor {
         this.isTimelineOpen = !this.isTimelineOpen;
         break;
     }
+  }
+
+  setActiveSidebarLeft(sidebar: string | null) {
+    this.sidebarLeft = sidebar;
+  }
+
+  setActiveSidebarRight(sidebar: string | null) {
+    this.sidebarRight = sidebar;
   }
 
   onAddPage() {
