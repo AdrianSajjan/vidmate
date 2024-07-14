@@ -223,17 +223,14 @@ export class Canvas {
 
   private onUpdateSelection() {
     const selection = this.instance?.getActiveObject();
-
     if (FabricUtils.isActiveSelection(this.selected)) {
       const objects = this.selected.objects.map((object) => this.instance?.getItemByName(object.name)).filter(Boolean) as fabric.Object[];
       objects.forEach((object) => object.set({ hasBorders: true, hasControls: true }));
     }
-
     if (FabricUtils.isActiveSelection(selection)) {
       const objects = selection._objects;
       objects.forEach((object) => object.set({ hasBorders: false, hasControls: false }));
     }
-
     this.selected = selection?.toObject(propertiesToInclude);
     this.instance?.requestRenderAll();
   }
@@ -241,7 +238,6 @@ export class Canvas {
   private onUpdateViewportTransform() {
     if (!this.instance) return;
     this.viewportTransform = [...this.instance.viewportTransform!];
-    this.instance.requestRenderAll();
   }
 
   private onCenterArtboard() {
@@ -447,6 +443,7 @@ export class Canvas {
   *onInitializeRecordTimeline() {
     if (!this.instance || !this.recorder || !this.artboard) return;
 
+    this.instance.discardActiveObject();
     this.recorder.setDimensions({ height: this.height, width: this.width });
     this.recorder.clear();
 
@@ -460,13 +457,7 @@ export class Canvas {
     }
 
     this.recorder.renderAll();
-
-    this.timeline = anime.timeline({
-      duration: this.duration,
-      loop: false,
-      autoplay: false,
-      update: this.recorder!.requestRenderAll.bind(this.recorder),
-    });
+    this.timeline = anime.timeline({ duration: this.duration, loop: false, autoplay: false, update: this.recorder!.requestRenderAll.bind(this.recorder) });
   }
 
   onInitializeAnimationTimeline() {
@@ -726,26 +717,18 @@ export class Canvas {
   }
 
   *onStartRecordVideo() {
-    if (!this.instance) return;
-
     this.trim = null;
     this.selected = null;
     this.playing = false;
 
-    this.instance.discardActiveObject();
     yield this.onInitializeRecordTimeline();
     this.onInitializeTimelineAnimations(this.recorder);
   }
 
   onStopRecordVideo() {
-    if (!this.recorder) return;
-
-    if (this.timeline) {
-      anime.remove(this.timeline);
-      this.timeline = null;
-    }
-
-    this.recorder.clear();
+    if (this.timeline) anime.remove(this.timeline);
+    if (this.recorder) this.recorder.clear();
+    this.timeline = null;
   }
 
   onStartRecordAudio(audios: EditorAudioElement[], context: OfflineAudioContext) {
