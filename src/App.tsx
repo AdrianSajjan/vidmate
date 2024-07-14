@@ -49,7 +49,7 @@ function _Editor() {
 
     case "complete":
       return (
-        <section className="h-screen overflow-hidden flex flex-col">
+        <section className="h-screen overflow-hidden flex flex-col select-none">
           <EditorMenubar />
           <main className="flex-1 flex w-full">
             <EditorSidebarLeft />
