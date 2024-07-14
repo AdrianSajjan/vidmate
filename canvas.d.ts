@@ -2558,6 +2558,14 @@ export class Video extends Image {
    */
   duration(trim?: boolean): number;
   /**
+   * Getter and setter for if the video is muted
+   */
+  muted(muted?: boolean): boolean;
+  /**
+   * Getter and setter for the volume of the video
+   */
+  volume(voumne?: number): number;
+  /**
    * Returns the video element which this instance is based on
    * @return the Video element
    */

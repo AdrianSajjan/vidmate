@@ -1,12 +1,13 @@
 import { makeAutoObservable } from "mobx";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { toBlobURL } from "@ffmpeg/util";
+import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 import { convertBufferToWaveBlob, dataURLToUInt8Array } from "@/lib/media";
 import { createInstance, createUint8Array } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
 import { fetchExtensionByCodec } from "@/constants/recorder";
 import { EditorAudioElement } from "@/types/editor";
+import { FabricUtils } from "@/fabric/utils";
 
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
 
@@ -85,11 +86,15 @@ export class Editor {
 
   private onFFmpegExecProgress({ progress }: { progress: number }) {
     switch (this.exporting) {
+      case ExportProgress.CaptureAudio:
+        this.progress.audio = progress * 100;
+        break;
       case ExportProgress.CompileVideo:
         this.progress.compile = progress * 100;
         break;
       case ExportProgress.CombineMedia:
         this.progress.combine = progress * 100;
+        break;
     }
   }
 
@@ -203,12 +208,45 @@ export class Editor {
     }
   }
 
-  *onExportAudio() {
-    const tracks = [] as any[]; // TODO: Extract audio tracks from videos
-    const audios = this.canvas.audios.filter((audio) => audio.muted); // TODO: Don't record muted audios
-    console.log(([] as EditorAudioElement[]).concat(audios, tracks)); // TODO: Combine the two and use them
+  *onExtractAudioTracks() {
+    const result: EditorAudioElement[] = [];
 
-    if (!this.canvas.audios.length || this.exports === "video") {
+    for (const object of this.canvas.instance!._objects) {
+      if (!FabricUtils.isVideoElement(object) || !object.hasAudio) continue;
+
+      this.controller.signal.throwIfAborted();
+      const input = object.name!;
+      const output = object.name! + ".wav";
+
+      const file: Uint8Array = yield fetchFile(object.getSrc());
+      yield this.ffmpeg.writeFile(input, file);
+      yield this.ffmpeg.exec(["-i", input, "-q:a", "0", "-map", "a", output], undefined, { signal: this.controller.signal });
+
+      const data: Uint8Array = yield this.ffmpeg.readFile(output);
+      const buffer: AudioBuffer = yield this.canvas.audioContext.decodeAudioData(data.buffer);
+
+      const id = FabricUtils.elementID("audio");
+      const duration = buffer.duration;
+
+      const muted = object.muted();
+      const volume = object.volume();
+
+      const trim = object.trimStart / 1000;
+      const offset = object.meta!.offset / 1000;
+      const timeline = object.meta!.duration / 1000 - object.trimStart / 1000 - object.trimEnd / 1000;
+
+      const source = this.canvas.audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.canvas.audioContext.destination);
+
+      result.push({ id, buffer, duration, muted, volume, source, offset, timeline, trim, name: output, playing: false, url: "" });
+    }
+
+    return result;
+  }
+
+  *onExportAudio() {
+    if (this.exports === "video") {
       this.progress.audio = 100;
       return null;
     }
@@ -216,18 +254,29 @@ export class Editor {
     this.controller = createInstance(AbortController);
     this.onChangeExportStatus(ExportProgress.CaptureAudio);
 
-    const sampleRate = this.canvas.audios[0].buffer.sampleRate;
-    const duration = this.canvas.audios.reduce((duration, audio) => (audio.timeline + audio.offset > duration ? audio.timeline + audio.offset : duration), 0);
+    const tracks: EditorAudioElement[] = yield this.onExtractAudioTracks();
+    const audios = this.canvas.audios.filter((audio) => !audio.muted && !!audio.volume);
+    const combined = ([] as EditorAudioElement[]).concat(audios, tracks);
+
+    if (!combined.length) {
+      this.progress.audio = 100;
+      return null;
+    }
+
+    const sampleRate = combined[0].buffer.sampleRate;
+    const duration = combined.reduce((duration, audio) => (audio.timeline + audio.offset > duration ? audio.timeline + audio.offset : duration), 0);
     const length = Math.min(duration, this.canvas.duration / 1000) * sampleRate;
 
     const context = createInstance(OfflineAudioContext, 2, length, sampleRate);
-    this.canvas.onStartRecordAudio(context);
+    this.canvas.onStartRecordAudio(combined, context);
 
-    this.controller.signal.addEventListener("abort", this.canvas.onStopRecordAudio.bind(this.canvas));
+    const handler = () => this.canvas.onStopRecordAudio(audios);
+    this.controller.signal.addEventListener("abort", handler);
+
     const buffer: AudioBuffer = yield context.startRendering();
     this.controller.signal.throwIfAborted();
 
-    this.controller.signal.removeEventListener("abort", this.canvas.onStopRecordAudio.bind(this.canvas));
+    this.controller.signal.removeEventListener("abort", handler);
     const blob = convertBufferToWaveBlob(buffer, buffer.length);
     this.progress.audio = 100;
 

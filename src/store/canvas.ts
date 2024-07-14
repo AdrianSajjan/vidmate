@@ -748,8 +748,8 @@ export class Canvas {
     this.recorder.clear();
   }
 
-  onStartRecordAudio(context: OfflineAudioContext) {
-    for (const audio of this.audios) {
+  onStartRecordAudio(audios: EditorAudioElement[], context: OfflineAudioContext) {
+    for (const audio of audios) {
       if (audio.muted) continue;
 
       const gain = context.createGain();
@@ -765,8 +765,8 @@ export class Canvas {
     }
   }
 
-  onStopRecordAudio() {
-    for (const audio of this.audios) {
+  onStopRecordAudio(audios: EditorAudioElement[]) {
+    for (const audio of audios) {
       if (!audio.muted) continue;
       audio.source.stop();
     }
