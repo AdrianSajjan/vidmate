@@ -1,21 +1,13 @@
 import { observer } from "mobx-react";
 
-import { CanvasProvider, useInitializeCanvas } from "@/context/canvas";
 import { EditorElementControls } from "@/layout/controls";
+import { useInitializeCanvas } from "@/hooks/use-canvas";
 
 export interface EditorCanvasProps {
   page: number;
 }
 
-export function EditorCanvas(props: EditorCanvasProps) {
-  return (
-    <CanvasProvider page={props.page}>
-      <Canvas {...props} />
-    </CanvasProvider>
-  );
-}
-
-function _Canvas({ page }: EditorCanvasProps) {
+function _EditorCanvas({ page }: EditorCanvasProps) {
   const [ref] = useInitializeCanvas();
   const name = `canvas-${page}`;
 
@@ -27,4 +19,4 @@ function _Canvas({ page }: EditorCanvasProps) {
   );
 }
 
-const Canvas = observer(_Canvas);
+export const EditorCanvas = observer(_EditorCanvas);

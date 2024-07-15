@@ -21,7 +21,7 @@ export class CanvasTimeline {
     this._timeline = null;
     this._canvas = canvas;
 
-    this._init();
+    this._initEvents();
     makeAutoObservable(this);
   }
 
@@ -29,8 +29,8 @@ export class CanvasTimeline {
     return this._canvas.instance!;
   }
 
-  private _init() {
-    this.canvas.on("object:added", this._objectAddedEvent);
+  private _initEvents() {
+    this.canvas.on("object:added", this._objectAddedEvent.bind(this));
   }
 
   private _objectAddedEvent(event: fabric.IEvent<MouseEvent>) {

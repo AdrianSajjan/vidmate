@@ -27,6 +27,8 @@ function _EditorMenubar() {
     }
   };
 
+  if (!editor.canvas.workspace) return null;
+
   return (
     <header className="flex h-14 items-center px-3 bg-card dark:bg-gray-900/40 border-b shrink-0">
       <section id="left" className="flex gap-3">

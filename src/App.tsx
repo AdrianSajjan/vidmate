@@ -14,7 +14,7 @@ import { EditorPreviewModal } from "@/layout/modals/preview";
 import { EditorProvider, useEditorContext } from "@/context/editor";
 
 import { Toaster } from "@/components/ui/sonner";
-import { EditorCanvas } from "@/components/editor";
+import { EditorCanvas, EditorRecorder } from "@/components/editor";
 import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -57,6 +57,7 @@ function _Editor() {
               <EditorToolbar />
               <div className="flex-1 relative" id="workspace">
                 <EditorCanvas page={0} />
+                <EditorRecorder />
                 <EditorFAB />
                 <EditorPreviewModal />
                 <Toaster richColors position="bottom-right" offset={24} visibleToasts={6} />

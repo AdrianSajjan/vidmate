@@ -2,16 +2,17 @@ import { makeAutoObservable } from "mobx";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
+import { Canvas } from "@/store/canvas";
+import { Recorder } from "@/store/recorder";
+
 import { convertBufferToWaveBlob, dataURLToUInt8Array } from "@/lib/media";
 import { createInstance, createUint8Array } from "@/lib/utils";
-import { Canvas } from "@/store/canvas";
 import { fetchExtensionByCodec } from "@/constants/recorder";
 import { EditorAudioElement } from "@/types/editor";
 import { FabricUtils } from "@/fabric/utils";
 
-export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
-
 export type ExportMode = "video" | "both";
+export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
 
 export interface EditorProgress {
   audio: number;
@@ -49,6 +50,7 @@ export class Editor {
   exports: ExportMode;
 
   preview: boolean;
+  recorder: Recorder;
   progress: EditorProgress;
 
   ffmpeg: FFmpeg;
@@ -60,6 +62,7 @@ export class Editor {
     this.status = "uninitialized";
 
     this.pages = [createInstance(Canvas)];
+    this.recorder = createInstance(Recorder, this);
     this.controller = createInstance(AbortController);
 
     this.preview = false;
@@ -84,7 +87,7 @@ export class Editor {
     return this.pages[this.page];
   }
 
-  private onFFmpegExecProgress({ progress }: { progress: number }) {
+  private _ffmpegProgressEvent({ progress }: { progress: number }) {
     switch (this.exporting) {
       case ExportProgress.CaptureAudio:
         this.progress.audio = progress * 100;
@@ -105,37 +108,32 @@ export class Editor {
         coreURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js", "text/javascript"),
         wasmURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm", "application/wasm"),
       });
-      this.ffmpeg.on("progress", this.onFFmpegExecProgress.bind(this));
+      this.ffmpeg.on("progress", this._ffmpegProgressEvent.bind(this));
       this.status = "complete";
     } catch (error) {
       this.status = "error";
     }
   }
 
-  onCaptureFrame() {
-    return this.canvas.recorder!.toDataURL({ format: "image/png" });
-  }
-
   *onCaptureFrames() {
     const frames: Uint8Array[] = [];
     const interval = 1000 / +this.fps;
-    const count = this.canvas.duration / interval;
 
+    const count = this.canvas.timeline.duration / interval;
     this.onChangeExportStatus(ExportProgress.CaptureVideo);
 
     for (let frame = 0; frame < count; frame++) {
       this.controller.signal.throwIfAborted();
-      const seek = frame === count - 1 ? this.canvas.duration : (frame / count) * this.canvas.duration;
+      const seek = frame === count - 1 ? this.canvas.timeline.duration : (frame / count) * this.canvas.timeline.duration;
 
-      this.canvas.timeline!.seek(seek);
-      yield this.canvas.onToggleRecorderCanvasElements(seek);
+      this.recorder.timeline!.seek(seek);
+      yield this.recorder.onToggleElements(seek);
 
-      const base64 = this.onCaptureFrame();
+      const base64 = this.recorder.onCaptureFrame();
       const buffer = dataURLToUInt8Array(base64);
 
       this.frame = base64;
       this.progress.capture = ((frame + 1) / count) * 100;
-
       frames.push(buffer);
     }
 
@@ -294,10 +292,10 @@ export class Editor {
       this.controller = createInstance(AbortController);
 
       this.onChangeExportStatus(ExportProgress.RenderScene);
-      yield this.canvas.onStartRecordVideo();
+      yield this.recorder.start();
 
       const frames: Uint8Array[] = yield this.onCaptureFrames();
-      this.canvas.onStopRecordVideo();
+      this.recorder.stop();
 
       const blob: Blob = yield this.onCompileFrames(frames, audio);
       this.controller.signal.throwIfAborted();
@@ -305,7 +303,7 @@ export class Editor {
 
       return blob;
     } catch (error) {
-      this.canvas.onStopRecordVideo();
+      this.recorder.stop();
       this.onChangeExportStatus(ExportProgress.Error);
       throw error;
     }

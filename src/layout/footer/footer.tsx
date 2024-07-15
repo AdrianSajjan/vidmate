@@ -18,6 +18,8 @@ import { EditorTimeline } from "./components/timeline";
 function _EditorFooter() {
   const editor = useEditorContext();
 
+  if (!editor.canvas.timeline) return;
+
   return (
     <footer style={{ height: editor.isTimelineOpen ? 288 : 64 }} className="flex flex-col bg-card dark:bg-gray-900/40 border-t shrink-0 overflow-hidden">
       <div className="h-16 px-4 flex items-center gap-12 justify-between border-b shrink-0 overflow-x-scroll">

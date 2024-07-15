@@ -11,6 +11,7 @@ import { CanvasHistory } from "@/plugins/history";
 import { CanvasTimeline } from "@/plugins/timeline";
 import { CanvasWorkspace } from "@/plugins/workspace";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
+import { CanvasGuidelines } from "@/plugins/guidelines";
 
 export const minLayerStack = 3;
 export const canvasYPadding = 100;
@@ -18,7 +19,6 @@ export const canvasYPadding = 100;
 export class Canvas {
   artboard?: fabric.Rect;
   instance?: fabric.Canvas;
-  recorder?: fabric.StaticCanvas;
 
   history!: CanvasHistory;
   timeline!: CanvasTimeline;
@@ -29,11 +29,10 @@ export class Canvas {
 
   elements: fabric.Object[];
   selected?: fabric.Object | null;
+  controls: boolean;
 
   crop?: fabric.Image | null;
   trim?: EditorTrim | null;
-
-  controls: boolean;
 
   constructor() {
     this.elements = [];
@@ -174,7 +173,7 @@ export class Canvas {
     });
   }
 
-  onInitializeMainCanvas(element: HTMLCanvasElement, workspace: HTMLDivElement) {
+  onInitialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
     const props = { width: workspace.offsetWidth, height: workspace.offsetHeight, backgroundColor: "#F0F0F0", selectionColor: "#2e73fc1c", selectionBorderColor: "#629bffcf", selectionLineWidth: 1.5 };
     this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, preserveObjectStacking: true, controlsAboveOverlay: true, ...props });
     this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
@@ -184,6 +183,8 @@ export class Canvas {
     this.workspace = createInstance(CanvasWorkspace, this, workspace);
 
     this.onInitializeEvents();
+    CanvasGuidelines.initializeAligningGuidelines(this.instance);
+    CanvasGuidelines.initializeCenteringGuidelines(this.instance);
 
     this.instance.add(this.artboard);
     this.instance.clipPath = this.artboard;

@@ -1,6 +1,6 @@
 import { createInstance } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { fabric } from "fabric";
 import { throttle } from "lodash";
 
@@ -68,7 +68,7 @@ export class CanvasWorkspace {
   }
 
   private _initEvents() {
-    this.canvas!.on("mouse:wheel", this._mouseWheelEvent);
+    this.canvas!.on("mouse:wheel", this._mouseWheelEvent.bind(this));
   }
 
   private _mouseWheelEvent(event: fabric.IEvent<WheelEvent>) {
@@ -76,7 +76,7 @@ export class CanvasWorkspace {
     event.e.stopPropagation();
 
     if (event.e.ctrlKey) {
-      let zoom = this.canvas!.getZoom();
+      let zoom = this.canvas.getZoom();
       zoom *= 0.999 ** (event.e.deltaY * 5);
 
       if (zoom > 2.5) zoom = 2.5;
@@ -86,8 +86,10 @@ export class CanvasWorkspace {
       this.canvas.zoomToPoint(createInstance(fabric.Point, center.left, center.top), zoom);
       this.canvas.requestRenderAll();
 
-      this.zoom = zoom;
-      this.viewportTransform = [...this.canvas.viewportTransform!];
+      runInAction(() => {
+        this.zoom = zoom;
+        this.viewportTransform = [...this.canvas.viewportTransform!];
+      });
     }
   }
 
