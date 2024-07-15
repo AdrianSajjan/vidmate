@@ -5,12 +5,12 @@ import { ChangeEventHandler, HTMLAttributes } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EditorAnimation, easings, entry, exit } from "@/constants/animations";
 import { rightSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
-import { EditorAnimation, easings, entry, exit } from "@/fabric/animations";
 import { cn } from "@/lib/utils";
 
 function _AnimationSidebar() {

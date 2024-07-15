@@ -7,6 +7,8 @@ import { makeAutoObservable } from "mobx";
 
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
+import { FabricGuidelines } from "@/fabric/guidelines";
+
 import { createInstance, createPromise, isVideoElement } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
 
@@ -110,117 +112,6 @@ export class Canvas {
     this.hasControls = enabled;
   }
 
-  private onInitializeGuidelines() {
-    if (!this.instance || !this.artboard) return;
-
-    const hCenter = this.artboard.left! + this.artboard.width! / 2;
-    const vCenter = this.artboard.top! + this.artboard.height! / 2;
-
-    this.instance.add(
-      createInstance(fabric.Line, [hCenter, 0, hCenter, this.instance.height!], {
-        opacity: 0,
-        selectable: false,
-        evented: false,
-        name: "center_h",
-      }),
-    );
-    this.instance.add(
-      createInstance(fabric.Line, [0, vCenter, this.instance.width!, vCenter], {
-        opacity: 0,
-        selectable: false,
-        evented: false,
-        name: "center_v",
-      }),
-    );
-    this.instance.add(
-      createInstance(fabric.Line, [hCenter, this.artboard.top!, hCenter, this.artboard.height! + this.artboard.top!], {
-        stroke: "red",
-        opacity: 0,
-        selectable: false,
-        evented: false,
-        name: "line_h",
-      }),
-    );
-    this.instance.add(
-      createInstance(fabric.Line, [this.artboard.left!, vCenter, this.artboard.width! + this.artboard.left!, vCenter], {
-        stroke: "red",
-        opacity: 0,
-        selectable: false,
-        evented: false,
-        name: "line_v",
-      }),
-    );
-
-    this.instance.requestRenderAll();
-  }
-
-  private onSnapToGuidelines(event: fabric.IEvent<MouseEvent>) {
-    const lineH = this.instance?.getItemByName("line_h") as fabric.Line | null;
-    const lineV = this.instance?.getItemByName("line_v") as fabric.Line | null;
-
-    if (!this.instance || !this.artboard || !lineH || !lineV) return;
-
-    lineH.opacity = 0;
-    lineV.opacity = 0;
-    this.instance.requestRenderAll();
-
-    const snapZone = 5;
-    const targetLeft = event.target!.left!;
-    const targetTop = event.target!.top!;
-    const targetWidth = event.target!.width! * event.target!.scaleX!;
-    const targetHeight = event.target!.height! * event.target!.scaleY!;
-
-    this.instance.forEachObject((obj) => {
-      if (obj != event.target && obj != lineH && obj != lineV && obj.evented) {
-        if (obj.get("name") == "center_h" || obj.get("name") == "center_v") {
-          const check1 = [[targetLeft, obj.left!, 1]];
-          const check2 = [[targetTop, obj.top!, 1]];
-
-          for (let i = 0; i < check1.length; i++) {
-            FabricUtils.checkHorizontalSnap(this.instance!, this.artboard!, lineH!, check1[i][0], check1[i][1], snapZone, event, check1[i][2]);
-            FabricUtils.checkVerticalSnap(this.instance!, this.artboard!, lineV!, check2[i][0], check2[i][1], snapZone, event, check2[i][2]);
-          }
-        } else {
-          const check1 = [
-            [targetLeft, obj.left!, 1],
-            [targetLeft, obj.left! + (obj.width! * obj.scaleX!) / 2, 1],
-            [targetLeft, obj.left! - (obj.width! * obj.scaleX!) / 2, 1],
-            [targetLeft + targetWidth / 2, obj.left!, 2],
-            [targetLeft + targetWidth / 2, obj.left! + (obj.width! * obj.scaleX!) / 2, 2],
-            [targetLeft + targetWidth / 2, obj.left! - (obj.width! * obj.scaleX!) / 2, 2],
-            [targetLeft - targetWidth / 2, obj.left!, 3],
-            [targetLeft - targetWidth / 2, obj.left! + (obj.width! * obj.scaleX!) / 2, 3],
-            [targetLeft - targetWidth / 2, obj.left! - (obj.width! * obj.scaleX!) / 2, 3],
-          ];
-          const check2 = [
-            [targetTop, obj.top!, 1],
-            [targetTop, obj.top! + (obj.height! * obj.scaleY!) / 2, 1],
-            [targetTop, obj.top! - (obj.height! * obj.scaleY!) / 2, 1],
-            [targetTop + targetHeight / 2, obj.top!, 2],
-            [targetTop + targetHeight / 2, obj.top! + (obj.height! * obj.scaleY!) / 2, 2],
-            [targetTop + targetHeight / 2, obj.top! - (obj.height! * obj.scaleY!) / 2, 2],
-            [targetTop - targetHeight / 2, obj.top!, 3],
-            [targetTop - targetHeight / 2, obj.top! + (obj.height! * obj.scaleY!) / 2, 3],
-            [targetTop - targetHeight / 2, obj.top! - (obj.height! * obj.scaleY!) / 2, 3],
-          ];
-
-          for (let i = 0; i < check1.length; i++) {
-            FabricUtils.checkHorizontalSnap(this.instance!, this.artboard!, lineH!, check1[i][0], check1[i][1], snapZone, event, check1[i][2]);
-            FabricUtils.checkVerticalSnap(this.instance!, this.artboard!, lineV!, check2[i][0], check2[i][1], snapZone, event, check2[i][2]);
-          }
-        }
-      }
-    });
-  }
-
-  private onResetGuidelines() {
-    const lineV = this.instance?.getItemByName("line_v");
-    const lineH = this.instance?.getItemByName("line_h");
-    if (!lineH || !lineV) return;
-    lineH.opacity = 0;
-    lineV.opacity = 0;
-  }
-
   private onUpdateSelection() {
     const selection = this.instance?.getActiveObject();
     if (FabricUtils.isActiveSelection(this.selected)) {
@@ -305,7 +196,6 @@ export class Canvas {
     });
 
     this.instance.on("object:moving", (event) => {
-      this.onSnapToGuidelines(event);
       this.onToggleControls(event.target!, false);
     });
 
@@ -328,7 +218,6 @@ export class Canvas {
     });
 
     this.instance.on("object:modified", (event) => {
-      this.onResetGuidelines();
       this.onUpdateElement(event.target);
       this.onToggleControls(event.target!, true);
     });
@@ -398,9 +287,12 @@ export class Canvas {
     this.zoom = 0.5;
 
     this.onCenterArtboard();
-    this.onInitializeGuidelines();
     this.onInitializeEvents();
     this.onInitializeWorkspaceObserver(workspace);
+
+    FabricGuidelines.initializeCenteringGuidelines(this.instance);
+    FabricGuidelines.initializeAligningGuidelines(this.instance);
+
     this.instance.requestRenderAll();
   }
 
@@ -862,7 +754,9 @@ export class Canvas {
       fabric.Image.fromURL(
         source,
         (image) => {
-          if (!image._originalElement) return reject();
+          if (!image._originalElement) {
+            return reject();
+          }
 
           if (!skip) {
             image.scaleToHeight(500);
@@ -873,9 +767,7 @@ export class Canvas {
           this.onInitializeElementAnimation(image);
 
           this.instance!.add(image);
-          this.instance!.setActiveObject(image);
-
-          this.instance!.requestRenderAll();
+          this.instance!.setActiveObject(image).requestRenderAll();
           this.onToggleMainCanvasElements(this.seek);
 
           resolve(image);
@@ -885,58 +777,51 @@ export class Canvas {
     });
   }
 
-  *onAddImageWithThumbail(source: string, _thumbnail: HTMLImageElement) {
+  *onAddImageFromThumbail(source: string, thumbnail: HTMLImageElement) {
     if (!this.instance || !this.artboard) return;
 
     const id = FabricUtils.elementID("image");
-
-    const thumbnail = createInstance(fabric.Image, _thumbnail, { name: id, crossOrigin: "anonymous", lockRotation: true });
-    thumbnail.scaleToWidth(500).setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
-
-    this.onInitializeElementMeta(thumbnail, { placeholder: true });
-    this.onInitializeElementAnimation(thumbnail);
-
     const props = { evented: false, selectable: false, originX: "center", originY: "center" };
-    const overlay = createInstance(fabric.Rect, { name: "overlay_" + id, height: thumbnail.height, width: thumbnail.width, scaleX: thumbnail.scaleX, scaleY: thumbnail.scaleY, fill: "#000000", opacity: 0.25, ...props });
-    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + id, fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
 
-    overlay.setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
-    spinner.scaleToWidth(48).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+    const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
+    const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
+    const spinner = createInstance(fabric.Path, activityIndicator, { fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
 
-    this.instance.add(thumbnail).add(overlay).add(spinner);
-    this.instance.setActiveObject(thumbnail);
+    image.scaleToWidth(500);
+    overlay.set({ height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY });
 
-    this.instance.requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
-
+    spinner.scaleToWidth(48);
     FabricUtils.objectSpinningAnimation(spinner);
-    FabricUtils.bindObjectTransformToParent(thumbnail, [overlay, spinner]);
 
-    const children = [{ object: overlay }, { object: spinner, skip: ["angle", "scaleX", "scaleY"] }];
-    FabricUtils.updateObjectTransformToParent(thumbnail, children);
+    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id });
+    placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
-    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
-    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
-    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
+    this.onInitializeElementMeta(placeholder, { placeholder: true });
+    this.instance.add(placeholder);
+
+    this.instance.setActiveObject(placeholder).requestRenderAll();
+    this.onToggleMainCanvasElements(this.seek);
 
     return createPromise<fabric.Image>((resolve, reject) => {
       fabric.Image.fromURL(
         source,
         (image) => {
+          if (!this.instance!.contains(placeholder)) {
+            return;
+          }
+
           if (!image._originalElement) {
-            this.instance!.remove(thumbnail, overlay, spinner).requestRenderAll();
+            this.instance!.remove(placeholder).requestRenderAll();
             return reject();
           }
 
-          const scaleX = thumbnail.getScaledWidth() / image.getScaledWidth();
-          const scaleY = thumbnail.getScaledHeight() / image.getScaledHeight();
-
-          image.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+          image.set({ scaleX: placeholder.getScaledWidth() / image.getScaledWidth(), scaleY: placeholder.getScaledHeight() / image.getScaledHeight() });
+          image.setPositionByOrigin(placeholder.getCenterPoint(), "center", "center");
 
           this.onInitializeElementMeta(image);
           this.onInitializeElementAnimation(image);
 
-          this.instance!.add(image).remove(thumbnail, overlay, spinner);
+          this.instance!.remove(placeholder).add(image);
           this.instance!.setActiveObject(image).requestRenderAll();
 
           this.onToggleMainCanvasElements(this.seek);
@@ -953,21 +838,21 @@ export class Canvas {
       fabric.Video.fromURL(
         source,
         (video) => {
-          if (!video || !video._originalElement) return reject();
-          const element = video._originalElement as HTMLVideoElement;
+          if (!video || !video._originalElement) {
+            return reject();
+          }
 
           if (!skip) {
             video.scaleToHeight(500);
             video.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
           }
 
+          const element = video._originalElement as HTMLVideoElement;
           this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.duration) });
           this.onInitializeElementAnimation(video);
 
           this.instance!.add(video);
-          this.instance!.setActiveObject(video);
-
-          this.instance!.requestRenderAll();
+          this.instance!.setActiveObject(video).requestRenderAll();
           this.onToggleMainCanvasElements(this.seek);
 
           resolve(video);
@@ -977,59 +862,52 @@ export class Canvas {
     });
   }
 
-  *onAddVideoWithThumbail(source: string, _thumbnail: HTMLImageElement) {
+  *onAddVideoFromThumbail(source: string, thumbnail: HTMLImageElement) {
     if (!this.instance || !this.artboard) return;
 
     const id = FabricUtils.elementID("video");
-
-    const thumbnail = createInstance(fabric.Image, _thumbnail, { name: id, type: "video", crossOrigin: "anonymous", lockRotation: true });
-    thumbnail.scaleToWidth(500).setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
-
-    this.onInitializeElementMeta(thumbnail, { placeholder: true });
-    this.onInitializeElementAnimation(thumbnail);
-
     const props = { evented: false, selectable: false, originX: "center", originY: "center" };
-    const overlay = createInstance(fabric.Rect, { name: "overlay_" + id, height: thumbnail.height, width: thumbnail.width, scaleX: thumbnail.scaleX, scaleY: thumbnail.scaleY, fill: "#000000", opacity: 0.25, ...props });
-    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + id, fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
 
-    overlay.setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
-    spinner.scaleToWidth(48).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+    const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
+    const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
+    const spinner = createInstance(fabric.Path, activityIndicator, { fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
 
-    this.instance.add(thumbnail).add(overlay).add(spinner);
-    this.instance.setActiveObject(thumbnail);
+    image.scaleToWidth(500);
+    overlay.set({ height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY });
 
-    this.instance.requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
-
+    spinner.scaleToWidth(48);
     FabricUtils.objectSpinningAnimation(spinner);
-    FabricUtils.bindObjectTransformToParent(thumbnail, [overlay, spinner]);
 
-    const children = [{ object: overlay }, { object: spinner, skip: ["angle", "scaleX", "scaleY"] }];
-    FabricUtils.updateObjectTransformToParent(thumbnail, children);
+    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id });
+    placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
-    thumbnail.on("moving", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
-    thumbnail.on("scaling", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
-    thumbnail.on("rotating", () => FabricUtils.updateObjectTransformToParent(thumbnail, children));
+    this.onInitializeElementMeta(placeholder, { placeholder: true });
+    this.instance.add(placeholder);
+
+    this.instance.setActiveObject(placeholder).requestRenderAll();
+    this.onToggleMainCanvasElements(this.seek);
 
     return createPromise<fabric.Video>((resolve, reject) => {
       fabric.Video.fromURL(
         source,
         (video) => {
+          if (!this.instance!.contains(placeholder)) {
+            return;
+          }
+
           if (!video || !video._originalElement) {
-            this.instance!.remove(thumbnail, overlay, spinner).requestRenderAll();
+            this.instance!.remove(placeholder).requestRenderAll();
             return reject();
           }
 
           const element = video._originalElement as HTMLVideoElement;
-          const scaleX = thumbnail.getScaledWidth() / video.getScaledWidth();
-          const scaleY = thumbnail.getScaledHeight() / video.getScaledHeight();
-
-          video.set({ scaleX, scaleY }).setPositionByOrigin(thumbnail.getCenterPoint(), "center", "center");
+          video.set({ scaleX: placeholder.getScaledWidth() / video.getScaledWidth(), scaleY: placeholder.getScaledHeight() / video.getScaledHeight() });
+          video.setPositionByOrigin(placeholder.getCenterPoint(), "center", "center");
 
           this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.duration) });
           this.onInitializeElementAnimation(video);
 
-          this.instance!.add(video).remove(thumbnail, overlay, spinner);
+          this.instance!.remove(placeholder).add(video);
           this.instance!.setActiveObject(video).requestRenderAll();
           this.onToggleMainCanvasElements(this.seek);
 

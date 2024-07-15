@@ -5,14 +5,14 @@ import { HTMLAttributes } from "react";
 import { Button } from "@/components/ui/button";
 import { rightSidebarWidth } from "@/constants/layout";
 import { Label } from "@/components/ui/label";
+import { Toggle } from "@/components/ui/toggle";
 import { FilterSlider } from "@/components/slider/filter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useEditorContext } from "@/context/editor";
-import { filters, Filter, adjustments, Adjustment } from "@/fabric/filters";
+import { filters, Filter, adjustments, Adjustment } from "@/constants/filters";
 import { filterPlaceholder } from "@/constants/editor";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Toggle } from "@/components/ui/toggle";
 
 function _FilterSidebar() {
   const editor = useEditorContext();

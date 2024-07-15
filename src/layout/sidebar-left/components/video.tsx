@@ -49,7 +49,7 @@ function _VideoSidebar() {
           error: () => "Ran into an error adding the video asset",
         });
       } else {
-        toast.promise(flowResult(editor.canvas.onAddVideoWithThumbail(source, thumbnail)), {
+        toast.promise(flowResult(editor.canvas.onAddVideoFromThumbail(source, thumbnail)), {
           error: () => "Ran into an error adding the video asset",
         });
       }

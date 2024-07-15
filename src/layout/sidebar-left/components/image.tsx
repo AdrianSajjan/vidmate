@@ -47,7 +47,7 @@ function _ImageSidebar() {
           error: () => "Ran into an error adding the image asset",
         });
       } else {
-        toast.promise(flowResult(editor.canvas.onAddImageWithThumbail(source, thumbnail)), {
+        toast.promise(flowResult(editor.canvas.onAddImageFromThumbail(source, thumbnail)), {
           error: () => "Ran into an error adding the image asset",
         });
       }

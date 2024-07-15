@@ -1,11 +1,10 @@
-import useMeasure from "react-use-measure";
-
 import { clamp } from "lodash";
-import { CopyPlusIcon, GroupIcon, PencilIcon, RepeatIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 import { observer } from "mobx-react";
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { CopyPlusIcon, GroupIcon, PencilIcon, RepeatIcon, SparklesIcon, Trash2Icon } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { useEditorContext } from "@/context/editor";
 
@@ -13,7 +12,15 @@ const MENU_OFFSET_Y = 50;
 
 function _EditorElementControls() {
   const editor = useEditorContext();
-  const [ref, dimensions] = useMeasure();
+
+  const [cache, setCache] = useState<DOMRect>();
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    setCache(rect);
+  }, [ref.current]);
 
   const style = useMemo(() => {
     if (!editor.canvas.instance) return undefined;
@@ -22,25 +29,32 @@ function _EditorElementControls() {
     const offsetX = viewport[4];
     const offsetY = viewport[5];
 
-    const selected = editor.canvas.instance.getActiveObject();
+    const rect = ref.current ? ref.current.getBoundingClientRect() : cache;
+    const width = rect?.width || 0;
+    const height = rect?.height || 0;
 
+    const selected = editor.canvas.instance.getActiveObject();
     if (!selected) return undefined;
 
-    const top = offsetY + selected.getBoundingRect(true).top! * editor.canvas.zoom - (dimensions.height / 2) * editor.canvas.zoom - MENU_OFFSET_Y;
-    const left = offsetX + selected.getBoundingRect(true).left! * editor.canvas.zoom - dimensions.width / 2 + ((selected.width! * selected.scaleX!) / 2) * editor.canvas.zoom;
+    const top = offsetY + selected.getBoundingRect(true).top! * editor.canvas.zoom - (height / 2) * editor.canvas.zoom - MENU_OFFSET_Y;
+    const left = offsetX + selected.getBoundingRect(true).left! * editor.canvas.zoom - width / 2 + ((selected.width! * selected.scaleX!) / 2) * editor.canvas.zoom;
 
     return {
       top: clamp(top, MENU_OFFSET_Y / 4, editor.canvas.instance.height! - MENU_OFFSET_Y / 4),
       left: left,
     };
-  }, [editor.canvas.selected, editor.canvas.viewportTransform, editor.canvas.height, editor.canvas.width, editor.canvas.zoom, dimensions]);
+  }, [editor.canvas.selected, editor.canvas.viewportTransform, editor.canvas.height, editor.canvas.width, editor.canvas.zoom, ref.current]);
 
   if (!editor.canvas.selected || editor.canvas.selected.type === "audio" || !editor.canvas.hasControls) {
     return null;
   }
 
   return (
-    <div ref={ref} style={style} className={cn("absolute border bg-popover text-popover-foreground shadow rounded-md outline-none flex items-center divide-x", "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2")}>
+    <div
+      ref={ref}
+      style={style}
+      className={cn("absolute border bg-popover text-popover-foreground shadow rounded-md outline-none items-center divide-x flex", "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 transition-opacity")}
+    >
       {editor.canvas.selected.meta?.group ? (
         <div className="flex items-center p-1">
           <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.canvas.onSelectGroup(editor.canvas.selected!.meta?.group)}>
