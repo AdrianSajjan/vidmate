@@ -79,12 +79,12 @@ function _AudioToolbar() {
             </div>
             <Label className="text-xs font-medium">Offset (s)</Label>
             <div className="flex items-center justify-between gap-4">
-              <Slider min={0} max={editor.canvas.duration / 1000 - selected.timeline} value={[selected.offset]} onValueChange={([offset]) => editor.canvas.onChangeAudioProperties(selected.id, { offset })} />
+              <Slider min={0} max={editor.canvas.timeline.duration / 1000 - selected.timeline} value={[selected.offset]} onValueChange={([offset]) => editor.canvas.onChangeAudioProperties(selected.id, { offset })} />
               <Input
                 min={0}
                 step={0.5}
                 autoFocus
-                max={editor.canvas.duration / 1000 - selected.timeline}
+                max={editor.canvas.timeline.duration / 1000 - selected.timeline}
                 type="number"
                 className="h-8 w-20 text-xs"
                 value={floor(selected.offset, 2)}

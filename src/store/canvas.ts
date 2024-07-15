@@ -1,28 +1,28 @@
-import anime from "animejs";
-
-import { fabric } from "fabric";
-import { floor, throttle } from "lodash";
 import { EntryAnimation, ExitAnimation } from "canvas";
+import { fabric } from "fabric";
+import { floor } from "lodash";
 import { makeAutoObservable } from "mobx";
 
 import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
-import { FabricGuidelines } from "@/fabric/guidelines";
 
 import { createInstance, createPromise, isVideoElement } from "@/lib/utils";
+import { CanvasHistory } from "@/plugins/history";
+import { CanvasTimeline } from "@/plugins/timeline";
+import { CanvasWorkspace } from "@/plugins/workspace";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
 
 export const minLayerStack = 3;
-export const timelineDuration = 5000;
-export const artboardHeight = 1080;
-export const artboardWidth = 1080;
 export const canvasYPadding = 100;
-export const artboardFill = "#FFFFFF";
 
 export class Canvas {
   artboard?: fabric.Rect;
   instance?: fabric.Canvas;
   recorder?: fabric.StaticCanvas;
+
+  history!: CanvasHistory;
+  timeline!: CanvasTimeline;
+  workspace!: CanvasWorkspace;
 
   audioContext: AudioContext;
   audios: EditorAudioElement[];
@@ -33,55 +33,25 @@ export class Canvas {
   crop?: fabric.Image | null;
   trim?: EditorTrim | null;
 
-  seek: number;
-  duration: number;
-  loop: boolean;
-  playing: boolean;
-  timeline?: anime.AnimeTimelineInstance | null;
-
-  zoom: number;
-  fill: string;
-  width: number;
-  height: number;
-
-  hasControls: boolean;
-  viewportTransform: number[];
+  controls: boolean;
 
   constructor() {
-    this.zoom = 0.5;
     this.elements = [];
+    this.controls = true;
 
     this.audios = [];
     this.audioContext = createInstance(AudioContext);
 
-    this.seek = 0;
-    this.loop = false;
-    this.playing = false;
-    this.duration = timelineDuration;
-
-    this.hasControls = true;
-    this.viewportTransform = [];
-
-    this.fill = artboardFill;
-    this.width = artboardWidth;
-    this.height = artboardHeight;
-
     makeAutoObservable(this);
-  }
-
-  private isElementExcluded(object: fabric.Object) {
-    return (
-      elementsToExclude.includes(object.name!) || object.name!.startsWith("crop") || object.name!.startsWith("clone") || object.name!.startsWith("clip") || object.name!.startsWith("overlay") || object.meta?.placeholder
-    );
   }
 
   private onRefreshElements() {
     if (!this.instance) return;
-    this.elements = this.instance._objects.filter((object) => !this.isElementExcluded(object)).map((object) => object.toObject(propertiesToInclude));
+    this.elements = this.instance._objects.filter((object) => !FabricUtils.isElementExcluded(object)).map((object) => object.toObject(propertiesToInclude));
   }
 
   private onAddElement(object?: fabric.Object) {
-    if (!object || this.isElementExcluded(object)) return;
+    if (!object || FabricUtils.isElementExcluded(object)) return;
     this.elements.push(object.toObject(propertiesToInclude));
   }
 
@@ -99,17 +69,9 @@ export class Canvas {
     this.crop = image ? image.toObject(propertiesToInclude) : null;
   }
 
-  private onUpdateZoom(zoom: number) {
-    this.zoom = zoom;
-  }
-
-  private onUpdateTimelineStatus(playing: boolean) {
-    this.playing = playing;
-  }
-
   private onToggleControls(object: fabric.Object, enabled: boolean) {
     object.hasControls = enabled;
-    this.hasControls = enabled;
+    this.controls = enabled;
   }
 
   private onUpdateSelection() {
@@ -124,43 +86,6 @@ export class Canvas {
     }
     this.selected = selection?.toObject(propertiesToInclude);
     this.instance?.requestRenderAll();
-  }
-
-  private onUpdateViewportTransform() {
-    if (!this.instance) return;
-    this.viewportTransform = [...this.instance.viewportTransform!];
-  }
-
-  private onCenterArtboard() {
-    if (!this.instance || !this.artboard) return;
-
-    const center = this.instance.getCenter();
-
-    this.instance.setViewportTransform(fabric.iMatrix.concat());
-    this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
-
-    const artboardCenter = this.artboard.getCenterPoint();
-    const viewportTransform = this.instance.viewportTransform!;
-
-    viewportTransform[4] = this.instance.width! / 2 - artboardCenter.x * viewportTransform[0];
-    viewportTransform[5] = this.instance.height! / 2 - artboardCenter.y * viewportTransform[3];
-
-    this.viewportTransform = [...viewportTransform];
-    this.instance.setViewportTransform(viewportTransform);
-    this.instance.requestRenderAll();
-  }
-
-  private onInitializeWorkspaceObserver(workspace: HTMLDivElement) {
-    const resizeObserver = createInstance(
-      ResizeObserver,
-      throttle(() => {
-        this.instance!.setHeight(workspace.offsetHeight);
-        this.instance!.setWidth(workspace.offsetWidth);
-        this.onCenterArtboard();
-        this.instance!.requestRenderAll();
-      }, 50),
-    );
-    resizeObserver.observe(workspace);
   }
 
   private onInitializeElementMeta(object: fabric.Object, props?: Record<string, any>) {
@@ -238,28 +163,6 @@ export class Canvas {
       this.onUpdateSelection();
     });
 
-    this.instance.on("mouse:wheel", (event) => {
-      event.e.preventDefault();
-      event.e.stopPropagation();
-
-      if (event.e.ctrlKey) {
-        if (!this.instance || !this.artboard) return;
-
-        let zoom = this.instance.getZoom();
-        zoom *= 0.999 ** (event.e.deltaY * 5);
-
-        if (zoom > 2.5) zoom = 2.5;
-        if (zoom < 0.01) zoom = 0.01;
-
-        const center = this.instance.getCenter();
-        this.onUpdateZoom(zoom);
-
-        this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
-        this.instance.requestRenderAll();
-        this.onUpdateViewportTransform();
-      }
-    });
-
     this.instance.on("mouse:dblclick", (event) => {
       switch (event.target?.type) {
         case "video":
@@ -272,311 +175,19 @@ export class Canvas {
   }
 
   onInitializeMainCanvas(element: HTMLCanvasElement, workspace: HTMLDivElement) {
-    const width = workspace.offsetWidth;
-    const height = workspace.offsetHeight;
+    const props = { width: workspace.offsetWidth, height: workspace.offsetHeight, backgroundColor: "#F0F0F0", selectionColor: "#2e73fc1c", selectionBorderColor: "#629bffcf", selectionLineWidth: 1.5 };
+    this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, preserveObjectStacking: true, controlsAboveOverlay: true, ...props });
+    this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
 
-    this.instance = createInstance(fabric.Canvas, element, { height, width, stateful: true, centeredRotation: true, backgroundColor: "#F0F0F0", preserveObjectStacking: true, controlsAboveOverlay: true });
-    this.artboard = createInstance(fabric.Rect, { name: "artboard", height: this.height, width: this.width, fill: this.fill, rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
+    this.history = createInstance(CanvasHistory, this);
+    this.timeline = createInstance(CanvasTimeline, this);
+    this.workspace = createInstance(CanvasWorkspace, this, workspace);
 
-    this.instance.selectionColor = "rgba(46, 115, 252, 0.11)";
-    this.instance.selectionBorderColor = "rgba(98, 155, 255, 0.81)";
-    this.instance.selectionLineWidth = 1.5;
+    this.onInitializeEvents();
 
     this.instance.add(this.artboard);
     this.instance.clipPath = this.artboard;
-    this.zoom = 0.5;
-
-    this.onCenterArtboard();
-    this.onInitializeEvents();
-    this.onInitializeWorkspaceObserver(workspace);
-
-    FabricGuidelines.initializeCenteringGuidelines(this.instance);
-    FabricGuidelines.initializeAligningGuidelines(this.instance);
-
-    this.instance.requestRenderAll();
-  }
-
-  onInitializeRecorderCanvas(element: HTMLCanvasElement) {
-    this.recorder = createInstance(fabric.StaticCanvas, element, { height: this.height, width: this.width, backgroundColor: this.fill });
-  }
-
-  onToggleMainCanvasElements(ms: number) {
-    if (!this.instance) return;
-    for (const object of this.instance._objects) {
-      if (this.isElementExcluded(object)) continue;
-      const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
-      object.visible = !hidden;
-      if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder) {
-        if (this.playing) {
-          if (hidden && object.playing) object.pause();
-          if (!hidden && !object.playing) object.play();
-        } else {
-          if (object.playing) object.pause();
-          object.seek((ms - object.meta!.offset) / 1000);
-        }
-      }
-    }
-    this.instance.requestRenderAll();
-  }
-
-  *onToggleRecorderCanvasElements(ms: number) {
-    if (!this.recorder) return;
-    for (const object of this.recorder._objects) {
-      if (this.isElementExcluded(object)) continue;
-      const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
-      object.visible = !hidden;
-      if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder && !hidden) {
-        yield object.seek((ms - object.meta!.offset) / 1000);
-      }
-    }
-    this.recorder.requestRenderAll();
-  }
-
-  *onInitializeRecordTimeline() {
-    if (!this.instance || !this.recorder || !this.artboard) return;
-
-    this.instance.discardActiveObject();
-    this.recorder.setDimensions({ height: this.height, width: this.width });
-    this.recorder.clear();
-
-    const artboard: fabric.Object = yield createPromise<fabric.Object>((resolve) => this.artboard!.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
-    this.recorder.add(artboard);
-
-    for (const object of this.instance._objects) {
-      if (this.isElementExcluded(object)) continue;
-      const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
-      this.recorder.add(clone);
-    }
-
-    this.recorder.renderAll();
-    this.timeline = anime.timeline({ duration: this.duration, loop: false, autoplay: false, update: this.recorder!.requestRenderAll.bind(this.recorder) });
-  }
-
-  onInitializeAnimationTimeline() {
-    this.timeline = anime.timeline({
-      duration: this.duration,
-      autoplay: false,
-      loop: this.loop,
-      begin: (anim) => {
-        this.onChangeSeekTime(anim.currentTime / 1000);
-      },
-      update: (anim) => {
-        if (anim.currentTime >= this.duration) {
-          this.onResetAudioTimeline();
-          if (anim.loop) {
-            anim.pause();
-            anim.seek(0);
-            anim.play();
-            this.onChangeSeekTime(0);
-            this.onInitializeAudioTimeline();
-          } else {
-            this.onPauseTimeline(true);
-          }
-        } else {
-          this.onChangeSeekTime(anim.currentTime / 1000);
-        }
-      },
-      complete: () => {
-        this.onUpdateTimelineStatus(false);
-        this.onResetAnimationTimeline();
-        this.onResetAudioTimeline();
-        this.onChangeSeekTime(0);
-      },
-    });
-  }
-
-  onInitializeTimelineAnimations(canvas = this.instance as fabric.Canvas | fabric.StaticCanvas) {
-    if (!canvas || !this.timeline) return;
-
-    this.timeline.add({
-      targets: canvas,
-      duration: this.duration,
-    });
-
-    for (const object of canvas._objects) {
-      if (this.isElementExcluded(object)) continue;
-
-      object.anim!.state = { opacity: object.opacity, left: object.left, top: object.top, scaleX: object.scaleX, scaleY: object.scaleY, fill: object.fill, selectable: object.selectable };
-      object.set({ selectable: false });
-
-      const entry = object.anim!.in;
-      const exit = object.anim!.out;
-
-      switch (entry.name) {
-        case "fade-in": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: [0, 1],
-              duration: entry.duration,
-              easing: entry.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset,
-          );
-          break;
-        }
-        case "slide-in-left": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: [0, 1],
-              left: [object.left! - Math.min(object.getScaledWidth() / 2, 100), object.left!],
-              duration: entry.duration,
-              easing: entry.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset,
-          );
-          break;
-        }
-        case "slide-in-right": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: [0, 1],
-              left: [object.left! + Math.min(object.getScaledWidth() / 2, 100), object.left!],
-              duration: entry.duration,
-              easing: entry.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset,
-          );
-          break;
-        }
-        case "rise-in-up": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: [0, 1],
-              top: [object.top! + Math.min(object.getScaledHeight() / 2, 50), object.top!],
-              duration: entry.duration,
-              easing: entry.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset,
-          );
-          break;
-        }
-        case "rise-in-down": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: [0, 1],
-              top: [object.top! - Math.min(object.getScaledHeight() / 2, 50), object.top!],
-              duration: entry.duration,
-              easing: entry.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset,
-          );
-          break;
-        }
-        case "pop-in": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: [0, 1],
-              top: [object.top! + object.getScaledHeight() / 4, object.top!],
-              left: [object.left! + object.getScaledWidth() / 4, object.left!],
-              scaleX: [object.scaleX! - 0.5, object.scaleX!],
-              scaleY: [object.scaleY! - 0.5, object.scaleY],
-              duration: entry.duration,
-              easing: entry.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset,
-          );
-          break;
-        }
-      }
-
-      switch (exit.name) {
-        case "fade-out": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: 0,
-              duration: exit.duration,
-              easing: exit.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset + object.meta!.duration - exit.duration,
-          );
-          break;
-        }
-        case "slide-out-left": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: 0,
-              left: [object.left!, object.left! - Math.min(object.getScaledWidth() / 2, 100)],
-              duration: exit.duration,
-              easing: exit.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset + object.meta!.duration - exit.duration,
-          );
-          break;
-        }
-        case "slide-out-right": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: 0,
-              left: [object.left!, object.left! + Math.min(object.getScaledWidth() / 2, 100)],
-              duration: exit.duration,
-              easing: exit.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset + object.meta!.duration - exit.duration,
-          );
-          break;
-        }
-        case "rise-out-up": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: 0,
-              top: [object.top!, object.top! - Math.min(object.getScaledHeight() / 2, 50)],
-              duration: exit.duration,
-              easing: exit.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset + object.meta!.duration - exit.duration,
-          );
-          break;
-        }
-        case "sink-out-down": {
-          this.timeline.add(
-            {
-              targets: object,
-              opacity: 0,
-              top: [object.top!, object.top! + Math.min(object.getScaledHeight() / 2, 50)],
-              duration: exit.duration,
-              easing: exit.easing || "linear",
-              round: false,
-            },
-            object.meta!.offset + object.meta!.duration - exit.duration,
-          );
-          break;
-        }
-      }
-    }
-  }
-
-  onResetAnimationTimeline() {
-    if (!this.instance) return;
-
-    if (this.timeline) {
-      anime.remove(this.timeline);
-      this.timeline = null;
-    }
-
-    for (const object of this.instance._objects) {
-      if (this.isElementExcluded(object)) continue;
-      object.set({ ...(object.anim?.state || {}) });
-    }
+    this.instance.renderAll();
   }
 
   onInitializeAudioTimeline() {
@@ -608,21 +219,6 @@ export class Canvas {
     }
   }
 
-  *onStartRecordVideo() {
-    this.trim = null;
-    this.selected = null;
-    this.playing = false;
-
-    yield this.onInitializeRecordTimeline();
-    this.onInitializeTimelineAnimations(this.recorder);
-  }
-
-  onStopRecordVideo() {
-    if (this.timeline) anime.remove(this.timeline);
-    if (this.recorder) this.recorder.clear();
-    this.timeline = null;
-  }
-
   onStartRecordAudio(audios: EditorAudioElement[], context: OfflineAudioContext) {
     for (const audio of audios) {
       if (audio.muted) continue;
@@ -647,34 +243,6 @@ export class Canvas {
     }
   }
 
-  onStartTimeline(last?: boolean) {
-    if (!this.instance || this.playing) return;
-
-    this.instance.discardActiveObject();
-    this.onInitializeAnimationTimeline();
-    this.onInitializeTimelineAnimations();
-    this.onInitializeAudioTimeline();
-
-    this.trim = null;
-    this.selected = null;
-    this.playing = true;
-
-    if (last) this.timeline!.seek(this.seek);
-    this.timeline!.play();
-  }
-
-  onPauseTimeline(initial?: boolean) {
-    if (!this.instance || !this.playing) return;
-
-    this.playing = false;
-    if (initial) this.seek = 0;
-    this.timeline!.pause();
-
-    this.onResetAudioTimeline();
-    this.onResetAnimationTimeline();
-    this.onToggleMainCanvasElements(this.seek);
-  }
-
   onDeleteObject(object?: fabric.Object) {
     if (!this.instance || !object) return;
     this.instance.remove(object).fire("").requestRenderAll();
@@ -692,39 +260,18 @@ export class Canvas {
     this.instance.discardActiveObject().requestRenderAll();
   }
 
-  onUpdateDimensions({ height, width }: { height?: number; width?: number }) {
-    if (!this.artboard || !this.instance) return;
-
-    if (height) {
-      this.height = height;
-      this.artboard.set("height", height);
-    }
-
-    if (width) {
-      this.width = width;
-      this.artboard.set("width", width);
-    }
-
-    this.onCenterArtboard();
-    this.instance.requestRenderAll();
-  }
-
   onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
     if (!this.artboard || !this.instance) return;
 
     const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: 500, objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
+    textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
 
     this.onInitializeElementMeta(textbox);
     this.onInitializeElementAnimation(textbox);
 
-    textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
-
     this.instance.add(textbox);
-    this.instance.setActiveObject(textbox);
-
-    this.instance.requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
+    this.instance.setActiveObject(textbox).requestRenderAll();
 
     return textbox;
   }
@@ -736,7 +283,7 @@ export class Canvas {
 
     const id = FabricUtils.elementID("audio");
     const duration = buffer.duration;
-    const timeline = Math.min(duration, this.duration / 1000);
+    const timeline = Math.min(duration, this.timeline.duration / 1000);
 
     const source = this.audioContext.createBufferSource();
     source.buffer = buffer;
@@ -768,7 +315,6 @@ export class Canvas {
 
           this.instance!.add(image);
           this.instance!.setActiveObject(image).requestRenderAll();
-          this.onToggleMainCanvasElements(this.seek);
 
           resolve(image);
         },
@@ -800,7 +346,6 @@ export class Canvas {
     this.instance.add(placeholder);
 
     this.instance.setActiveObject(placeholder).requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
 
     return createPromise<fabric.Image>((resolve, reject) => {
       fabric.Image.fromURL(
@@ -824,7 +369,6 @@ export class Canvas {
           this.instance!.remove(placeholder).add(image);
           this.instance!.setActiveObject(image).requestRenderAll();
 
-          this.onToggleMainCanvasElements(this.seek);
           resolve(image);
         },
         { name: id, crossOrigin: "anonymous", objectCaching: true, effects: {}, adjustments: {} },
@@ -848,12 +392,11 @@ export class Canvas {
           }
 
           const element = video._originalElement as HTMLVideoElement;
-          this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.duration) });
+          this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration) });
           this.onInitializeElementAnimation(video);
 
           this.instance!.add(video);
           this.instance!.setActiveObject(video).requestRenderAll();
-          this.onToggleMainCanvasElements(this.seek);
 
           resolve(video);
         },
@@ -885,7 +428,6 @@ export class Canvas {
     this.instance.add(placeholder);
 
     this.instance.setActiveObject(placeholder).requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
 
     return createPromise<fabric.Video>((resolve, reject) => {
       fabric.Video.fromURL(
@@ -904,12 +446,11 @@ export class Canvas {
           video.set({ scaleX: placeholder.getScaledWidth() / video.getScaledWidth(), scaleY: placeholder.getScaledHeight() / video.getScaledHeight() });
           video.setPositionByOrigin(placeholder.getCenterPoint(), "center", "center");
 
-          this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.duration) });
+          this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration) });
           this.onInitializeElementAnimation(video);
 
           this.instance!.remove(placeholder).add(video);
           this.instance!.setActiveObject(video).requestRenderAll();
-          this.onToggleMainCanvasElements(this.seek);
 
           resolve(video);
         },
@@ -930,7 +471,6 @@ export class Canvas {
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
     this.instance.requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
 
     return shape;
   }
@@ -950,7 +490,6 @@ export class Canvas {
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
     this.instance.requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
 
     return shape;
   }
@@ -969,7 +508,6 @@ export class Canvas {
 
     this.instance.add(line);
     this.instance.setActiveObject(line).requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
 
     return line;
   }
@@ -1175,7 +713,7 @@ export class Canvas {
     const object = this.instance?.getItemByName(this.trim?.selected.name);
     this.trim = null;
     if (!this.instance || !FabricUtils.isVideoElement(object)) return;
-    object.seek(this.seek);
+    object.seek(this.timeline.seek);
     this.instance.requestRenderAll();
   }
 
@@ -1361,7 +899,6 @@ export class Canvas {
 
     if (!object.meta) object.meta = {};
     object.meta[property] = value;
-    this.onToggleMainCanvasElements(this.seek);
 
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
@@ -1406,7 +943,6 @@ export class Canvas {
     if (!this.instance || !object) return;
     object.anim![type].name = animation;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
   }
 
   onChangActiveObjectAnimation(type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
@@ -1419,14 +955,12 @@ export class Canvas {
     if (!this.instance || !object) return;
     object.anim![type].duration = duration;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
   }
 
   onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out", easing: any) {
     if (!this.instance || !object) return;
     object.anim![type].easing = easing;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
-    this.onToggleMainCanvasElements(this.seek);
   }
 
   onChangActiveObjectAnimationEasing(type: "in" | "out", easing: any) {
@@ -1562,27 +1096,5 @@ export class Canvas {
     const selected = this.instance?.getActiveObject();
     if (!this.instance || !selected) return;
     this.onAlignObjectToPage(selected, type);
-  }
-
-  onChangeZoom(zoom: number) {
-    this.zoom = zoom;
-    if (!this.instance) return;
-    const center = this.instance.getCenter();
-    this.instance.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
-  }
-
-  onChangeSeekTime(seek: number) {
-    this.seek = seek * 1000;
-    this.onToggleMainCanvasElements(this.seek);
-  }
-
-  onToggleLoop(loop: boolean) {
-    this.loop = loop;
-    if (this.timeline) this.timeline.loop = loop;
-  }
-
-  onChangeDuration(duration: number) {
-    this.duration = duration * 1000;
-    if (this.timeline) this.timeline.duration = this.duration;
   }
 }

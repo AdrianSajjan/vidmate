@@ -1,5 +1,5 @@
-import useMeasure from "react-use-measure";
 import Draggable from "react-draggable";
+import useMeasure from "react-use-measure";
 
 import { ChevronsLeftRightIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
@@ -10,9 +10,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
+import { rmbgAI } from "@/models/rmbg";
+
 import { useEditorContext } from "@/context/editor";
 import { rightSidebarWidth } from "@/constants/layout";
-import { backgroundRemover } from "@/plugins/background-remover";
 
 interface SelectPluginProps {
   plugin: string;
@@ -109,8 +110,8 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
   const [ref, dimensions] = useMeasure();
 
   const selected = editor.canvas.selected! as fabric.Image;
-  const entry = backgroundRemover.cache.get(selected.name!);
-  const pending = backgroundRemover.pending.get(selected.name!);
+  const entry = rmbgAI.cache.get(selected.name!);
+  const pending = rmbgAI.pending.get(selected.name!);
 
   useEffect(() => {
     setPosition(dimensions.width / 2);
@@ -119,9 +120,9 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
   const handleRemoveBackground = async () => {
     try {
       const original = entry ? entry.original : selected.src;
-      const blob = await flowResult(backgroundRemover.onRemoveBackground(original, selected.name!));
+      const blob = await flowResult(rmbgAI.onRemoveBackground(original, selected.name!));
       const modified = URL.createObjectURL(blob);
-      entry ? backgroundRemover.onCacheEntryUpdate(selected.name!, { modified }) : backgroundRemover.onCacheEntryAdd(selected.name!, original, modified, "original");
+      entry ? rmbgAI.onCacheEntryUpdate(selected.name!, { modified }) : rmbgAI.onCacheEntryAdd(selected.name!, original, modified, "original");
     } catch (error) {
       toast.error("Unable to remove background from image");
       console.warn(error);
@@ -142,13 +143,13 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
   const handleReplaceOriginal = () => {
     if (!entry) return;
     editor.canvas.onReplaceActiveImageSource(entry.modified);
-    backgroundRemover.onCacheEntryUpdate(selected.name!, { usage: "modified" });
+    rmbgAI.onCacheEntryUpdate(selected.name!, { usage: "modified" });
   };
 
   const handleRestoreOriginal = () => {
     if (!entry) return;
     editor.canvas.onReplaceActiveImageSource(entry.original);
-    backgroundRemover.onCacheEntryUpdate(selected.name!, { usage: "original" });
+    rmbgAI.onCacheEntryUpdate(selected.name!, { usage: "original" });
   };
 
   return (

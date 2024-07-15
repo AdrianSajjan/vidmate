@@ -25,7 +25,8 @@ function _EditorElementControls() {
   const style = useMemo(() => {
     if (!editor.canvas.instance) return undefined;
 
-    const viewport = editor.canvas.viewportTransform!;
+    const viewport = editor.canvas.workspace.viewportTransform;
+
     const offsetX = viewport[4];
     const offsetY = viewport[5];
 
@@ -36,16 +37,16 @@ function _EditorElementControls() {
     const selected = editor.canvas.instance.getActiveObject();
     if (!selected) return undefined;
 
-    const top = offsetY + selected.getBoundingRect(true).top! * editor.canvas.zoom - (height / 2) * editor.canvas.zoom - MENU_OFFSET_Y;
-    const left = offsetX + selected.getBoundingRect(true).left! * editor.canvas.zoom - width / 2 + ((selected.width! * selected.scaleX!) / 2) * editor.canvas.zoom;
+    const top = offsetY + selected.getBoundingRect(true).top! * editor.canvas.workspace.zoom - (height / 2) * editor.canvas.workspace.zoom - MENU_OFFSET_Y;
+    const left = offsetX + selected.getBoundingRect(true).left! * editor.canvas.workspace.zoom - width / 2 + ((selected.width! * selected.scaleX!) / 2) * editor.canvas.workspace.zoom;
 
     return {
       top: clamp(top, MENU_OFFSET_Y / 4, editor.canvas.instance.height! - MENU_OFFSET_Y / 4),
       left: left,
     };
-  }, [editor.canvas.selected, editor.canvas.viewportTransform, editor.canvas.height, editor.canvas.width, editor.canvas.zoom, ref.current]);
+  }, [editor.canvas.selected, editor.canvas.workspace.viewportTransform, editor.canvas.workspace.height, editor.canvas.workspace.width, editor.canvas.workspace.zoom, ref.current]);
 
-  if (!editor.canvas.selected || editor.canvas.selected.type === "audio" || !editor.canvas.hasControls) {
+  if (!editor.canvas.selected || editor.canvas.selected.type === "audio" || !editor.canvas.controls) {
     return null;
   }
 

@@ -265,7 +265,7 @@ export class Editor {
 
     const sampleRate = combined[0].buffer.sampleRate;
     const duration = combined.reduce((duration, audio) => (audio.timeline + audio.offset > duration ? audio.timeline + audio.offset : duration), 0);
-    const length = Math.min(duration, this.canvas.duration / 1000) * sampleRate;
+    const length = Math.min(duration, this.canvas.timeline.duration / 1000) * sampleRate;
 
     const context = createInstance(OfflineAudioContext, 2, length, sampleRate);
     this.canvas.onStartRecordAudio(combined, context);

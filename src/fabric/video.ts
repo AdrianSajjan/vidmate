@@ -42,6 +42,7 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   },
 
   play: async function () {
+    if (this.playing) return;
     this.playing = true;
     const element = this._originalElement as HTMLVideoElement;
     element.currentTime = this.trimStart;
@@ -49,6 +50,7 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   },
 
   pause: function () {
+    if (!this.playing) return;
     this.playing = false;
     const element = this._originalElement as HTMLVideoElement;
     element.pause();

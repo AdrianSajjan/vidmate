@@ -4,10 +4,11 @@ import { observer } from "mobx-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEditorContext } from "@/context/editor";
-import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
+
+import { useEditorContext } from "@/context/editor";
+import { cn } from "@/lib/utils";
 
 function _ToolbarTimelineOption() {
   const editor = useEditorContext();
@@ -34,7 +35,12 @@ function _ToolbarTimelineOption() {
         <PopoverContent className="pt-3 pb-3 px-3" align="end">
           <Label className="text-xs font-medium">Duration (s)</Label>
           <div className="flex items-center justify-between gap-4">
-            <Slider min={1} max={editor.canvas.duration / 1000} value={[selected.meta!.duration / 1000]} onValueChange={([duration]) => editor.canvas.onChangeActiveObjectTimelineProperty("duration", duration * 1000)} />
+            <Slider
+              min={1}
+              max={editor.canvas.timeline.duration / 1000}
+              value={[selected.meta!.duration / 1000]}
+              onValueChange={([duration]) => editor.canvas.onChangeActiveObjectTimelineProperty("duration", duration * 1000)}
+            />
             <Input
               autoFocus
               step={0.5}
@@ -46,7 +52,7 @@ function _ToolbarTimelineOption() {
           </div>
           <Label className="text-xs font-medium">Offset (s)</Label>
           <div className="flex items-center justify-between gap-4">
-            <Slider min={0} max={editor.canvas.duration / 1000} value={[selected.meta!.offset / 1000]} onValueChange={([offset]) => editor.canvas.onChangeActiveObjectTimelineProperty("offset", offset * 1000)} />
+            <Slider min={0} max={editor.canvas.timeline.duration / 1000} value={[selected.meta!.offset / 1000]} onValueChange={([offset]) => editor.canvas.onChangeActiveObjectTimelineProperty("offset", offset * 1000)} />
             <Input
               autoFocus
               step={0.5}

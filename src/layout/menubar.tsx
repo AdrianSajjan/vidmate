@@ -42,27 +42,27 @@ function _EditorMenubar() {
       </section>
       <section id="right" className="ml-auto flex gap-3">
         <div className="flex gap-px">
-          <Button variant="secondary" size="icon" className="rounded-r-none" onClick={() => editor.canvas.onChangeZoom(editor.canvas.zoom - 0.05)}>
+          <Button variant="secondary" size="icon" className="rounded-r-none" onClick={() => editor.canvas.workspace.onChangeZoom(editor.canvas.workspace.zoom - 0.05)}>
             <ZoomOutIcon size={15} />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm" className="rounded-none gap-1.5 justify-between w-32">
-                <span className="font-medium">{Math.round(editor.canvas.zoom * 100)}%</span>
+                <span className="font-medium">{Math.round(editor.canvas.workspace.zoom * 100)}%</span>
                 <ChevronDownIcon size={15} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="min-w-32">
               <DropdownMenuGroup>
                 {[25, 50, 75, 100, 125, 150, 175, 200].map((percentage) => (
-                  <DropdownMenuItem key={percentage} className="text-xs" onClick={() => editor.canvas.onChangeZoom(percentage / 100)}>
+                  <DropdownMenuItem key={percentage} className="text-xs" onClick={() => editor.canvas.workspace.onChangeZoom(percentage / 100)}>
                     {percentage}%
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="secondary" size="icon" className="rounded-l-none" onClick={() => editor.canvas.onChangeZoom(editor.canvas.zoom + 0.05)}>
+          <Button variant="secondary" size="icon" className="rounded-l-none" onClick={() => editor.canvas.workspace.onChangeZoom(editor.canvas.workspace.zoom + 0.05)}>
             <ZoomInIcon size={16} />
           </Button>
         </div>

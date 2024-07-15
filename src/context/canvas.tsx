@@ -23,7 +23,7 @@ export function useCanvasContext() {
   return context;
 }
 
-export function useInitializeMainCanvas() {
+export function useInitializeCanvas() {
   const canvas = useCanvasContext();
   const [isInitialized, setInitialized] = useState(false);
 
@@ -44,7 +44,7 @@ export function useInitializeMainCanvas() {
   return [ref, { isInitialized }] as const;
 }
 
-export function useInitializeRecorderCanvas() {
+export function useInitializeRecorder() {
   const canvas = useCanvasContext();
   const [isInitialized, setInitialized] = useState(false);
 

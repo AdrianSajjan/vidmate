@@ -4,7 +4,7 @@ import { AutoModel, AutoProcessor, PreTrainedModel, Processor, RawImage } from "
 
 type CacheUsage = "original" | "modified";
 
-interface BackgroundRemoverCache {
+interface RmbgAICache {
   original: string;
   modified: string;
   usage: CacheUsage;
@@ -36,12 +36,12 @@ const config = {
   size: { width: 1024, height: 1024 },
 };
 
-export class BackgroundRemover {
-  cache: Map<string, BackgroundRemoverCache>;
+export class RmbgAI {
+  cache: Map<string, RmbgAICache>;
   pending: Map<string, boolean>;
 
   constructor() {
-    this.cache = createMap<string, BackgroundRemoverCache>();
+    this.cache = createMap<string, RmbgAICache>();
     this.pending = createMap<string, boolean>();
     makeAutoObservable(this);
   }
@@ -91,7 +91,7 @@ export class BackgroundRemover {
     this.cache.set(id, { original, modified, usage });
   }
 
-  onCacheEntryUpdate(id: string, data: Partial<BackgroundRemoverCache>) {
+  onCacheEntryUpdate(id: string, data: Partial<RmbgAICache>) {
     const entry = this.cache.get(id);
     if (!entry) return;
     this.cache.set(id, { ...entry, ...data });
@@ -101,7 +101,7 @@ export class BackgroundRemover {
     this.cache.delete(id);
   }
 
-  onInitializeCache(entries: [string, BackgroundRemoverCache][]) {
+  onInitializeCache(entries: [string, RmbgAICache][]) {
     this.cache = createMap(entries);
   }
 
@@ -110,4 +110,4 @@ export class BackgroundRemover {
   }
 }
 
-export const backgroundRemover = createInstance(BackgroundRemover);
+export const rmbgAI = createInstance(RmbgAI);

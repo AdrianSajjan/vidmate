@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-export abstract class FabricGuidelines {
+export abstract class CanvasGuidelines {
   static initializeAligningGuidelines(canvas) {
     let ctx = canvas.getSelectionContext(),
       aligningLineOffset = 5,
