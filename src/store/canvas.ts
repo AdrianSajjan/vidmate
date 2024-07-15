@@ -23,7 +23,6 @@ export class Canvas {
 
   cropper!: CanvasCropper;
   history!: CanvasHistory;
-
   timeline!: CanvasTimeline;
   workspace!: CanvasWorkspace;
 
@@ -173,6 +172,7 @@ export class Canvas {
 
     this.history = createInstance(CanvasHistory, this);
     this.cropper = createInstance(CanvasCropper, this);
+
     this.timeline = createInstance(CanvasTimeline, this);
     this.workspace = createInstance(CanvasWorkspace, this, workspace);
 
@@ -321,7 +321,7 @@ export class Canvas {
     if (!this.instance || !this.artboard) return;
 
     const id = FabricUtils.elementID("image");
-    const props = { evented: false, selectable: false, originX: "center", originY: "center" };
+    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true };
 
     const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
     const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
@@ -329,16 +329,12 @@ export class Canvas {
 
     image.scaleToWidth(500);
     overlay.set({ height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY });
-
     spinner.scaleToWidth(48);
     FabricUtils.objectSpinningAnimation(spinner);
 
-    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id });
+    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true });
     placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
-
-    this.onInitializeElementMeta(placeholder, { placeholder: true });
     this.instance.add(placeholder);
-
     this.instance.setActiveObject(placeholder).requestRenderAll();
 
     return createPromise<fabric.Image>((resolve, reject) => {
@@ -403,7 +399,7 @@ export class Canvas {
     if (!this.instance || !this.artboard) return;
 
     const id = FabricUtils.elementID("video");
-    const props = { evented: false, selectable: false, originX: "center", originY: "center" };
+    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true };
 
     const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
     const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
@@ -411,16 +407,12 @@ export class Canvas {
 
     image.scaleToWidth(500);
     overlay.set({ height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY });
-
     spinner.scaleToWidth(48);
     FabricUtils.objectSpinningAnimation(spinner);
 
-    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id });
+    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true });
     placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
-
-    this.onInitializeElementMeta(placeholder, { placeholder: true });
     this.instance.add(placeholder);
-
     this.instance.setActiveObject(placeholder).requestRenderAll();
 
     return createPromise<fabric.Video>((resolve, reject) => {
@@ -585,14 +577,14 @@ export class Canvas {
   *onReplaceImageSource(image: fabric.Image, source: string) {
     if (!this.instance) return;
 
-    const props = { evented: false, selectable: false, originX: "center", originY: "center" };
+    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true };
     const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY, fill: "#000000", opacity: 0.25, ...props });
     const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + image.name, fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
 
     overlay.setPositionByOrigin(image.getCenterPoint(), "center", "center");
     spinner.scaleToWidth(48).setPositionByOrigin(image.getCenterPoint(), "center", "center");
 
-    image.meta!.placeholder = true;
+    image.meta!.replace = true;
     this.instance.add(overlay, spinner);
     this.instance.requestRenderAll();
 
@@ -600,7 +592,6 @@ export class Canvas {
     FabricUtils.bindObjectTransformToParent(image, [overlay, spinner]);
 
     const children = [{ object: overlay }, { object: spinner, skip: ["angle", "scaleX", "scaleY"] }];
-
     image.on("moving", () => FabricUtils.updateObjectTransformToParent(image, children));
     image.on("scaling", () => FabricUtils.updateObjectTransformToParent(image, children));
     image.on("rotating", () => FabricUtils.updateObjectTransformToParent(image, children));
@@ -612,16 +603,14 @@ export class Canvas {
           if (!element || !element.height || !element.width) return reject();
 
           image.setElement(element);
-          image.meta!.placeholder = false;
+          image.meta!.replace = false;
           image.set({ scaleX: image.scaleX, scaleY: image.scaleY, left: image.left, top: image.top, angle: image.angle, cropX: image.cropX, cropY: image.cropY });
 
           image.off("moving");
           image.off("scaling");
           image.off("rotating");
 
-          this.instance!.remove(overlay, spinner);
-          this.instance!.requestRenderAll();
-
+          this.instance!.remove(overlay, spinner).requestRenderAll();
           resolve(image);
         },
         null,

@@ -27,17 +27,17 @@ function _EditorMenubar() {
     }
   };
 
-  if (!editor.canvas.workspace) return null;
+  if (!editor.canvas.workspace || !editor.canvas.history) return null;
 
   return (
     <header className="flex h-14 items-center px-3 bg-card dark:bg-gray-900/40 border-b shrink-0">
       <section id="left" className="flex gap-3">
         <div className="flex gap-px">
-          <Button variant="secondary" size="sm" className="gap-1.5 rounded-r-none">
+          <Button variant="secondary" size="sm" className="gap-1.5 rounded-r-none" onClick={() => editor.canvas.history.undo()} disabled={!editor.canvas.history.canUndo}>
             <UndoIcon size={15} />
             <span className="font-medium">Undo</span>
           </Button>
-          <Button variant="secondary" size="icon" className="rounded-l-none">
+          <Button variant="secondary" size="icon" className="rounded-l-none" onClick={() => editor.canvas.history.redo()} disabled={!editor.canvas.history.canRedo}>
             <RedoIcon size={15} />
           </Button>
         </div>

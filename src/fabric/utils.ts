@@ -12,13 +12,11 @@ export abstract class FabricUtils {
   private static nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
 
   static isElementExcluded(object: fabric.Object) {
-    return (
-      object.name!.startsWith("artboard") || object.name!.startsWith("crop") || object.name!.startsWith("clone") || object.name!.startsWith("clip") || object.name!.startsWith("overlay") || !!object.meta?.placeholder
-    );
+    return object.name!.startsWith("artboard") || object.excludeFromExport;
   }
 
   static isAlignmentExcluded(object: fabric.Object) {
-    return object.name!.startsWith("crop") || object.name!.startsWith("clone") || object.name!.startsWith("clip") || object.name!.startsWith("overlay");
+    return object.excludeFromExport;
   }
 
   static isActiveSelection(object?: fabric.Object | null): object is fabric.ActiveSelection {
