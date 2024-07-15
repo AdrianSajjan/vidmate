@@ -1,5 +1,7 @@
 // @ts-nocheck
 
+import { FabricUtils } from "@/fabric/utils";
+
 export abstract class CanvasGuidelines {
   static initializeAligningGuidelines(canvas) {
     let ctx = canvas.getSelectionContext(),
@@ -64,7 +66,7 @@ export abstract class CanvasGuidelines {
       if (!transform) return;
 
       for (let i = canvasObjects.length; i--; ) {
-        if (canvasObjects[i] === activeObject) continue;
+        if (canvasObjects[i] === activeObject || FabricUtils.isElementExcluded(canvasObjects[i])) continue;
 
         let objectCenter = canvasObjects[i].getCenterPoint(),
           objectLeft = objectCenter.x,

@@ -378,7 +378,11 @@ type EventName =
   | "drop"
   | "dragover"
   | "dragenter"
-  | "dragleave";
+  | "dragleave"
+  | "timeline:start"
+  | "timeline:stop"
+  | "recorder:start"
+  | "recorder:stop";
 
 interface IObservable<T> {
   /**

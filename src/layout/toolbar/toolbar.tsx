@@ -22,11 +22,15 @@ const toolbarComponentMap: Record<string, () => JSX.Element> = {
   rect: ShapeToolbar,
   line: LineToolbar,
   audio: AudioToolbar,
+  crop: CropToolbar,
+  trim: TrimToolbar,
 };
 
 function _EditorToolbar() {
   const editor = useEditorContext();
-  const Toolbar = editor.canvas.crop ? CropToolbar : editor.canvas.trim ? TrimToolbar : editor.canvas.selected ? toolbarComponentMap[editor.canvas.selected.type!] : null;
+
+  const type = editor.canvas.cropper?.selected ? "crop" : editor.canvas.trim ? "trim" : editor.canvas.selected?.type;
+  const Toolbar = toolbarComponentMap[type!];
 
   if (!Toolbar) {
     return <div className="h-14 bg-card/50 border-b px-4 shrink-0 overflow-x-scroll" />;

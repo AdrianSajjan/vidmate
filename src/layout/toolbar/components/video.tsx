@@ -17,13 +17,13 @@ function _VideoToolbar() {
   const selected = editor.canvas.selected as fabric.Video;
 
   const handleCropStart = () => {
-    const video = editor.canvas.instance?.getItemByName(selected.name);
+    const video = editor.canvas.instance?.getActiveObject();
     if (!FabricUtils.isVideoElement(video)) return;
-    editor.canvas.onCropImageStart(video);
+    editor.canvas.cropper.start(video);
   };
 
   const handleTrimStart = () => {
-    const video = editor.canvas.instance?.getItemByName(selected.name);
+    const video = editor.canvas.instance?.getActiveObject();
     if (!FabricUtils.isVideoElement(video)) return;
     editor.canvas.onTrimVideoStart(video);
   };

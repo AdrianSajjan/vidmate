@@ -3,15 +3,16 @@ import { fabric } from "fabric";
 import { floor } from "lodash";
 import { makeAutoObservable } from "mobx";
 
-import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
-import { FabricUtils } from "@/fabric/utils";
-
-import { createInstance, createPromise, isVideoElement } from "@/lib/utils";
+import { CanvasCropper } from "@/plugins/crop";
+import { CanvasGuidelines } from "@/plugins/guidelines";
 import { CanvasHistory } from "@/plugins/history";
 import { CanvasTimeline } from "@/plugins/timeline";
 import { CanvasWorkspace } from "@/plugins/workspace";
+
+import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
+import { FabricUtils } from "@/fabric/utils";
+import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
-import { CanvasGuidelines } from "@/plugins/guidelines";
 
 export const minLayerStack = 3;
 export const canvasYPadding = 100;
@@ -20,7 +21,9 @@ export class Canvas {
   artboard?: fabric.Rect;
   instance?: fabric.Canvas;
 
+  cropper!: CanvasCropper;
   history!: CanvasHistory;
+
   timeline!: CanvasTimeline;
   workspace!: CanvasWorkspace;
 
@@ -31,7 +34,6 @@ export class Canvas {
   selected?: fabric.Object | null;
   controls: boolean;
 
-  crop?: fabric.Image | null;
   trim?: EditorTrim | null;
 
   constructor() {
@@ -60,12 +62,7 @@ export class Canvas {
     const element = object.toObject(propertiesToInclude);
     if (object.name === this.selected?.name) this.selected = element;
     if (object.name === this.trim?.selected.name) this.trim!.selected = element;
-    if (object.name === this.crop?.name) this.crop = element;
     this.elements[index] = element;
-  }
-
-  private onUpdateCrop(image?: fabric.Image | null) {
-    this.crop = image ? image.toObject(propertiesToInclude) : null;
   }
 
   private onToggleControls(object: fabric.Object, enabled: boolean) {
@@ -74,17 +71,23 @@ export class Canvas {
   }
 
   private onUpdateSelection() {
-    const selection = this.instance?.getActiveObject();
+    const selection = this.instance!.getActiveObject();
+
     if (FabricUtils.isActiveSelection(this.selected)) {
-      const objects = this.selected.objects.map((object) => this.instance?.getItemByName(object.name)).filter(Boolean) as fabric.Object[];
+      const objects = this.selected.objects.map((object) => this.instance!.getItemByName(object.name)).filter(Boolean) as fabric.Object[];
       objects.forEach((object) => object.set({ hasBorders: true, hasControls: true }));
     }
-    if (FabricUtils.isActiveSelection(selection)) {
-      const objects = selection._objects;
-      objects.forEach((object) => object.set({ hasBorders: false, hasControls: false }));
+
+    if (!selection || FabricUtils.isElementExcluded(selection)) {
+      this.selected = null;
+    } else if (FabricUtils.isActiveSelection(selection)) {
+      selection.forEachObject((object) => object.set({ hasBorders: false, hasControls: false }));
+      this.selected = selection.toObject(propertiesToInclude);
+    } else {
+      this.selected = selection.toObject(propertiesToInclude);
     }
-    this.selected = selection?.toObject(propertiesToInclude);
-    this.instance?.requestRenderAll();
+
+    this.instance!.requestRenderAll();
   }
 
   private onInitializeElementMeta(object: fabric.Object, props?: Record<string, any>) {
@@ -161,16 +164,6 @@ export class Canvas {
     this.instance.on("selection:cleared", () => {
       this.onUpdateSelection();
     });
-
-    this.instance.on("mouse:dblclick", (event) => {
-      switch (event.target?.type) {
-        case "video":
-        case "image":
-          if (this.crop === event.target || event.target.meta?.placeholder) return;
-          this.onCropImageStart(event.target as fabric.Image);
-          break;
-      }
-    });
   }
 
   onInitialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
@@ -179,6 +172,7 @@ export class Canvas {
     this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
 
     this.history = createInstance(CanvasHistory, this);
+    this.cropper = createInstance(CanvasCropper, this);
     this.timeline = createInstance(CanvasTimeline, this);
     this.workspace = createInstance(CanvasWorkspace, this, workspace);
 
@@ -566,135 +560,6 @@ export class Canvas {
       }
     }
     this.instance.requestRenderAll();
-  }
-
-  onCropImageStart(image: fabric.Image) {
-    if (!this.instance || !this.artboard) return;
-
-    this.onUpdateCrop(image);
-    const element = image._originalElement as HTMLImageElement | HTMLVideoElement;
-
-    const props = { top: image.top, left: image.left, angle: image.angle, width: image.getScaledWidth(), height: image.getScaledHeight(), lockRotation: true };
-    const crop = createInstance(fabric.Cropper, { name: "crop_" + image.name, fill: "#ffffff", globalCompositeOperation: "overlay", ...props });
-    const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, selectable: false, fill: "#00000080", ...props });
-
-    const verticals = Array.from({ length: 3 }, (_, index) => {
-      const x = crop.left! + crop.width! * 0.25 * (index + 1);
-      const line = createInstance(fabric.Line, [x, crop.top!, x, crop.top! + crop.height!], { name: `crop_v_${index}_${image.name}`, stroke: "#ffffff", selectable: false, evented: false });
-      this.instance!.add(line);
-      return line;
-    });
-
-    const horizontals = Array.from({ length: 3 }, (_, index) => {
-      const y = crop.top! + crop.height! * 0.25 * (index + 1);
-      const line = createInstance(fabric.Line, [crop.left!, y, crop.left! + crop.width!, y], { name: `crop_h_${index}_${image.name}`, stroke: "#ffffff", selectable: false, evented: false });
-      this.instance!.add(line);
-      return line;
-    });
-
-    const clipPath = image.clipPath;
-    image.set({ clipPath: undefined });
-
-    const width = image.width!;
-    const height = image.height!;
-
-    const cropX = image.cropX!;
-    const cropY = image.cropY!;
-
-    const elementWidth = isVideoElement(element) ? element.videoWidth : element.naturalWidth;
-    const elementHeight = isVideoElement(element) ? element.videoHeight : element.naturalHeight;
-
-    image.set({ cropX: 0, cropY: 0, dirty: false, selectable: false, left: image.left! - cropX * image.scaleX!, top: image.top! - cropY * image.scaleY!, width: elementWidth, height: elementHeight });
-    crop.set({ left: image.left! + cropX * image.scaleX!, top: image.top! + cropY * image.scaleY!, width: width * image.scaleX!, height: height * image.scaleY!, dirty: false });
-    overlay.set({ left: image.left, top: image.top, width: image.width! * image.scaleX!, height: image.height! * image.scaleY!, dirty: false });
-
-    this.instance.add(overlay);
-    this.instance.add(crop);
-
-    this.instance.discardActiveObject();
-    this.instance.setActiveObject(crop);
-    this.instance.requestRenderAll();
-
-    crop.on("moving", () => {
-      if (crop.top! <= image.top!) crop.set({ top: image.top! });
-      if (crop.left! <= image.left!) crop.set({ left: image.left! });
-
-      if (crop.top! + crop.getScaledHeight() >= image.top! + image.getScaledHeight()) crop.set({ top: image.top! + image.getScaledHeight() - crop.getScaledHeight() });
-      if (crop.left! + crop.getScaledWidth() >= image.left! + image.getScaledWidth()) crop.set({ left: image.left! + image.getScaledWidth() - crop.getScaledWidth() });
-
-      verticals.map((vertical, index) =>
-        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() }),
-      );
-      horizontals.map((vertical, index) =>
-        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) }),
-      );
-
-      this.instance!.requestRenderAll();
-    });
-
-    crop.on("scaling", () => {
-      verticals.map((vertical, index) =>
-        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() }),
-      );
-      horizontals.map((vertical, index) =>
-        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) }),
-      );
-    });
-
-    crop.on("mouseup", () => {
-      if (crop.left! < image.left!) {
-        const offsetX = image.left! - crop.left!;
-        const scaleX = offsetX / crop.width!;
-        crop.set({ left: image.left, scaleX: crop.scaleX! - scaleX });
-      }
-
-      if (crop.top! < image.top!) {
-        const offsetY = image.top! - crop.top!;
-        const scaleY = offsetY / crop.height!;
-        crop.set({ top: image.top, scaleY: crop.scaleY! - scaleY });
-      }
-
-      if (crop.left! + crop.getScaledWidth() > image.left! + image.getScaledWidth()) {
-        const offsetX = crop.left! + crop.getScaledWidth() - (image.left! + image.getScaledWidth());
-        const scaleX = offsetX / crop.width!;
-        crop.set({ scaleX: Math.abs(crop.scaleX! - scaleX) });
-      }
-
-      if (crop.top! + crop.getScaledHeight() > image.top! + image.getScaledHeight()) {
-        const offsetY = crop.top! + crop.getScaledHeight() - (image.top! + image.getScaledHeight());
-        const scaleY = offsetY / crop.height!;
-        crop.set({ scaleY: Math.abs(crop.scaleY! - scaleY) });
-      }
-
-      verticals.map((vertical, index) =>
-        vertical.set({ x1: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y1: crop.top!, x2: crop.left! + crop.getScaledWidth() * 0.25 * (index + 1), y2: crop.top! + crop.getScaledHeight() }),
-      );
-      horizontals.map((vertical, index) =>
-        vertical.set({ x1: crop.left!, y1: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1), x2: crop.left! + crop.getScaledWidth(), y2: crop.top! + crop.getScaledHeight() * 0.25 * (index + 1) }),
-      );
-    });
-
-    crop.on("deselected", () => {
-      image.set({ clipPath });
-      this.onCropImageEnd(crop, image);
-      this.onUpdateCrop(null);
-      this.instance!.remove(overlay, ...verticals, ...horizontals).requestRenderAll();
-    });
-  }
-
-  onCropImageEnd(crop: fabric.Rect, image: fabric.Image) {
-    if (!this.instance || !this.artboard) return;
-
-    const cropX = (crop.left! - image.left!) / image.scaleX!;
-    const cropY = (crop.top! - image.top!) / image.scaleY!;
-    const width = (crop.width! * crop.scaleX!) / image.scaleX!;
-    const height = (crop.height! * crop.scaleY!) / image.scaleY!;
-
-    image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: image.top! + cropY * image.scaleY!, left: image.left! + cropX * image.scaleX!, selectable: true });
-    image.setCoords();
-
-    this.instance.remove(crop);
-    this.instance.renderAll();
   }
 
   onTrimAudioStart(audio: EditorAudioElement) {

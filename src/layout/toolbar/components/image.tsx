@@ -10,16 +10,16 @@ import { useEditorContext } from "@/context/editor";
 import { ToolbarPositionOption } from "../common/position";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
+import { FabricUtils } from "@/fabric/utils";
 
 function _ImageToolbar() {
   const editor = useEditorContext();
-
   const selected = editor.canvas.selected as fabric.Image;
 
   const handleCropStart = () => {
-    const image = editor.canvas.instance?.getItemByName(selected.name) as fabric.Image | null;
-    if (!image) return;
-    editor.canvas.onCropImageStart(image);
+    const image = editor.canvas.instance?.getActiveObject();
+    if (!FabricUtils.isImageElement(image)) return;
+    editor.canvas.cropper.start(image);
   };
 
   return (
