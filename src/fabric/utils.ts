@@ -1,9 +1,7 @@
 import { fabric } from "fabric";
 import { customAlphabet } from "nanoid";
-
-import { createInstance } from "@/lib/utils";
 import { omit } from "lodash";
-import { elementsToExclude } from "./constants";
+import { createInstance } from "@/lib/utils";
 
 export interface TransformChildren {
   object: fabric.Object;
@@ -15,8 +13,12 @@ export abstract class FabricUtils {
 
   static isElementExcluded(object: fabric.Object) {
     return (
-      elementsToExclude.includes(object.name!) || object.name!.startsWith("crop") || object.name!.startsWith("clone") || object.name!.startsWith("clip") || object.name!.startsWith("overlay") || object.meta?.placeholder
+      object.name!.startsWith("artboard") || object.name!.startsWith("crop") || object.name!.startsWith("clone") || object.name!.startsWith("clip") || object.name!.startsWith("overlay") || !!object.meta?.placeholder
     );
+  }
+
+  static isAlignmentExcluded(object: fabric.Object) {
+    return object.name!.startsWith("crop") || object.name!.startsWith("clone") || object.name!.startsWith("clip") || object.name!.startsWith("overlay");
   }
 
   static isActiveSelection(object?: fabric.Object | null): object is fabric.ActiveSelection {

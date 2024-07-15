@@ -66,7 +66,7 @@ export abstract class CanvasGuidelines {
       if (!transform) return;
 
       for (let i = canvasObjects.length; i--; ) {
-        if (canvasObjects[i] === activeObject || FabricUtils.isElementExcluded(canvasObjects[i])) continue;
+        if (canvasObjects[i] === activeObject || FabricUtils.isAlignmentExcluded(canvasObjects[i])) continue;
 
         let objectCenter = canvasObjects[i].getCenterPoint(),
           objectLeft = objectCenter.x,

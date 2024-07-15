@@ -9,7 +9,7 @@ import { CanvasHistory } from "@/plugins/history";
 import { CanvasTimeline } from "@/plugins/timeline";
 import { CanvasWorkspace } from "@/plugins/workspace";
 
-import { activityIndicator, elementsToExclude, propertiesToInclude } from "@/fabric/constants";
+import { activityIndicator, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
@@ -178,7 +178,6 @@ export class Canvas {
 
     this.onInitializeEvents();
     CanvasGuidelines.initializeAligningGuidelines(this.instance);
-    CanvasGuidelines.initializeCenteringGuidelines(this.instance);
 
     this.instance.add(this.artboard);
     this.instance.clipPath = this.artboard;
@@ -900,12 +899,12 @@ export class Canvas {
     switch (type) {
       case "up":
         if (index === this.instance._objects.length - 1) return;
-        const top = [...this.instance._objects].slice(index + 1).findIndex((object) => !elementsToExclude.includes(object.name!));
+        const top = [...this.instance._objects].slice(index + 1).findIndex((object) => !FabricUtils.isElementExcluded(object));
         this.instance.moveTo(element, index + top + 1);
         break;
       case "down":
         if (index === minLayerStack) return;
-        const bottom = [...this.instance._objects].slice(minLayerStack + 1, index).findIndex((object) => !elementsToExclude.includes(object.name!));
+        const bottom = [...this.instance._objects].slice(minLayerStack + 1, index).findIndex((object) => !FabricUtils.isElementExcluded(object));
         this.instance.moveTo(element, minLayerStack + bottom);
         break;
       case "top":
