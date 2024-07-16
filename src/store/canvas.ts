@@ -16,7 +16,7 @@ import { CanvasSelection } from "@/plugins/selection";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
-import { activityIndicator, propertiesToInclude } from "@/fabric/constants";
+import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 
 export class Canvas {
   artboard!: fabric.Rect;
@@ -532,7 +532,7 @@ export class Canvas {
   onChangeTextboxProperty(textbox: fabric.Textbox, property: keyof fabric.Textbox, value: any, _selection = false) {
     if (textbox.type !== "textbox") return;
     textbox.set(property, value);
-    if (property === "textTransform") textbox.set("text", textbox.text);
+    if (textLayoutProperties.includes(property)) textbox.initDimensions();
     this.instance.fire("object:modified", { target: textbox });
     this.instance.requestRenderAll();
   }

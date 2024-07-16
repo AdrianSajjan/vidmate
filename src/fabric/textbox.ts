@@ -23,6 +23,10 @@ const Textbox = fabric.util.createClass(fabric.Textbox, {
         return text;
     }
   },
+
+  _render(ctx: CanvasRenderingContext2D) {
+    this.callSuper("_render", ctx);
+  },
 });
 
 Textbox.fromObject = fabric.Textbox.fromObject;
