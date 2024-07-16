@@ -120,9 +120,9 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
   const handleRemoveBackground = async () => {
     try {
       const original = entry ? entry.original : selected.src;
-      const blob = await flowResult(rmbgAI.onRemoveBackground(original, selected.name!));
+      const blob = await flowResult(rmbgAI.removeBackground(original, selected.name!));
       const modified = URL.createObjectURL(blob);
-      entry ? rmbgAI.onCacheEntryUpdate(selected.name!, { modified }) : rmbgAI.onCacheEntryAdd(selected.name!, original, modified, "original");
+      entry ? rmbgAI.updateCacheEntry(selected.name!, { modified }) : rmbgAI.addCacheEntry(selected.name!, original, modified, "original");
     } catch (error) {
       toast.error("Unable to remove background from image");
       console.warn(error);
@@ -143,13 +143,13 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
   const handleReplaceOriginal = () => {
     if (!entry) return;
     editor.canvas.onReplaceActiveImageSource(entry.modified);
-    rmbgAI.onCacheEntryUpdate(selected.name!, { usage: "modified" });
+    rmbgAI.updateCacheEntry(selected.name!, { usage: "modified" });
   };
 
   const handleRestoreOriginal = () => {
     if (!entry) return;
     editor.canvas.onReplaceActiveImageSource(entry.original);
-    rmbgAI.onCacheEntryUpdate(selected.name!, { usage: "original" });
+    rmbgAI.updateCacheEntry(selected.name!, { usage: "original" });
   };
 
   return (

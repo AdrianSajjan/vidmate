@@ -129,8 +129,8 @@ export class Editor {
     const buffer: AudioBuffer = yield context.startRendering();
     this.controller.signal.throwIfAborted();
     this.controller.signal.removeEventListener("abort", handler);
-
     const blob = convertBufferToWaveBlob(buffer, buffer.length);
+
     return blob;
   }
 

@@ -14,6 +14,7 @@ import { activityIndicator, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
+import { CanvasEffects } from "@/plugins/filters";
 
 export const minLayerStack = 3;
 export const canvasYPadding = 100;
@@ -25,7 +26,9 @@ export class Canvas {
   audio!: CanvasAudio;
   timeline!: CanvasTimeline;
 
+  effects!: CanvasEffects;
   cropper!: CanvasCropper;
+
   history!: CanvasHistory;
   workspace!: CanvasWorkspace;
 
@@ -167,11 +170,13 @@ export class Canvas {
     this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
 
     this.history = createInstance(CanvasHistory, this);
+    this.workspace = createInstance(CanvasWorkspace, this, workspace);
+
+    this.effects = createInstance(CanvasEffects, this);
     this.cropper = createInstance(CanvasCropper, this);
 
     this.audio = createInstance(CanvasAudio, this);
     this.timeline = createInstance(CanvasTimeline, this);
-    this.workspace = createInstance(CanvasWorkspace, this, workspace);
 
     this.onInitializeEvents();
     CanvasGuidelines.initializeAligningGuidelines(this.instance);
@@ -183,7 +188,7 @@ export class Canvas {
 
   onDeleteObject(object?: fabric.Object) {
     if (!this.instance || !object) return;
-    this.instance.remove(object).fire("").requestRenderAll();
+    this.instance.remove(object).requestRenderAll();
   }
 
   onDeleteActiveObject() {
@@ -569,99 +574,6 @@ export class Canvas {
     const object = this.instance?.getActiveObject() as fabric.Image | fabric.Video;
     if (!object || !(object.type === "image" || object.type === "video")) return;
     this.onAddClipPathToImage(object, clipPath);
-  }
-
-  onRemoveFilterFromImage(image: fabric.Image, name: string) {
-    if (!this.instance || !image || !(image.type === "image" || image.type === "video") || image.effects!.name !== name) return;
-
-    image.effects!.name = null;
-    image.effects!.intensity = null;
-
-    if (image.effects!.start >= 0 && image.effects!.end >= 0) {
-      image.filters!.splice(image.effects!.start, image.effects!.end);
-    }
-
-    image.effects!.end = null;
-    image.effects!.start = null;
-
-    image.applyFilters();
-    this.instance.fire("object:modified", { target: image }).requestRenderAll();
-  }
-
-  onRemoveFilterFromActiveImage(name: string) {
-    const image = this.instance?.getActiveObject() as fabric.Image;
-    if (!image || !(image.type === "image" || image.type === "video")) return;
-    this.onRemoveFilterFromImage(image, name);
-  }
-
-  onAddFilterToImage(image: fabric.Image, filter: fabric.IBaseFilter[], name: string, intensity: number) {
-    if (!this.instance || !image || (image.effects!.name === name && image.effects!.intensity === intensity)) return;
-
-    image.effects!.name = name;
-    image.effects!.intensity = intensity;
-
-    if (image.effects!.start >= 0 && image.effects!.end >= 0) {
-      image.filters!.splice(image.effects!.start, image.effects!.end);
-    }
-
-    image.effects!.start = image.filters!.length;
-    image.effects!.end = image.filters!.length + filter.length;
-
-    image.filters!.push(...filter);
-    image.applyFilters();
-
-    this.instance.fire("object:modified", { target: image });
-    this.instance.requestRenderAll();
-  }
-
-  onAddFilterToActiveImage(filter: fabric.IBaseFilter[], name: string, intensity: number) {
-    const image = this.instance?.getActiveObject() as fabric.Image;
-    if (!image || !(image.type === "image" || image.type === "video")) return;
-    this.onAddFilterToImage(image, filter, name, intensity);
-  }
-
-  onRemoveAdjustmentFromImage(image: fabric.Image, name: string) {
-    if (!this.instance || !image || !(image.type === "image" || image.type === "video") || !image.adjustments![name]) return;
-
-    if (image.adjustments![name].index >= 0) image.filters!.splice(image.adjustments![name].index, 1);
-    image.applyFilters();
-    image.adjustments![name] = null;
-
-    this.instance.fire("object:modified", { target: image });
-    this.instance.requestRenderAll();
-  }
-
-  onRemoveAdjustmentFromActiveImage(name: string) {
-    const image = this.instance?.getActiveObject() as fabric.Image;
-    if (!image || !(image.type === "image" || image.type === "video")) return;
-    this.onRemoveAdjustmentFromImage(image, name);
-  }
-
-  onApplyAdjustmentsToImage(image: fabric.Image, filter: fabric.IBaseFilter, name: string, intensity: number) {
-    if (!this.instance || !image || !(image.type === "image" || image.type === "video")) return;
-
-    if (!image.adjustments![name]) image.adjustments![name] = {};
-    const adjustment = image.adjustments![name];
-
-    if (adjustment.name === name && adjustment.intensity === intensity) return;
-
-    adjustment.name = name;
-    adjustment.intensity = intensity;
-
-    if (adjustment.index >= 0) image.filters!.splice(adjustment.index, 1);
-    adjustment.index = image.filters!.length;
-
-    image.filters!.push(filter);
-    image.applyFilters();
-
-    this.instance.fire("object:modified", { target: image });
-    this.instance.requestRenderAll();
-  }
-
-  onApplyAdjustmentToActiveImage(filter: fabric.IBaseFilter, name: string, intensity: number) {
-    const image = this.instance?.getActiveObject() as fabric.Image;
-    if (!image || !(image.type === "image" || image.type === "video")) return;
-    this.onApplyAdjustmentsToImage(image, filter, name, intensity);
   }
 
   onChangeObjectTimelineProperty(object: fabric.Object, property: string, value: number) {

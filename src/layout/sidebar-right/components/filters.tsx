@@ -20,26 +20,26 @@ function _FilterSidebar() {
 
   const handleToggleFilter = (filter: Filter) => {
     if (selected.effects!.name === filter.name) {
-      editor.canvas.onRemoveFilterFromActiveImage(filter.name);
+      editor.canvas.effects.removeFilterFromActiveImage(filter.name);
     } else {
-      editor.canvas.onAddFilterToActiveImage(filter.filter(50), filter.name, 50);
+      editor.canvas.effects.addFilterToActiveImage(filter.filter(50), filter.name, 50);
     }
   };
 
   const handleModifyFilter = (filter: Filter, intensity: number) => {
-    editor.canvas.onAddFilterToActiveImage(filter.filter(intensity), filter.name, intensity);
+    editor.canvas.effects.addFilterToActiveImage(filter.filter(intensity), filter.name, intensity);
   };
 
   const handleToggleAdjustment = (adjustment: Adjustment, active: boolean) => {
     if (active) {
-      editor.canvas.onApplyAdjustmentToActiveImage(adjustment.filter(0), adjustment.name, 0);
+      editor.canvas.effects.applyAdjustmentToActiveImage(adjustment.filter(0), adjustment.name, 0);
     } else {
-      editor.canvas.onRemoveAdjustmentFromActiveImage(adjustment.name);
+      editor.canvas.effects.removeAdjustmentFromActiveImage(adjustment.name);
     }
   };
 
   const handleModifyAdjustment = (adjustment: Adjustment, intensity: number) => {
-    editor.canvas.onApplyAdjustmentToActiveImage(adjustment.filter(intensity), adjustment.name, intensity);
+    editor.canvas.effects.applyAdjustmentToActiveImage(adjustment.filter(intensity), adjustment.name, intensity);
   };
 
   return (

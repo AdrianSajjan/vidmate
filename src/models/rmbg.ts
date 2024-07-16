@@ -46,16 +46,16 @@ export class RmbgAI {
     makeAutoObservable(this);
   }
 
-  *onInitialize() {
+  private *_initialize() {
     const model: PreTrainedModel = yield AutoModel.from_pretrained("RMBG-1.4");
     const processor: Processor = yield AutoProcessor.from_pretrained("RMBG-1.4", { config });
     return { model, processor };
   }
 
-  *onRemoveBackground(url: string, id: string) {
+  *removeBackground(url: string, id: string) {
     try {
       this.pending.set(id, true);
-      const initialize: InitializationResponse = yield this.onInitialize();
+      const initialize: InitializationResponse = yield this._initialize();
 
       const image: RawImage = yield RawImage.fromURL(url);
       const processed: ProcessorResponse = yield initialize.processor(image);
@@ -87,25 +87,25 @@ export class RmbgAI {
     }
   }
 
-  onCacheEntryAdd(id: string, original: string, modified: string, usage: CacheUsage) {
+  addCacheEntry(id: string, original: string, modified: string, usage: CacheUsage) {
     this.cache.set(id, { original, modified, usage });
   }
 
-  onCacheEntryUpdate(id: string, data: Partial<RmbgAICache>) {
+  updateCacheEntry(id: string, data: Partial<RmbgAICache>) {
     const entry = this.cache.get(id);
     if (!entry) return;
     this.cache.set(id, { ...entry, ...data });
   }
 
-  onCacheEntryRemove(id: string) {
+  removeCacheEntry(id: string) {
     this.cache.delete(id);
   }
 
-  onInitializeCache(entries: [string, RmbgAICache][]) {
+  initializeCache(entries: [string, RmbgAICache][]) {
     this.cache = createMap(entries);
   }
 
-  onExportCache() {
+  exportCache() {
     return Array.from(this.cache.entries());
   }
 }
