@@ -1,8 +1,10 @@
-import { PauseIcon, PlayIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
-import { observer } from "mobx-react";
-import { Fragment, MouseEventHandler, useEffect, useRef, useState } from "react";
 import { flowResult } from "mobx";
+import { observer } from "mobx-react";
+import { PauseIcon, PlayIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
+import { Fragment, MouseEventHandler, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { upperFirst } from "lodash";
+import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { leftSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
 import { isImageLoaded } from "@/lib/utils";
-
 import { mock, useMockStore } from "@/constants/mock";
 import { EditorAudio } from "@/types/editor";
 import { formatMediaDuration } from "@/lib/time";
-import { useMutation } from "@tanstack/react-query";
 import { uploadAssetToS3 } from "@/api/upload";
 import { extractAudioWaveformFromAudioFile, extractThumbnailFromVideoURL } from "@/lib/media";
-import { upperFirst } from "lodash";
 
 interface UploadResponse {
   thumbnail: string;
@@ -108,7 +107,7 @@ function _UploadSidebar() {
     };
 
   const handleClickAudio = (audio: EditorAudio) => async () => {
-    toast.promise(flowResult(editor.canvas.onAddAudioFromSource(audio.source, audio.name)), {
+    toast.promise(flowResult(editor.canvas.audio.add(audio.source, audio.name)), {
       loading: "The audio asset is being loaded...",
       success: () => "The audio asset has been added to timeline",
       error: () => "Ran into an error adding the audio asset",

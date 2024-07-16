@@ -32,7 +32,7 @@ function _Editor() {
   const editor = useEditorContext();
 
   useEffect(() => {
-    editor.onInitialize();
+    editor.initialize();
   }, []);
 
   switch (editor.status) {

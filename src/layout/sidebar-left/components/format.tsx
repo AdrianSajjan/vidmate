@@ -31,7 +31,7 @@ function _FormatSidebar() {
             <div className="flex flex-col gap-2" key={format.name}>
               <button
                 key={format.name}
-                onClick={() => editor.canvas.workspace.onResizeArtboard(format.dimensions)}
+                onClick={() => editor.canvas.workspace.resizeArtboard(format.dimensions)}
                 className="group shrink-0 border flex items-center justify-center overflow-hidden rounded-md shadow-sm transition-colors hover:bg-card p-1.5"
               >
                 <img src={format.preview} className="object-contain h-full w-full" />

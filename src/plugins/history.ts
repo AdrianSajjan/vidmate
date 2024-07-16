@@ -87,7 +87,8 @@ export class CanvasHistory {
   }
 
   clear() {
-    this._undo = [];
+    const undo = this._undo.pop();
+    this._undo = undo ? Array(undo) : Array(this._next());
     this._redo = [];
   }
 }

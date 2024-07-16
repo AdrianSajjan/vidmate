@@ -35,7 +35,7 @@ function _AudioToolbar() {
           <PopoverContent className="pt-3 pb-3 px-3 w-80" align="start">
             <Label className="text-xs font-medium">Volume (%)</Label>
             <div className="flex items-center justify-between">
-              <Slider min={0} max={100} value={[selected.volume * 100]} disabled={selected.muted} onValueChange={([volume]) => editor.canvas.onChangeAudioProperties(selected.id, { volume: volume / 100 })} />
+              <Slider min={0} max={100} value={[selected.volume * 100]} disabled={selected.muted} onValueChange={([volume]) => editor.canvas.audio.update(selected.id, { volume: volume / 100 })} />
               <Input
                 min={1}
                 autoFocus
@@ -44,9 +44,9 @@ function _AudioToolbar() {
                 disabled={selected.muted}
                 value={selected.volume * 100}
                 className="h-8 w-20 text-xs ml-4 mr-2"
-                onChange={(event) => (+event.target.value < 0 || +event.target.value > 100 ? null : editor.canvas.onChangeAudioProperties(selected.id, { volume: +event.target.value / 100 }))}
+                onChange={(event) => (+event.target.value < 0 || +event.target.value > 100 ? null : editor.canvas.audio.update(selected.id, { volume: +event.target.value / 100 }))}
               />
-              <Toggle pressed={selected.muted} onPressedChange={(muted) => editor.canvas.onChangeAudioProperties(selected.id, { muted })} size="sm" className="text-gray-400 data-[state=on]:text-primary">
+              <Toggle pressed={selected.muted} onPressedChange={(muted) => editor.canvas.audio.update(selected.id, { muted })} size="sm" className="text-gray-400 data-[state=on]:text-primary">
                 <VolumeXIcon size={15} />
               </Toggle>
             </div>
@@ -65,7 +65,7 @@ function _AudioToolbar() {
           <PopoverContent className="pt-3 pb-3 px-3" align="start">
             <Label className="text-xs font-medium">Duration (s)</Label>
             <div className="flex items-center justify-between gap-4">
-              <Slider min={1} max={selected.duration} value={[selected.timeline]} onValueChange={([timeline]) => editor.canvas.onChangeAudioProperties(selected.id, { timeline })} />
+              <Slider min={1} max={selected.duration} value={[selected.timeline]} onValueChange={([timeline]) => editor.canvas.audio.update(selected.id, { timeline })} />
               <Input
                 min={1}
                 autoFocus
@@ -74,12 +74,12 @@ function _AudioToolbar() {
                 type="number"
                 className="h-8 w-20 text-xs"
                 value={floor(selected.timeline, 2)}
-                onChange={(event) => (+event.target.value > 0 ? editor.canvas.onChangeAudioProperties(selected.id, { timeline: +event.target.value }) : null)}
+                onChange={(event) => (+event.target.value > 0 ? editor.canvas.audio.update(selected.id, { timeline: +event.target.value }) : null)}
               />
             </div>
             <Label className="text-xs font-medium">Offset (s)</Label>
             <div className="flex items-center justify-between gap-4">
-              <Slider min={0} max={editor.canvas.timeline.duration / 1000 - selected.timeline} value={[selected.offset]} onValueChange={([offset]) => editor.canvas.onChangeAudioProperties(selected.id, { offset })} />
+              <Slider min={0} max={editor.canvas.timeline.duration / 1000 - selected.timeline} value={[selected.offset]} onValueChange={([offset]) => editor.canvas.audio.update(selected.id, { offset })} />
               <Input
                 min={0}
                 step={0.5}
@@ -88,12 +88,12 @@ function _AudioToolbar() {
                 type="number"
                 className="h-8 w-20 text-xs"
                 value={floor(selected.offset, 2)}
-                onChange={(event) => (+event.target.value > 0 ? editor.canvas.onChangeAudioProperties(selected.id, { offset: +event.target.value }) : null)}
+                onChange={(event) => (+event.target.value > 0 ? editor.canvas.audio.update(selected.id, { offset: +event.target.value }) : null)}
               />
             </div>
           </PopoverContent>
         </Popover>
-        <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => editor.canvas.onDeleteAudio(selected.id)}>
+        <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => editor.canvas.audio.delete(selected.id)}>
           <Trash2Icon size={15} />
           <span className="text-xs font-normal">Delete</span>
         </Button>

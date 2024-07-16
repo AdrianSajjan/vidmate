@@ -109,7 +109,7 @@ export class CanvasWorkspace {
     this.canvas.requestRenderAll();
   }
 
-  onResizeArtboard({ height, width }: WorkspaceDimensions) {
+  resizeArtboard({ height, width }: WorkspaceDimensions) {
     if (height) {
       this.height = height;
       this.artboard.set("height", height);
@@ -122,12 +122,12 @@ export class CanvasWorkspace {
     this.canvas.requestRenderAll();
   }
 
-  onChangeZoom(zoom: number) {
+  changeZoom(zoom: number) {
     this.zoom = zoom;
     this.canvas.setZoom(zoom);
   }
 
-  onChangeFill(fill: string) {
+  changeFill(fill: string) {
     this.fill = fill;
     this.artboard.set({ fill });
   }

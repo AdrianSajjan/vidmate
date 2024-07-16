@@ -1,35 +1,29 @@
-import { makeAutoObservable } from "mobx";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { toBlobURL } from "@ffmpeg/util";
+import { makeAutoObservable } from "mobx";
 
 import { Canvas } from "@/store/canvas";
 import { Recorder } from "@/store/recorder";
 
-import { convertBufferToWaveBlob, dataURLToUInt8Array } from "@/lib/media";
-import { createInstance, createUint8Array } from "@/lib/utils";
-import { fetchExtensionByCodec } from "@/constants/recorder";
+import { convertBufferToWaveBlob } from "@/lib/media";
+import { createInstance } from "@/lib/utils";
 import { EditorAudioElement } from "@/types/editor";
-import { FabricUtils } from "@/fabric/utils";
 
 export type ExportMode = "video" | "both";
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
 
 export interface EditorProgress {
-  audio: number;
   capture: number;
   compile: number;
-  combine: number;
 }
 
 export enum ExportProgress {
   None = 0,
   Error = 1,
   Completed = 2,
-  RenderScene = 3,
+  CaptureAudio = 3,
   CaptureVideo = 4,
   CompileVideo = 5,
-  CaptureAudio = 6,
-  CombineMedia = 7,
 }
 
 export class Editor {
@@ -66,7 +60,7 @@ export class Editor {
     this.controller = createInstance(AbortController);
 
     this.preview = false;
-    this.progress = { audio: 0, capture: 0, combine: 0, compile: 0 };
+    this.progress = { capture: 0, compile: 0 };
 
     this.file = "";
     this.fps = "30";
@@ -87,220 +81,77 @@ export class Editor {
     return this.pages[this.page];
   }
 
-  private _ffmpegProgressEvent({ progress }: { progress: number }) {
+  private _progressEvent({ progress, frame }: { progress: number; frame?: string }) {
     switch (this.exporting) {
-      case ExportProgress.CaptureAudio:
-        this.progress.audio = progress * 100;
-        break;
       case ExportProgress.CompileVideo:
         this.progress.compile = progress * 100;
         break;
-      case ExportProgress.CombineMedia:
-        this.progress.combine = progress * 100;
+      case ExportProgress.CaptureAudio:
+        this.progress.capture = progress * 100;
+        this.frame = frame;
         break;
     }
   }
 
-  *onInitialize() {
+  *initialize() {
     this.status = "pending";
     try {
       yield this.ffmpeg.load({
         coreURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js", "text/javascript"),
         wasmURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm", "application/wasm"),
       });
-      this.ffmpeg.on("progress", this._ffmpegProgressEvent.bind(this));
+      this.ffmpeg.on("progress", this._progressEvent.bind(this));
       this.status = "complete";
     } catch (error) {
       this.status = "error";
     }
   }
 
-  *onCaptureFrames() {
-    const frames: Uint8Array[] = [];
-    const interval = 1000 / +this.fps;
-
-    const count = this.canvas.timeline.duration / interval;
-    this.onChangeExportStatus(ExportProgress.CaptureVideo);
-
-    for (let frame = 0; frame < count; frame++) {
-      this.controller.signal.throwIfAborted();
-      const seek = frame === count - 1 ? this.canvas.timeline.duration : (frame / count) * this.canvas.timeline.duration;
-
-      this.recorder.timeline!.seek(seek);
-      yield this.recorder.onToggleElements(seek);
-
-      const base64 = this.recorder.onCaptureFrame();
-      const buffer = dataURLToUInt8Array(base64);
-
-      this.frame = base64;
-      this.progress.capture = ((frame + 1) / count) * 100;
-      frames.push(buffer);
-    }
-
-    return frames;
-  }
-
-  *onCompileFrames(frames: Uint8Array[], audio?: Blob) {
-    if (!this.ffmpeg.loaded) throw createInstance(Error, "Ffmpeg is not loaded");
-
-    let cleanup = 0;
-
-    const pattern = "output_frame_%d.png";
-    const codec = fetchExtensionByCodec(this.codec);
-
-    const music = "output_audio.wav";
-    const temporary = "output_temporary." + codec.extension;
-    const output = audio ? "output_with_audio." + codec.extension : "output_without_audio." + codec.extension;
-
-    try {
-      this.onChangeExportStatus(ExportProgress.CompileVideo);
-
-      for (let frame = 0; frame < frames.length; frame++) {
-        this.controller.signal.throwIfAborted();
-        const name = pattern.replace("%d", String(frame));
-        yield this.ffmpeg.writeFile(name, frames[frame], { signal: this.controller.signal });
-        cleanup = frame;
-      }
-
-      yield this.ffmpeg.exec(["-framerate", this.fps, "-i", pattern, "-c:v", codec.command, "-preset", "ultrafast", "-pix_fmt", "yuv420p", temporary], undefined, { signal: this.controller.signal });
-
-      if (audio) {
-        this.onChangeExportStatus(ExportProgress.CombineMedia);
-        const buffer: ArrayBuffer = yield audio.arrayBuffer();
-
-        yield this.ffmpeg.writeFile(music, createUint8Array(buffer), { signal: this.controller.signal });
-        yield this.ffmpeg.exec(["-i", temporary, "-i", music, "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", output], undefined, { signal: this.controller.signal });
-        const data: Uint8Array = yield this.ffmpeg.readFile(output, undefined, { signal: this.controller.signal });
-
-        this.controller.signal.throwIfAborted();
-        this.onChangeExportStatus(ExportProgress.Completed);
-        const blob = createInstance(Blob, [data.buffer], { type: codec.mimetype });
-
-        return blob;
-      } else {
-        yield this.ffmpeg.rename(temporary, output, { signal: this.controller.signal });
-        const data: Uint8Array = yield this.ffmpeg.readFile(output, undefined, { signal: this.controller.signal });
-
-        this.progress.combine = 100;
-        this.controller.signal.throwIfAborted();
-
-        this.onChangeExportStatus(ExportProgress.Completed);
-        const blob = createInstance(Blob, [data.buffer], { type: codec.mimetype });
-
-        return blob;
-      }
-    } finally {
-      try {
-        for (let frame = 0; frame <= cleanup; frame++) {
-          const name = pattern.replace("%d", String(frame));
-          yield this.ffmpeg.deleteFile(name);
-        }
-        yield this.ffmpeg.deleteFile(output);
-        if (audio) {
-          yield this.ffmpeg.deleteFile(temporary);
-          yield this.ffmpeg.deleteFile(music);
-        }
-      } catch {
-        console.warn("FFMPEG - Failed to perform cleanup");
-      }
-    }
-  }
-
-  *onExtractAudioTracks() {
-    const result: EditorAudioElement[] = [];
-
-    for (const object of this.canvas.instance!._objects) {
-      if (!FabricUtils.isVideoElement(object) || !object.hasAudio) continue;
-
-      this.controller.signal.throwIfAborted();
-      const input = object.name!;
-      const output = object.name! + ".wav";
-
-      const file: Uint8Array = yield fetchFile(object.getSrc());
-      yield this.ffmpeg.writeFile(input, file);
-      yield this.ffmpeg.exec(["-i", input, "-q:a", "0", "-map", "a", output], undefined, { signal: this.controller.signal });
-
-      const data: Uint8Array = yield this.ffmpeg.readFile(output);
-      const buffer: AudioBuffer = yield this.canvas.audioContext.decodeAudioData(data.buffer);
-
-      const id = FabricUtils.elementID("audio");
-      const duration = buffer.duration;
-
-      const muted = object.muted();
-      const volume = object.volume();
-
-      const trim = object.trimStart / 1000;
-      const offset = object.meta!.offset / 1000;
-      const timeline = object.meta!.duration / 1000 - object.trimStart / 1000 - object.trimEnd / 1000;
-
-      const source = this.canvas.audioContext.createBufferSource();
-      source.buffer = buffer;
-      source.connect(this.canvas.audioContext.destination);
-
-      result.push({ id, buffer, duration, muted, volume, source, offset, timeline, trim, name: output, playing: false, url: "" });
-    }
-
-    return result;
-  }
-
-  *onExportAudio() {
-    if (this.exports === "video") {
-      this.progress.audio = 100;
-      return null;
-    }
-
+  *exportAudio() {
+    if (this.exports === "video") return null;
     this.controller = createInstance(AbortController);
-    this.onChangeExportStatus(ExportProgress.CaptureAudio);
 
-    const tracks: EditorAudioElement[] = yield this.onExtractAudioTracks();
-    const audios = this.canvas.audios.filter((audio) => !audio.muted && !!audio.volume);
+    const tracks: EditorAudioElement[] = yield this.canvas.audio.extract(this.ffmpeg, { signal: this.controller.signal });
+    const audios = this.canvas.audio.elements.filter((audio) => !audio.muted && !!audio.volume);
     const combined = ([] as EditorAudioElement[]).concat(audios, tracks);
 
-    if (!combined.length) {
-      this.progress.audio = 100;
-      return null;
-    }
+    if (!combined.length) return null;
 
     const sampleRate = combined[0].buffer.sampleRate;
     const duration = combined.reduce((duration, audio) => (audio.timeline + audio.offset > duration ? audio.timeline + audio.offset : duration), 0);
     const length = Math.min(duration, this.canvas.timeline.duration / 1000) * sampleRate;
 
     const context = createInstance(OfflineAudioContext, 2, length, sampleRate);
-    this.canvas.onStartRecordAudio(combined, context);
-
-    const handler = () => this.canvas.onStopRecordAudio(audios);
+    this.canvas.audio.record(combined, context);
+    const handler = () => this.canvas.audio.stop(audios);
     this.controller.signal.addEventListener("abort", handler);
 
     const buffer: AudioBuffer = yield context.startRendering();
     this.controller.signal.throwIfAborted();
-
     this.controller.signal.removeEventListener("abort", handler);
-    const blob = convertBufferToWaveBlob(buffer, buffer.length);
-    this.progress.audio = 100;
 
+    const blob = convertBufferToWaveBlob(buffer, buffer.length);
     return blob;
   }
 
-  *onExportVideo() {
+  *exportVideo() {
     this.blob = undefined;
     this.frame = undefined;
+    this.onResetProgress();
 
     try {
-      this.onResetProgress();
-
-      const audio: Blob = yield this.onExportAudio();
+      this.onChangeExportStatus(ExportProgress.CaptureAudio);
+      const audio: Blob = yield this.exportAudio();
       this.controller = createInstance(AbortController);
 
-      this.onChangeExportStatus(ExportProgress.RenderScene);
       yield this.recorder.start();
-
-      const frames: Uint8Array[] = yield this.onCaptureFrames();
+      this.onChangeExportStatus(ExportProgress.CaptureVideo);
+      const frames: Uint8Array[] = yield this.recorder.capture(+this.fps, { signal: this.controller.signal, progress: this._progressEvent.bind(this) });
       this.recorder.stop();
 
-      const blob: Blob = yield this.onCompileFrames(frames, audio);
-      this.controller.signal.throwIfAborted();
+      this.onChangeExportStatus(ExportProgress.CompileVideo);
+      const blob: Blob = yield this.recorder.compile(frames, { ffmpeg: this.ffmpeg, codec: this.codec, fps: this.fps, signal: this.controller.signal, audio });
       this.blob = blob;
-
       return blob;
     } catch (error) {
       this.recorder.stop();
@@ -310,7 +161,7 @@ export class Editor {
   }
 
   onResetProgress() {
-    this.progress = { audio: 0, capture: 0, combine: 0, compile: 0 };
+    this.progress = { capture: 0, compile: 0 };
   }
 
   onChangeExportStatus(status: ExportProgress) {
@@ -331,6 +182,18 @@ export class Editor {
 
   onChangeFileName(name: string) {
     this.file = name;
+  }
+
+  setActiveSidebarLeft(sidebar: string | null) {
+    this.sidebarLeft = sidebar;
+  }
+
+  setActiveSidebarRight(sidebar: string | null) {
+    this.sidebarRight = sidebar;
+  }
+
+  onAddPage() {
+    this.pages.push(createInstance(Canvas));
   }
 
   onTogglePreviewModal(mode: "open" | "close") {
@@ -357,17 +220,5 @@ export class Editor {
         this.isTimelineOpen = !this.isTimelineOpen;
         break;
     }
-  }
-
-  setActiveSidebarLeft(sidebar: string | null) {
-    this.sidebarLeft = sidebar;
-  }
-
-  setActiveSidebarRight(sidebar: string | null) {
-    this.sidebarRight = sidebar;
-  }
-
-  onAddPage() {
-    this.pages.push(createInstance(Canvas));
   }
 }

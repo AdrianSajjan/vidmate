@@ -144,7 +144,7 @@ function _TrimToolbarAudio() {
   const handleChanges = () => {
     const _trim = (trim / containerWidth) * audio.duration;
     const _timeline = ((containerWidth - timeline) / containerWidth) * audio.duration;
-    editor.canvas.onChangeAudioProperties(audio.id, { trim: _trim, timeline: audio.duration - _trim - _timeline });
+    editor.canvas.audio.update(audio.id, { trim: _trim, timeline: audio.duration - _trim - _timeline });
     editor.canvas.onTrimAudioEnd();
   };
 

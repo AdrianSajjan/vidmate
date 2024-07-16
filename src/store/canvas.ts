@@ -13,6 +13,7 @@ import { activityIndicator, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
+import { CanvasAudio } from "@/plugins/audio";
 
 export const minLayerStack = 3;
 export const canvasYPadding = 100;
@@ -21,26 +22,22 @@ export class Canvas {
   artboard?: fabric.Rect;
   instance?: fabric.Canvas;
 
+  audio!: CanvasAudio;
+  timeline!: CanvasTimeline;
+
   cropper!: CanvasCropper;
   history!: CanvasHistory;
-  timeline!: CanvasTimeline;
   workspace!: CanvasWorkspace;
-
-  audioContext: AudioContext;
-  audios: EditorAudioElement[];
 
   elements: fabric.Object[];
   selected?: fabric.Object | null;
-  controls: boolean;
 
+  controls: boolean;
   trim?: EditorTrim | null;
 
   constructor() {
     this.elements = [];
     this.controls = true;
-
-    this.audios = [];
-    this.audioContext = createInstance(AudioContext);
 
     makeAutoObservable(this);
   }
@@ -173,6 +170,7 @@ export class Canvas {
     this.history = createInstance(CanvasHistory, this);
     this.cropper = createInstance(CanvasCropper, this);
 
+    this.audio = createInstance(CanvasAudio, this);
     this.timeline = createInstance(CanvasTimeline, this);
     this.workspace = createInstance(CanvasWorkspace, this, workspace);
 
@@ -182,59 +180,6 @@ export class Canvas {
     this.instance.add(this.artboard);
     this.instance.clipPath = this.artboard;
     this.instance.renderAll();
-  }
-
-  onInitializeAudioTimeline() {
-    for (const audio of this.audios) {
-      if (audio.muted) continue;
-
-      const gain = this.audioContext.createGain();
-      const source = this.audioContext.createBufferSource();
-
-      source.buffer = audio.buffer;
-      gain.gain.value = audio.volume;
-
-      gain.connect(this.audioContext.destination);
-      source.connect(gain);
-
-      audio.playing = true;
-      audio.source = source;
-
-      audio.source.start(this.audioContext.currentTime + audio.offset, audio.trim, audio.timeline);
-      audio.source.addEventListener("ended", () => (audio.playing = false));
-    }
-  }
-
-  onResetAudioTimeline() {
-    for (const audio of this.audios) {
-      if (!audio.playing) continue;
-      audio.playing = false;
-      audio.source.stop();
-    }
-  }
-
-  onStartRecordAudio(audios: EditorAudioElement[], context: OfflineAudioContext) {
-    for (const audio of audios) {
-      if (audio.muted) continue;
-
-      const gain = context.createGain();
-      const source = context.createBufferSource();
-
-      source.buffer = audio.buffer;
-      gain.gain.value = audio.volume;
-      audio.source = source;
-
-      gain.connect(context.destination);
-      source.connect(gain);
-      source.start(context.currentTime + audio.offset, audio.trim, audio.timeline);
-    }
-  }
-
-  onStopRecordAudio(audios: EditorAudioElement[]) {
-    for (const audio of audios) {
-      if (!audio.muted) continue;
-      audio.source.stop();
-    }
   }
 
   onDeleteObject(object?: fabric.Object) {
@@ -268,25 +213,6 @@ export class Canvas {
     this.instance.setActiveObject(textbox).requestRenderAll();
 
     return textbox;
-  }
-
-  *onAddAudioFromSource(url: string, name: string) {
-    const response: Response = yield fetch(url);
-    const data: ArrayBuffer = yield response.arrayBuffer();
-    const buffer: AudioBuffer = yield this.audioContext.decodeAudioData(data);
-
-    const id = FabricUtils.elementID("audio");
-    const duration = buffer.duration;
-    const timeline = Math.min(duration, this.timeline.duration / 1000);
-
-    const source = this.audioContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(this.audioContext.destination);
-
-    const audio: EditorAudioElement = { id, buffer, url, timeline, name, duration, source, muted: false, playing: false, trim: 0, offset: 0, volume: 1 };
-    this.audios.push(audio);
-
-    return audio;
   }
 
   *onAddImageFromSource(source: string, options?: fabric.IImageOptions, skip?: boolean) {
@@ -502,15 +428,6 @@ export class Canvas {
     if (!audio) return (this.selected = null);
     this.instance!.discardActiveObject().requestRenderAll();
     this.selected = Object.assign({ type: "audio" }, audio) as unknown as fabric.Object;
-  }
-
-  onDeleteAudio(id: string) {
-    const index = this.audios.findIndex((audio) => audio.id === id);
-    if (index === -1) return;
-    const audio = this.audios[index];
-    this.audios.splice(index, 1);
-    if (this.selected?.id === audio.id) this.selected = null;
-    if (this.trim?.selected.id === audio.id) this.trim = null;
   }
 
   onSelectGroup(group: string[]) {
@@ -870,15 +787,6 @@ export class Canvas {
     const selected = this.instance?.getActiveObject() as fabric.Video | null;
     if (!this.instance || !selected || selected.type !== "video") return;
     this.onChangeVideoProperty(selected, property, value);
-  }
-
-  onChangeAudioProperties(id: string, value: Partial<EditorAudioElement>) {
-    const index = this.audios.findIndex((audio) => audio.id === id);
-    const audio = this.audios[index];
-    const updated = { ...audio, ...value };
-    this.audios[index] = updated;
-    if (!this.selected || this.selected.type !== "audio" || this.selected.id !== id) return;
-    this.selected = Object.assign({ type: "audio" }, updated) as unknown as fabric.Object;
   }
 
   onChangeObjectLayer(element: fabric.Object, type: "up" | "down" | "top" | "bottom") {

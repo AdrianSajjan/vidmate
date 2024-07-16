@@ -29,10 +29,10 @@ export function useInitializeRecorder() {
   const ref = useCallback(
     (element: HTMLCanvasElement) => {
       if (!element) {
-        editor.recorder.instance?.dispose();
+        editor.recorder.destroy();
         setInitialized(false);
       } else {
-        editor.recorder.onInitialize(element);
+        editor.recorder.initialize(element);
         setInitialized(true);
       }
     },

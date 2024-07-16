@@ -38,11 +38,11 @@ function _PreviewModalContent() {
   const editor = useEditorContext();
 
   const codec = fetchExtensionByCodec(editor.codec);
-  const progress = editor.progress.audio * 0.1 + editor.progress.capture * 0.4 + editor.progress.compile * 0.4 + editor.progress.combine * 0.1;
+  const progress = editor.progress.capture * 0.4 + editor.progress.compile * 0.6;
 
   const handleExportVideo = async () => {
     try {
-      const blob = await flowResult(editor.onExportVideo());
+      const blob = await flowResult(editor.exportVideo());
       const file = (editor.file || "output") + "." + codec.extension;
       createFileDownload(blob, file);
     } catch (e) {
@@ -168,16 +168,13 @@ function _ProgressText({ progress }: { progress: ExportProgress }) {
       return <span className="text-xxs text-primary-foreground">Error</span>;
     case ExportProgress.Completed:
       return <span className="text-xxs text-primary-foreground">Completed</span>;
-    case ExportProgress.RenderScene:
-      return <span className="text-xxs text-primary-foreground">In Progress - Rendering Video Scene</span>;
-    case ExportProgress.CaptureVideo:
-      return <span className="text-xxs text-primary-foreground">In Progress - Capturing Video Frames</span>;
-    case ExportProgress.CompileVideo:
-      return <span className="text-xxs text-primary-foreground">In Progress - Compiling Video Frames</span>;
     case ExportProgress.CaptureAudio:
-      return <span className="text-xxs text-primary-foreground">In Progress - Compiling Audio</span>;
-    case ExportProgress.CombineMedia:
-      return <span className="text-xxs text-primary-foreground">In Progress - Combining Audio and Audio</span>;
+      return <span className="text-xxs text-primary-foreground">In Progress - Capturing Audio</span>;
+    case ExportProgress.CaptureVideo:
+      return <span className="text-xxs text-primary-foreground">In Progress - Capturing Video</span>;
+    case ExportProgress.CompileVideo:
+      return <span className="text-xxs text-primary-foreground">In Progress - Compiling Media</span>;
+
     default:
       return null;
   }

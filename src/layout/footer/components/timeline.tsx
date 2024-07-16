@@ -84,7 +84,7 @@ function _EditorTimeline() {
           {[...editor.canvas.elements].reverse().map((element) => (
             <TimelineElementItem key={element.name} element={element} trackWidth={trackWidth} />
           ))}
-          {[...editor.canvas.audios].reverse().map((audio) => (
+          {[...editor.canvas.audio.elements].reverse().map((audio) => (
             <TimelineAudioItem key={audio.id} audio={audio} trackWidth={trackWidth} />
           ))}
         </div>
@@ -216,20 +216,20 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
   const handleDragTrack = (value: number) => {
     if (editor.canvas.timeline.playing) return;
     const offset = value / SEEK_TIME_WIDTH;
-    editor.canvas.onChangeAudioProperties(audio.id, { offset });
+    editor.canvas.audio.update(audio.id, { offset });
   };
 
   const handleDragLeftBar = (value: number) => {
     if (editor.canvas.timeline.playing) return;
     const offset = value / SEEK_TIME_WIDTH;
     const timeline = audio.timeline + audio.offset - offset;
-    editor.canvas.onChangeAudioProperties(audio.id, { offset, timeline });
+    editor.canvas.audio.update(audio.id, { offset, timeline });
   };
 
   const handleDragRightBar = (value: number) => {
     if (editor.canvas.timeline.playing) return;
     const timeline = value / SEEK_TIME_WIDTH - audio.offset;
-    editor.canvas.onChangeAudioProperties(audio.id, { timeline });
+    editor.canvas.audio.update(audio.id, { timeline });
   };
 
   const style = {
