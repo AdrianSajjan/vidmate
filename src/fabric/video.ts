@@ -3,7 +3,7 @@ import { createInstance, createPromise, waitUntilEvent } from "@/lib/utils";
 import { fabric } from "fabric";
 import { clamp, isUndefined } from "lodash";
 
-const FabricVideo = fabric.util.createClass(fabric.Image, {
+const Video = fabric.util.createClass(fabric.Image, {
   type: "video",
   playing: false,
 
@@ -81,7 +81,7 @@ const FabricVideo = fabric.util.createClass(fabric.Image, {
   },
 });
 
-FabricVideo.fromURL = function (url: string, callback: (video: fabric.Video | null) => void, options?: fabric.IVideoOptions) {
+Video.fromURL = function (url: string, callback: (video: fabric.Video | null) => void, options?: fabric.IVideoOptions) {
   const element = document.createElement("video");
   element.currentTime = 0;
   element.crossOrigin = options?.crossOrigin ?? null;
@@ -91,7 +91,7 @@ FabricVideo.fromURL = function (url: string, callback: (video: fabric.Video | nu
       element.height = element.videoHeight;
       element.width = element.videoWidth;
       const hasAudio = await checkForAudioInVideo(url);
-      callback(createInstance(FabricVideo, element, Object.assign({ hasAudio }, options)));
+      callback(createInstance(Video, element, Object.assign({ hasAudio }, options)));
     },
     { once: true },
   );
@@ -100,7 +100,7 @@ FabricVideo.fromURL = function (url: string, callback: (video: fabric.Video | nu
   element.load();
 };
 
-FabricVideo.fromObject = function (object: any, callback: (video: fabric.Video) => void) {
+Video.fromObject = function (object: any, callback: (video: fabric.Video) => void) {
   Promise.all([
     createPromise<fabric.IBaseFilter[]>((resolve) => {
       if (!object.filters?.length) {
@@ -116,7 +116,7 @@ FabricVideo.fromObject = function (object: any, callback: (video: fabric.Video) 
       }
     }),
   ]).then(([filters]) => {
-    FabricVideo.fromURL(
+    Video.fromURL(
       object.src,
       (video: fabric.Video) => {
         callback(video);
@@ -126,4 +126,4 @@ FabricVideo.fromObject = function (object: any, callback: (video: fabric.Video) 
   });
 };
 
-fabric.Video = FabricVideo;
+fabric.Video = Video;
