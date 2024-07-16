@@ -25,11 +25,11 @@ function _ToolbarPositionOption() {
   const editor = useEditorContext();
 
   const handleMoveLayer = (type: "up" | "down" | "bottom" | "top") => {
-    editor.canvas.onChangeActiveObjectLayer(type);
+    editor.canvas.alignment.changeActiveObjectLayer(type);
   };
 
   const handleAlignToPage = (type: "left" | "center" | "right" | "top" | "middle" | "bottom") => {
-    editor.canvas.onAlignActiveObjectToPage(type);
+    editor.canvas.alignment.alignActiveObjecToPage(type);
   };
 
   return (

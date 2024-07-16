@@ -13,7 +13,7 @@ import { useEditorContext } from "@/context/editor";
 
 function _FontSidebar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected! as fabric.Textbox;
+  const selected = editor.canvas.selection.active! as fabric.Textbox;
 
   const isFontSelected = (font: EditorFont) => {
     return selected.fontFamily?.toLowerCase() === font.family.toLowerCase();

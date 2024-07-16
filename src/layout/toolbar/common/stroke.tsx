@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 
 function _ToolbarStrokeOption() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected as fabric.Object;
+  const selected = editor.canvas.selection.active as fabric.Object;
 
   return (
     <div className="flex items-center gap-2.5 mr-5">

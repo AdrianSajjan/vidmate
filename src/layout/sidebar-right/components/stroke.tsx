@@ -14,7 +14,7 @@ const picker = { default: { picker: { boxShadow: "none", padding: 0, width: "100
 
 function _StrokeSidebar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected!;
+  const selected = editor.canvas.selection.active!;
 
   const onColorChange = (result: ColorResult) => {
     const { r, g, b, a } = result.rgb;

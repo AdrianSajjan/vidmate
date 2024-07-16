@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function _ClipMaskSidebar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected!;
+  const selected = editor.canvas.selection.active!;
 
   const scene = useMemo(() => {
     return editor.canvas.elements.filter((element) => element.name !== selected.name && element.type !== "textbox");

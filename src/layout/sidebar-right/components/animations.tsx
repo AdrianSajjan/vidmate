@@ -52,7 +52,7 @@ function _AnimationSidebar() {
 function _EntryAnimations() {
   const editor = useEditorContext();
 
-  const selected = editor.canvas.selected!;
+  const selected = editor.canvas.selection.active!;
   const animation = entry.find((animation) => animation.value === selected.anim?.in.name);
 
   const easing = selected.anim?.in.easing || "linear";
@@ -111,7 +111,7 @@ function _EntryAnimations() {
 function _ExitAnimations() {
   const editor = useEditorContext();
 
-  const selected = editor.canvas.selected!;
+  const selected = editor.canvas.selection.active!;
   const disabled = !selected.anim?.out.name || selected.anim?.out.name === "none";
 
   const handleSelectAnimation = (animation: EditorAnimation) => {

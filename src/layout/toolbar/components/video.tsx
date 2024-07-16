@@ -14,7 +14,7 @@ import { ToolbarTimelineOption } from "../common/timeline";
 
 function _VideoToolbar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected as fabric.Video;
+  const selected = editor.canvas.selection.active as fabric.Video;
 
   const handleCropStart = () => {
     const video = editor.canvas.instance?.getActiveObject();

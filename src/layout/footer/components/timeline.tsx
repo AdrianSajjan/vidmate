@@ -116,10 +116,10 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
   }, [element]);
 
   const isSelected = useMemo(() => {
-    if (!editor.canvas.selected) return false;
-    if (FabricUtils.isActiveSelection(editor.canvas.selected)) return editor.canvas.selected.objects.some((object) => object.name === element.name);
-    return editor.canvas.selected.name === element.name;
-  }, [editor.canvas.selected, element]);
+    if (!editor.canvas.selection.active) return false;
+    if (FabricUtils.isActiveSelection(editor.canvas.selection.active)) return editor.canvas.selection.active.objects.some((object) => object.name === element.name);
+    return editor.canvas.selection.active.name === element.name;
+  }, [editor.canvas.selection.active, element]);
 
   const handleDragTrack = (value: number) => {
     if (editor.canvas.timeline.playing) return;
@@ -166,7 +166,7 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
 
       <Draggable axis={editor.canvas.timeline.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
         <button
-          onClick={(event) => (editor.canvas.timeline.playing ? null : editor.canvas.onCreateSelection(element.name!, event.shiftKey))}
+          onClick={(event) => (editor.canvas.timeline.playing ? null : editor.canvas.selection.selectObject(element.name!, event.shiftKey))}
           className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-primary" : "border-gray-400")}
           style={style}
         >
@@ -201,9 +201,9 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
   const width = audio.timeline * SEEK_TIME_WIDTH;
 
   const isSelected = useMemo(() => {
-    if (!editor.canvas.selected || editor.canvas.selected.type !== "audio") return;
-    return editor.canvas.selected.id === audio.id;
-  }, [editor.canvas.selected, audio]);
+    if (!editor.canvas.selection.active || editor.canvas.selection.active.type !== "audio") return;
+    return editor.canvas.selection.active.id === audio.id;
+  }, [editor.canvas.selection.active, audio]);
 
   useEffect(() => {
     drawWavefromFromAudioBuffer(audio.buffer, 40, width).then(setBackgroundURL);
@@ -254,7 +254,7 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
       ) : null}
       <Draggable axis={editor.canvas.timeline.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
         <button
-          onClick={() => (editor.canvas.timeline.playing ? null : editor.canvas.onSelectAudio(isSelected ? null : audio))}
+          onClick={() => (editor.canvas.timeline.playing ? null : editor.canvas.selection.selectAudio(isSelected ? null : audio))}
           className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-primary" : "border-gray-400")}
           style={style}
         >

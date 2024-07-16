@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 
 function _ToolbarFillOption() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected as fabric.Object;
+  const selected = editor.canvas.selection.active as fabric.Object;
 
   return (
     <div className="flex items-center gap-2.5">

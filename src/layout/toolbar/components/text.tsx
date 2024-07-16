@@ -22,7 +22,7 @@ import { Slider } from "@/components/ui/slider";
 
 function _TextToolbar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected as fabric.Textbox;
+  const selected = editor.canvas.selection.active as fabric.Textbox;
 
   return (
     <div className="flex items-center h-full w-full overflow-x-scroll scrollbar-hidden">

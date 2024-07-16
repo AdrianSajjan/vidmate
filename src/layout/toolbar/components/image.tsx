@@ -14,7 +14,7 @@ import { FabricUtils } from "@/fabric/utils";
 
 function _ImageToolbar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected as fabric.Image;
+  const selected = editor.canvas.selection.active as fabric.Image;
 
   const handleCropStart = () => {
     const image = editor.canvas.instance?.getActiveObject();

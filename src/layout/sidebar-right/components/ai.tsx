@@ -69,7 +69,7 @@ function _AISidebar() {
 
 function _AIPluginItems(props: Omit<SelectPluginProps, "plugin">) {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected!;
+  const selected = editor.canvas.selection.active!;
 
   switch (selected.type) {
     case "image":
@@ -109,7 +109,7 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
   const [position, setPosition] = useState(0);
   const [ref, dimensions] = useMeasure();
 
-  const selected = editor.canvas.selected! as fabric.Image;
+  const selected = editor.canvas.selection.active! as fabric.Image;
   const entry = rmbgAI.cache.get(selected.name!);
   const pending = rmbgAI.pending.get(selected.name!);
 

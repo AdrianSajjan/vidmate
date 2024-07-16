@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 function _FilterSidebar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected! as fabric.Image;
+  const selected = editor.canvas.selection.active! as fabric.Image;
 
   const handleToggleFilter = (filter: Filter) => {
     if (selected.effects!.name === filter.name) {

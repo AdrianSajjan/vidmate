@@ -15,7 +15,7 @@ import { Toggle } from "@/components/ui/toggle";
 
 function _AudioToolbar() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selected as unknown as EditorAudioElement;
+  const selected = editor.canvas.selection.active as unknown as EditorAudioElement;
 
   return (
     <div className="flex items-center h-full w-full overflow-x-scroll scrollbar-hidden">
