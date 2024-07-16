@@ -11,15 +11,15 @@ const MENU_OFFSET_Y = 60;
 
 function _EditorElementControls() {
   const editor = useEditorContext();
-  if (!editor.canvas.selected || editor.canvas.selected.type === "audio" || !editor.canvas.controls || !editor.canvas.workspace) return null;
+  if (!editor.canvas.selection || !editor.canvas.selection.active || editor.canvas.selection.active.type === "audio" || !editor.canvas.controls) return null;
   return <EditorElementControlsBase />;
 }
 
 function _EditorElementControlsBase() {
   const editor = useEditorContext();
 
-  const selected = editor.canvas.selected!;
   const workspace = editor.canvas.workspace;
+  const selected = editor.canvas.selection.active!;
 
   const style = useMemo(() => {
     const selected = editor.canvas.instance?.getActiveObject();
@@ -42,7 +42,7 @@ function _EditorElementControlsBase() {
     <motion.div style={style} className="absolute border bg-popover text-popover-foreground shadow rounded-md outline-none items-center divide-x flex -translate-x-1/2">
       {selected.meta!.group ? (
         <div className="flex items-center p-1">
-          <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.canvas.onSelectGroup(selected.meta!.group)}>
+          <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.canvas.selection.selectGroup(selected.meta!.group)}>
             <GroupIcon size={14} />
             <span>Select Group</span>
           </Button>

@@ -232,7 +232,7 @@ fabric.Cropper = fabric.util.createClass(fabric.Rect, {
 
 fabric.Canvas.prototype.getItemByName = function (name) {
   let object: fabric.Object | null = null;
-  const objects = this.getObjects();
+  const objects = this._objects;
   for (let i = 0, len = this.size(); i < len; i++) {
     if (objects[i].get("type") == "group") {
       if (objects[i].get("name") && objects[i].get("name") === name) {
@@ -252,6 +252,10 @@ fabric.Canvas.prototype.getItemByName = function (name) {
     }
   }
   return object;
+};
+
+fabric.Canvas.prototype.indexOf = function (object) {
+  return this._objects.findIndex((element) => element === object);
 };
 
 fabric.Object.NUM_FRACTION_DIGITS = 5;

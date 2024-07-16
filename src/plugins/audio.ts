@@ -24,6 +24,10 @@ export class CanvasAudio {
     return this._canvas.instance!;
   }
 
+  private get selection() {
+    return this._canvas.selection;
+  }
+
   private get timeline() {
     return this._canvas.timeline;
   }
@@ -90,10 +94,12 @@ export class CanvasAudio {
   delete(id: string) {
     const index = this.elements.findIndex((audio) => audio.id === id);
     if (index === -1) return;
+
     const audio = this.elements[index];
     this.elements.splice(index, 1);
+
     runInAction(() => {
-      if (this._canvas.selected?.id === audio.id) this._canvas.selected = null;
+      if (this.selection.active?.id === audio.id) this.selection.active = null;
       if (this._canvas.trim?.selected.id === audio.id) this._canvas.trim = null;
     });
   }
@@ -101,10 +107,13 @@ export class CanvasAudio {
   update(id: string, value: Partial<EditorAudioElement>) {
     const index = this.elements.findIndex((audio) => audio.id === id);
     const audio = this.elements[index];
+
     const updated = { ...audio, ...value };
     this.elements[index] = updated;
-    if (!this._canvas.selected || this._canvas.selected.type !== "audio" || this._canvas.selected.id !== id) return;
-    runInAction(() => (this._canvas.selected = Object.assign({ type: "audio" }, updated) as unknown as fabric.Object));
+
+    runInAction(() => {
+      if (this.selection) this.selection.active = Object.assign({ type: "audio" }, updated) as unknown as fabric.Object;
+    });
   }
 
   *add(url: string, name: string) {

@@ -2091,6 +2091,11 @@ export class Canvas {
    */
   getItemByName(name?: string): Object | null;
   /**
+   * Returns the index of the fabric object
+   * @return {number} index of object
+   */
+  indexOf(object?: fabric.Object): number;
+  /**
    * Sets given object as the only active object on canvas
    * @param {fabric.Object} object Object to set as an active one
    * @param {Event} [e] Event (passed along when firing "object:selected")
