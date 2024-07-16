@@ -50,7 +50,7 @@ const sidebarComponentMap: Record<string, SidebarMapValue> = {
 
 function _EditorSidebarRight() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selection.active;
+  const selected = editor.canvas.selection?.active;
 
   const sidebar = editor.sidebarRight ? sidebarComponentMap[editor.sidebarRight] : null;
   const close = sidebar ? sidebar.close(selected) : false;

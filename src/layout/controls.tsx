@@ -11,7 +11,7 @@ const MENU_OFFSET_Y = 60;
 
 function _EditorElementControls() {
   const editor = useEditorContext();
-  if (!editor.canvas.selection || !editor.canvas.selection.active || editor.canvas.selection.active.type === "audio" || !editor.canvas.controls) return null;
+  if (!editor.canvas.selection || !editor.canvas.workspace || !editor.canvas.controls || !editor.canvas.selection.active || editor.canvas.selection.active.type === "audio") return null;
   return <EditorElementControlsBase />;
 }
 
