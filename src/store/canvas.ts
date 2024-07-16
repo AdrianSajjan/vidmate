@@ -1,6 +1,6 @@
-import { EntryAnimation, ExitAnimation } from "canvas";
 import { fabric } from "fabric";
 import { floor } from "lodash";
+import { EntryAnimation, ExitAnimation } from "canvas";
 import { makeAutoObservable, runInAction } from "mobx";
 
 import { CanvasCropper } from "@/plugins/crop";
@@ -13,10 +13,10 @@ import { CanvasEffects } from "@/plugins/filters";
 import { CanvasAlignment } from "@/plugins/alignment";
 import { CanvasSelection } from "@/plugins/selection";
 
-import { activityIndicator, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
+import { activityIndicator, propertiesToInclude } from "@/fabric/constants";
 
 export class Canvas {
   artboard!: fabric.Rect;
@@ -460,11 +460,8 @@ export class Canvas {
   }
 
   onChangeObjectTimelineProperty(object: fabric.Object, property: string, value: number) {
-    if (!object || !this.instance) return;
-
-    if (!object.meta) object.meta = {};
+    if (!object || !object.meta) return;
     object.meta[property] = value;
-
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
   }
@@ -488,10 +485,8 @@ export class Canvas {
 
   onChangeObjectFillGradient(object: fabric.Object, type: string, colors: fabric.IGradientOptionsColorStops) {
     if (!object) return;
-
     const gradient = createInstance(fabric.Gradient, { type: type, gradientUnits: "percentage", colorStops: colors, coords: { x1: 0, y1: 0, x2: 1, y2: 0 } });
     object.set({ fill: gradient });
-
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
   }
