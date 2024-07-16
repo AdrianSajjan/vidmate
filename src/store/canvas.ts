@@ -8,12 +8,12 @@ import { CanvasGuidelines } from "@/plugins/guidelines";
 import { CanvasHistory } from "@/plugins/history";
 import { CanvasTimeline } from "@/plugins/timeline";
 import { CanvasWorkspace } from "@/plugins/workspace";
+import { CanvasAudio } from "@/plugins/audio";
 
 import { activityIndicator, propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
-import { CanvasAudio } from "@/plugins/audio";
 
 export const minLayerStack = 3;
 export const canvasYPadding = 100;
@@ -38,7 +38,6 @@ export class Canvas {
   constructor() {
     this.elements = [];
     this.controls = true;
-
     makeAutoObservable(this);
   }
 

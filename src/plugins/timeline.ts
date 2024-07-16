@@ -81,7 +81,7 @@ export class CanvasTimeline {
   }
 
   private _initializeTimeline() {
-    this._timeline = anime.timeline({ duration: this.duration, autoplay: false, begin: this._begin, update: this._update, complete: this._complete });
+    this._timeline = anime.timeline({ duration: this.duration, autoplay: false, begin: this._begin.bind(this), update: this._update.bind(this), complete: this._complete.bind(this) });
     CanvasAnimations.initializeAnimations(this.canvas, this._timeline!, this.duration);
   }
 

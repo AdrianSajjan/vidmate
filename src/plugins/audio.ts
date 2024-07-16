@@ -16,6 +16,7 @@ export class CanvasAudio {
     this._canvas = canvas;
     this.elements = [];
     this.context = createInstance(AudioContext);
+    this._initEvents();
     makeAutoObservable(this);
   }
 
@@ -25,6 +26,19 @@ export class CanvasAudio {
 
   private get timeline() {
     return this._canvas.timeline;
+  }
+
+  private _timelineStartEvent() {
+    this.play();
+  }
+
+  private _timelineStopEvent() {
+    this.stop();
+  }
+
+  private _initEvents() {
+    this.canvas.on("timeline:start", this._timelineStartEvent.bind(this));
+    this.canvas.on("timeline:stop", this._timelineStopEvent.bind(this));
   }
 
   play() {
