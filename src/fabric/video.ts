@@ -97,10 +97,15 @@ Video.fromURL = function (url: string, callback: (video: fabric.Video | null) =>
   );
   element.addEventListener("error", () => callback(null), { once: true });
   element.src = url;
-  element.load();
 };
 
-Video.fromObject = function (object: any, callback: (video: fabric.Video) => void) {
+Video.fromElement = function (element: HTMLVideoElement, callback: (video: fabric.Video | null) => void, options?: fabric.IVideoOptions) {
+  checkForAudioInVideo(element.src).then((hasAudio) => {
+    callback(createInstance(Video, element, Object.assign({ hasAudio }, options)));
+  });
+};
+
+Video.fromObject = function (object: fabric.Video, callback: (video: fabric.Video) => void) {
   Promise.all([
     createPromise<fabric.IBaseFilter[]>((resolve) => {
       if (!object.filters?.length) {

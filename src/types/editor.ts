@@ -35,4 +35,4 @@ export interface EditorTrimAudio {
   type: "audio";
 }
 
-export type EditorTrim = EditorTrimAudio | EditorTrimVideo;
+export type EditorTrim = EditorTrimAudio | EditorTrimVideo | null;

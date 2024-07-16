@@ -1,7 +1,7 @@
 import { EntryAnimation, ExitAnimation } from "canvas";
 import { fabric } from "fabric";
 import { floor } from "lodash";
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 
 import { CanvasCropper } from "@/plugins/crop";
 import { CanvasGuidelines } from "@/plugins/guidelines";
@@ -19,119 +19,102 @@ import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
 
 export class Canvas {
-  artboard?: fabric.Rect;
-  instance?: fabric.Canvas;
+  artboard!: fabric.Rect;
+  instance!: fabric.Canvas;
 
   audio!: CanvasAudio;
   timeline!: CanvasTimeline;
+  workspace!: CanvasWorkspace;
 
+  trim: EditorTrim;
   effects!: CanvasEffects;
   cropper!: CanvasCropper;
 
   history!: CanvasHistory;
   selection!: CanvasSelection;
   alignment!: CanvasAlignment;
-  workspace!: CanvasWorkspace;
 
   controls: boolean;
   elements: fabric.Object[];
 
-  trim?: EditorTrim | null;
-
   constructor() {
     this.elements = [];
+    this.trim = null;
     this.controls = true;
     makeAutoObservable(this);
   }
 
-  private onRefreshElements() {
-    if (!this.instance) return;
+  private _refreshElements() {
     this.elements = this.instance._objects.filter((object) => !FabricUtils.isElementExcluded(object)).map((object) => object.toObject(propertiesToInclude));
   }
 
-  private onAddElement(object?: fabric.Object) {
-    if (!object || FabricUtils.isElementExcluded(object)) return;
-    this.elements.push(object.toObject(propertiesToInclude));
-  }
-
-  private onUpdateElement(object?: fabric.Object) {
-    const index = this.elements.findIndex((element) => element.name === object?.name);
-    if (index === -1 || !object) return;
-    const element = object.toObject(propertiesToInclude);
-    if (object.name === this.trim?.selected.name) this.trim!.selected = element;
-    this.elements[index] = element;
-  }
-
-  private onToggleControls(object: fabric.Object, enabled: boolean) {
+  private _toggleControls(object: fabric.Object, enabled: boolean) {
     object.hasControls = enabled;
     this.controls = enabled;
   }
 
-  private onInitializeElementMeta(object: fabric.Object, props?: Record<string, any>) {
-    object.meta = {
-      duration: 5000,
-      offset: 0,
-      ...(object.meta || {}),
-    };
-    if (!props) return;
-    for (const key in props) {
-      object.meta[key] = props[key];
-    }
+  private _objectAddedEvent(event: fabric.IEvent) {
+    runInAction(() => {
+      if (!event.target || FabricUtils.isElementExcluded(event.target)) return;
+      this.elements.push(event.target.toObject(propertiesToInclude));
+    });
   }
 
-  private onInitializeElementAnimation(object: fabric.Object) {
-    object.anim = {
-      in: {
-        name: "none",
-        duration: 0,
-      },
-      out: {
-        name: "none",
-        duration: 0,
-      },
-    };
+  private _objectModifiedEvent(event: fabric.IEvent) {
+    runInAction(() => {
+      if (!event.target || FabricUtils.isElementExcluded(event.target)) return;
+      const index = this.elements.findIndex((element) => element.name === event.target!.name);
+      if (index === -1) return;
+      const element = event.target.toObject(propertiesToInclude);
+      this.elements[index] = element;
+      if (event.target.name === this.trim?.selected.name) this.trim!.selected = element;
+    });
   }
 
-  private onInitializeEvents() {
-    if (!this.instance) return;
+  private _objectDeletedEvent(_: fabric.IEvent) {
+    this._refreshElements();
+  }
 
-    this.instance.on("object:added", (event) => {
-      this.onAddElement(event.target);
+  private _objectMovingEvent(event: fabric.IEvent) {
+    runInAction(() => {
+      if (!event.target) return;
+      this._toggleControls(event.target, false);
     });
+  }
 
-    this.instance.on("object:moving", (event) => {
-      this.onToggleControls(event.target!, false);
-    });
-
-    this.instance.on("object:scaling", (event) => {
-      this.onToggleControls(event.target!, false);
-      if (event.target!.type === "textbox") {
-        const textbox = event.target as fabric.Textbox;
-        textbox.set({ fontSize: Math.round(textbox.fontSize! * textbox.scaleY!), width: textbox.width! * textbox.scaleX!, scaleY: 1, scaleX: 1 });
+  private _objectScalingEvent(event: fabric.IEvent) {
+    runInAction(() => {
+      if (!event.target) return;
+      switch (event.target.type) {
+        case "textbox":
+          const textbox = event.target as fabric.Textbox;
+          textbox.set({ fontSize: Math.round(textbox.fontSize! * textbox.scaleY!), width: textbox.width! * textbox.scaleX!, scaleY: 1, scaleX: 1 });
+          break;
       }
-    });
-
-    this.instance.on("object:resizing", (event) => {
-      this.onToggleControls(event.target!, false);
-    });
-
-    this.instance.on("object:rotating", (event) => {
-      if (event.e.shiftKey) event.target!.set({ snapAngle: 45 });
-      else event.target!.set({ snapAngle: undefined });
-      this.onToggleControls(event.target!, false);
-    });
-
-    this.instance.on("object:modified", (event) => {
-      this.onUpdateElement(event.target);
-      this.onToggleControls(event.target!, true);
-    });
-
-    this.instance.on("object:removed", () => {
-      this.onRefreshElements();
+      this._toggleControls(event.target, false);
     });
   }
 
-  onInitialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
+  private _objectRotatingEvent(event: fabric.IEvent<MouseEvent>) {
+    runInAction(() => {
+      if (!event.target) return;
+      if (event.e.shiftKey) event.target.set({ snapAngle: 45 });
+      else event.target.set({ snapAngle: undefined });
+      this._toggleControls(event.target, false);
+    });
+  }
+
+  private _initEvents() {
+    this.instance.on("object:added", this._objectAddedEvent.bind(this));
+    this.instance.on("object:modified", this._objectModifiedEvent.bind(this));
+    this.instance.on("object:removed", this._objectDeletedEvent.bind(this));
+
+    this.instance.on("object:moving", this._objectMovingEvent.bind(this));
+    this.instance.on("object:scaling", this._objectScalingEvent.bind(this));
+    this.instance.on("object:rotating", this._objectRotatingEvent.bind(this));
+  }
+
+  initialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
     const props = { width: workspace.offsetWidth, height: workspace.offsetHeight, backgroundColor: "#F0F0F0", selectionColor: "#2e73fc1c", selectionBorderColor: "#629bffcf", selectionLineWidth: 1.5 };
     this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, preserveObjectStacking: true, controlsAboveOverlay: true, ...props });
     this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
@@ -146,7 +129,7 @@ export class Canvas {
     this.cropper = createInstance(CanvasCropper, this);
     this.timeline = createInstance(CanvasTimeline, this);
 
-    this.onInitializeEvents();
+    this._initEvents();
     CanvasGuidelines.initializeAligningGuidelines(this.instance);
 
     this.instance.add(this.artboard);
@@ -155,40 +138,33 @@ export class Canvas {
   }
 
   onDeleteObject(object?: fabric.Object) {
-    if (!this.instance || !object) return;
-    this.instance.remove(object).requestRenderAll();
+    if (object) this.instance.remove(object).requestRenderAll();
   }
 
   onDeleteActiveObject() {
-    const selection = this.instance?.getActiveObject();
-    if (!selection || !this.instance) return;
+    const selection = this.instance.getActiveObject();
     if (FabricUtils.isActiveSelection(selection)) {
-      selection.forEachObject((object) => this.onDeleteObject(object));
+      this.instance.remove(...selection._objects);
     } else {
-      this.onDeleteObject(selection);
+      if (selection) this.instance.remove(selection);
     }
-    this.onRefreshElements();
     this.instance.discardActiveObject().requestRenderAll();
   }
 
   onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
-    if (!this.artboard || !this.instance) return;
-
     const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: 500, objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
-    textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
 
-    this.onInitializeElementMeta(textbox);
-    this.onInitializeElementAnimation(textbox);
+    textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
+    FabricUtils.initializeMetaProperties(textbox);
+    FabricUtils.initializeAnimationProperties(textbox);
 
     this.instance.add(textbox);
     this.instance.setActiveObject(textbox).requestRenderAll();
-
     return textbox;
   }
 
   *onAddImageFromSource(source: string, options?: fabric.IImageOptions, skip?: boolean) {
-    if (!this.instance || !this.artboard) return;
     return createPromise<fabric.Image>((resolve, reject) => {
       fabric.Image.fromURL(
         source,
@@ -202,8 +178,8 @@ export class Canvas {
             image.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
           }
 
-          this.onInitializeElementMeta(image);
-          this.onInitializeElementAnimation(image);
+          FabricUtils.initializeMetaProperties(image);
+          FabricUtils.initializeAnimationProperties(image);
 
           this.instance!.add(image);
           this.instance!.setActiveObject(image).requestRenderAll();
@@ -216,8 +192,6 @@ export class Canvas {
   }
 
   *onAddImageFromThumbail(source: string, thumbnail: HTMLImageElement) {
-    if (!this.instance || !this.artboard) return;
-
     const id = FabricUtils.elementID("image");
     const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true };
 
@@ -251,8 +225,8 @@ export class Canvas {
           image.set({ scaleX: placeholder.getScaledWidth() / image.getScaledWidth(), scaleY: placeholder.getScaledHeight() / image.getScaledHeight() });
           image.setPositionByOrigin(placeholder.getCenterPoint(), "center", "center");
 
-          this.onInitializeElementMeta(image);
-          this.onInitializeElementAnimation(image);
+          FabricUtils.initializeMetaProperties(image);
+          FabricUtils.initializeAnimationProperties(image);
 
           this.instance!.remove(placeholder).add(image);
           this.instance!.setActiveObject(image).requestRenderAll();
@@ -265,7 +239,6 @@ export class Canvas {
   }
 
   *onAddVideoFromSource(source: string, options?: fabric.IVideoOptions, skip?: boolean) {
-    if (!this.instance || !this.artboard) return;
     return createPromise<fabric.Video>((resolve, reject) => {
       fabric.Video.fromURL(
         source,
@@ -280,8 +253,8 @@ export class Canvas {
           }
 
           const element = video._originalElement as HTMLVideoElement;
-          this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration) });
-          this.onInitializeElementAnimation(video);
+          FabricUtils.initializeMetaProperties(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration) });
+          FabricUtils.initializeAnimationProperties(video);
 
           this.instance!.add(video);
           this.instance!.setActiveObject(video).requestRenderAll();
@@ -294,8 +267,6 @@ export class Canvas {
   }
 
   *onAddVideoFromThumbail(source: string, thumbnail: HTMLImageElement) {
-    if (!this.instance || !this.artboard) return;
-
     const id = FabricUtils.elementID("video");
     const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true };
 
@@ -330,8 +301,8 @@ export class Canvas {
           video.set({ scaleX: placeholder.getScaledWidth() / video.getScaledWidth(), scaleY: placeholder.getScaledHeight() / video.getScaledHeight() });
           video.setPositionByOrigin(placeholder.getCenterPoint(), "center", "center");
 
-          this.onInitializeElementMeta(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration) });
-          this.onInitializeElementAnimation(video);
+          FabricUtils.initializeMetaProperties(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration) });
+          FabricUtils.initializeAnimationProperties(video);
 
           this.instance!.remove(placeholder).add(video);
           this.instance!.setActiveObject(video).requestRenderAll();
@@ -344,13 +315,11 @@ export class Canvas {
   }
 
   onAddBasicShape(klass: string, params: any) {
-    if (!this.instance || !this.artboard) return;
-
     const shape: fabric.Object = createInstance((fabric as any)[klass], { name: FabricUtils.elementID(klass), objectCaching: true, ...params });
     shape.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
-    this.onInitializeElementMeta(shape);
-    this.onInitializeElementAnimation(shape);
+    FabricUtils.initializeMetaProperties(shape);
+    FabricUtils.initializeAnimationProperties(shape);
 
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
@@ -360,16 +329,14 @@ export class Canvas {
   }
 
   onAddAbstractShape(path: string, name = "shape") {
-    if (!this.artboard || !this.instance) return;
-
     const options = { name: FabricUtils.elementID(name), objectCaching: true, fill: "#000000" };
     const shape = createInstance(fabric.Path, path, options);
 
     shape.scaleToHeight(500);
     shape.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
-    this.onInitializeElementMeta(shape);
-    this.onInitializeElementAnimation(shape);
+    FabricUtils.initializeMetaProperties(shape);
+    FabricUtils.initializeAnimationProperties(shape);
 
     this.instance.add(shape);
     this.instance.setActiveObject(shape);
@@ -379,16 +346,14 @@ export class Canvas {
   }
 
   onAddLine(points: number[], name = "line") {
-    if (!this.artboard || !this.instance) return;
-
     const options = { name: FabricUtils.elementID(name), objectCaching: true, strokeWidth: 4, stroke: "#000000", hasBorders: false };
     const line = createInstance(fabric.Line, points, options);
 
     line.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
     line.set({ controls: { mtr: fabric.Object.prototype.controls.mtr, mr: fabric.Object.prototype.controls.mr, ml: fabric.Object.prototype.controls.ml } });
 
-    this.onInitializeElementMeta(line);
-    this.onInitializeElementAnimation(line);
+    FabricUtils.initializeMetaProperties(line);
+    FabricUtils.initializeAnimationProperties(line);
 
     this.instance.add(line);
     this.instance.setActiveObject(line).requestRenderAll();
@@ -410,16 +375,14 @@ export class Canvas {
   }
 
   onTrimVideoEnd() {
-    const object = this.instance?.getItemByName(this.trim?.selected.name);
+    const object = this.instance.getItemByName(this.trim?.selected.name);
     this.trim = null;
-    if (!this.instance || !FabricUtils.isVideoElement(object)) return;
+    if (!FabricUtils.isVideoElement(object)) return;
     object.seek(this.timeline.seek);
     this.instance.requestRenderAll();
   }
 
   *onReplaceImageSource(image: fabric.Image, source: string) {
-    if (!this.instance) return;
-
     const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true };
     const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY, fill: "#000000", opacity: 0.25, ...props });
     const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + image.name, fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
@@ -463,14 +426,12 @@ export class Canvas {
   }
 
   *onReplaceActiveImageSource(source: string) {
-    const object = this.instance?.getActiveObject() as fabric.Image;
+    const object = this.instance.getActiveObject() as fabric.Image;
     if (!object || object.type !== "image") return;
     this.onReplaceImageSource(object, source);
   }
 
   onAddClipPathToImage(image: fabric.Image, clipPath: fabric.Object) {
-    if (!this.instance || !this.artboard) return;
-
     const index = this.instance._objects.findIndex((object) => object === image);
     if (index === -1) return;
 
@@ -488,12 +449,12 @@ export class Canvas {
     clipPath.meta!.group = group;
     image.meta!.group = group;
 
-    this.onRefreshElements();
-    this.instance.fire("object:modified", { target: image }).fire("object:modified", { target: clipPath }).requestRenderAll();
+    this.instance.requestRenderAll();
+    this._refreshElements();
   }
 
   onAddClipPathToActiveImage(clipPath: fabric.Object) {
-    const object = this.instance?.getActiveObject() as fabric.Image | fabric.Video;
+    const object = this.instance.getActiveObject() as fabric.Image | fabric.Video;
     if (!object || !(object.type === "image" || object.type === "video")) return;
     this.onAddClipPathToImage(object, clipPath);
   }
@@ -509,26 +470,24 @@ export class Canvas {
   }
 
   onChangeActiveObjectTimelineProperty(property: string, value: any) {
-    const selected = this.instance?.getActiveObject();
-    if (!this.instance || !selected) return;
-    this.onChangeObjectTimelineProperty(selected, property, value);
+    const selected = this.instance.getActiveObject();
+    if (selected) this.onChangeObjectTimelineProperty(selected, property, value);
   }
 
   onChangeObjectProperty(object: fabric.Object, property: keyof fabric.Object, value: any) {
-    if (!this.instance || !object) return;
+    if (!object) return;
     object.set(property, value);
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
   }
 
   onChangeActiveObjectProperty(property: keyof fabric.Object, value: any) {
-    const selected = this.instance?.getActiveObject();
-    if (!this.instance || !selected) return;
-    this.onChangeObjectProperty(selected, property, value);
+    const selected = this.instance.getActiveObject();
+    if (selected) this.onChangeObjectProperty(selected, property, value);
   }
 
   onChangeObjectFillGradient(object: fabric.Object, type: string, colors: fabric.IGradientOptionsColorStops) {
-    if (!this.instance || !object) return;
+    if (!object) return;
 
     const gradient = createInstance(fabric.Gradient, { type: type, gradientUnits: "percentage", colorStops: colors, coords: { x1: 0, y1: 0, x2: 1, y2: 0 } });
     object.set({ fill: gradient });
@@ -538,87 +497,84 @@ export class Canvas {
   }
 
   onChangeActiveObjectFillGradient(type: string, colors: fabric.IGradientOptionsColorStops) {
-    const selected = this.instance?.getActiveObject();
-    if (!this.instance || !selected) return;
-    this.onChangeObjectFillGradient(selected, type, colors);
+    const selected = this.instance.getActiveObject();
+    if (selected) this.onChangeObjectFillGradient(selected, type, colors);
   }
 
   onChangeObjectAnimation(object: fabric.Object, type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
-    if (!this.instance || !object) return;
+    if (!object) return;
     object.anim![type].name = animation;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
   onChangActiveObjectAnimation(type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
-    const selected = this.instance?.getActiveObject();
-    if (!this.instance || !selected) return;
-    this.onChangeObjectAnimation(selected, type, animation);
+    const selected = this.instance.getActiveObject();
+    if (selected) this.onChangeObjectAnimation(selected, type, animation);
   }
 
   onChangeObjectAnimationDuration(object: fabric.Object, type: "in" | "out", duration: number) {
-    if (!this.instance || !object) return;
+    if (!object) return;
     object.anim![type].duration = duration;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
   onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out", easing: any) {
-    if (!this.instance || !object) return;
+    if (!object) return;
     object.anim![type].easing = easing;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
   onChangActiveObjectAnimationEasing(type: "in" | "out", easing: any) {
-    const selected = this.instance?.getActiveObject();
-    if (!this.instance || !selected) return;
-    this.onChangeObjectAnimationEasing(selected, type, easing);
+    const selected = this.instance.getActiveObject();
+    if (selected) this.onChangeObjectAnimationEasing(selected, type, easing);
   }
 
   onChangActiveObjectAnimationDuration(type: "in" | "out", duration: number) {
-    const selected = this.instance?.getActiveObject();
-    if (!this.instance || !selected) return;
-    this.onChangeObjectAnimationDuration(selected, type, duration);
+    const selected = this.instance.getActiveObject();
+    if (selected) this.onChangeObjectAnimationDuration(selected, type, duration);
   }
 
-  onChangeTextboxProperty(textbox: fabric.Textbox, property: keyof fabric.Textbox, value: any, selection = false) {
-    if (!this.instance || textbox.type !== "textbox") return;
-    if (selection) {
-      alert("TODO: Add styles for the specific selection element");
-    } else {
-      textbox.set(property, value);
-    }
+  onChangeTextboxProperty(textbox: fabric.Textbox, property: keyof fabric.Textbox, value: any, _selection = false) {
+    if (textbox.type !== "textbox") return;
+    textbox.set(property, value);
+    if (property === "textTransform") textbox.set("text", textbox.text);
     this.instance.fire("object:modified", { target: textbox });
     this.instance.requestRenderAll();
   }
 
   onChangeActiveTextboxProperty(property: keyof fabric.Textbox, value: any, selection = false) {
-    const selected = this.instance?.getActiveObject() as fabric.Textbox | null;
+    const selected = this.instance.getActiveObject() as fabric.Textbox | null;
     if (!selected || selected.type !== "textbox") return;
     this.onChangeTextboxProperty(selected, property, value, selection);
   }
 
   onChangeImageProperty(image: fabric.Image, property: keyof fabric.Image, value: any) {
-    if (!this.instance || !(image.type === "image" || image.type === "video")) return;
+    if (!(image.type === "image" || image.type === "video")) return;
     image.set(property, value);
     this.instance.fire("object:modified", { target: image });
     this.instance.requestRenderAll();
   }
 
   onChangeActiveImageProperty(property: keyof fabric.Image, value: any) {
-    const selected = this.instance?.getActiveObject() as fabric.Image | null;
-    if (!this.instance || !selected || selected.type !== "image") return;
+    const selected = this.instance.getActiveObject() as fabric.Image | null;
+    if (!selected || selected.type !== "image") return;
     this.onChangeImageProperty(selected, property, value);
   }
 
   onChangeVideoProperty(video: fabric.Video, property: keyof fabric.Video, value: any) {
-    if (!this.instance || video.type !== "video") return;
+    if (video.type !== "video") return;
     video.set(property, value);
     this.instance.fire("object:modified", { target: video });
     this.instance.requestRenderAll();
   }
 
   onChangeActiveVideoProperty(property: keyof fabric.Video, value: any) {
-    const selected = this.instance?.getActiveObject() as fabric.Video | null;
-    if (!this.instance || !selected || selected.type !== "video") return;
+    const selected = this.instance.getActiveObject() as fabric.Video | null;
+    if (!selected || selected.type !== "video") return;
     this.onChangeVideoProperty(selected, property, value);
+  }
+
+  destroy() {
+    this.instance?.dispose();
   }
 }

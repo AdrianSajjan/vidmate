@@ -1,4 +1,4 @@
-import { GanttChartIcon, LayersIcon } from "lucide-react";
+import { ChevronDownIcon, GanttChartIcon, LayersIcon } from "lucide-react";
 import { observer } from "mobx-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,9 +27,10 @@ function _ToolbarTimelineOption() {
       </Button>
       <Popover>
         <PopoverTrigger asChild>
-          <Button size="sm" variant="outline" className="gap-1.5 data-[state=open]:bg-card">
+          <Button size="sm" variant="outline" className="data-[state=open]:bg-card">
             <GanttChartIcon size={15} />
-            <span>Timeline</span>
+            <span className="ml-1.5 mr-2">Timeline</span>
+            <ChevronDownIcon size={15} />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="pt-3 pb-3 px-3" align="end">

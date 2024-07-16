@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { rightSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
 import { Skeleton } from "@/components/ui/skeleton";
+import { advancedShapes, basicShapes } from "@/constants/elements";
 
 function _ClipMaskSidebar() {
   const editor = useEditorContext();
@@ -15,6 +16,18 @@ function _ClipMaskSidebar() {
     return editor.canvas.elements.filter((element) => element.name !== selected.name && element.type !== "textbox");
   }, [editor.canvas.elements, editor.canvas.elements.length, selected]);
 
+  const handleBasicShapeClipPath = (klass: string, params: any) => {
+    const image = selected.name!;
+    const object = editor.canvas.onAddBasicShape(klass, params)!;
+    editor.canvas.selection.selectObject(image);
+    editor.canvas.onAddClipPathToActiveImage(object);
+  };
+
+  const handleAbstractShapeClipPath = (path: string, name: any) => {
+    const object = editor.canvas.onAddAbstractShape(path, name);
+    if (object) editor.canvas.onAddClipPathToActiveImage(object);
+  };
+
   return (
     <div className="h-full" style={{ width: rightSidebarWidth }}>
       <div className="flex items-center h-14 border-b px-4 gap-2.5">
@@ -23,7 +36,7 @@ function _ClipMaskSidebar() {
           <XIcon size={15} />
         </Button>
       </div>
-      <div className="px-3 pt-3 flex flex-col gap-6">
+      <div className="p-4 flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-4">
             <h4 className="text-xs font-semibold line-clamp-1">Scene Elements</h4>
@@ -42,6 +55,48 @@ function _ClipMaskSidebar() {
                 <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Elements</span>
               </Fragment>
             )}
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-4">
+            <h4 className="text-xs font-semibold line-clamp-1">Basic Shapes</h4>
+            <Button size="sm" variant="link" className="text-primary font-medium line-clamp-1">
+              See All
+            </Button>
+          </div>
+          <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden">
+            {basicShapes.map(({ name, path, klass, params }) => (
+              <button
+                key={name}
+                onClick={() => handleBasicShapeClipPath(klass, params)}
+                className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+              >
+                <svg viewBox="0 0 48 48" aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+                  <path d={path} className="h-full" />
+                </svg>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-4">
+            <h4 className="text-xs font-semibold line-clamp-1">Abstract Shapes</h4>
+            <Button size="sm" variant="link" className="text-primary font-medium line-clamp-1">
+              See All
+            </Button>
+          </div>
+          <div className="flex gap-2.5 items-center overflow-scroll relative scrollbar-hidden">
+            {advancedShapes.map(({ name, path, viewbox = "0 0 48 48" }) => (
+              <button
+                key={name}
+                onClick={() => handleAbstractShapeClipPath(path, name)}
+                className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+              >
+                <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+                  <path d={path} className="h-full" />
+                </svg>
+              </button>
+            ))}
           </div>
         </div>
       </div>

@@ -43,7 +43,12 @@ function _ImageToolbar() {
           <WandIcon size={15} />
           <span>Filters</span>
         </Button>
-        <Button onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "clip" ? null : "clip")} size="sm" variant="outline" className="gap-1.5">
+        <Button
+          onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "clip" ? null : "clip")}
+          size="sm"
+          variant="outline"
+          className={cn("gap-1.5", editor.sidebarRight === "clip" ? "bg-card" : "bg-transparent", !selected.clipPath ? "text-foreground" : "text-primary")}
+        >
           <BlendIcon size={15} />
           <span>Clip Mask</span>
         </Button>

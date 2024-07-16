@@ -39,6 +39,19 @@ export abstract class FabricUtils {
     return b + (t / d) * c;
   }
 
+  static initializeMetaProperties(object: fabric.Object, props?: Record<string, any>) {
+    object.meta = { duration: 5000, offset: 0, ...(object.meta || {}) };
+    if (!props) return;
+    for (const key in props) object.meta[key] = props[key];
+  }
+
+  static initializeAnimationProperties(object: fabric.Object) {
+    object.anim = {
+      in: { name: "none", duration: 0 },
+      out: { name: "none", duration: 0 },
+    };
+  }
+
   static bindObjectTransformToParent(parent: fabric.Object, children: fabric.Object[]) {
     const invertedTransform = fabric.util.invertTransform(parent.calcTransformMatrix());
     for (const child of children) {

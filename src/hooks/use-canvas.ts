@@ -9,10 +9,10 @@ export function useInitializeCanvas() {
     (element: HTMLCanvasElement) => {
       const workspace = document.getElementById("workspace") as HTMLDivElement;
       if (!element) {
-        editor.canvas.instance?.dispose();
+        editor.canvas.destroy();
         setInitialized(false);
       } else {
-        editor.canvas.onInitialize(element, workspace);
+        editor.canvas.initialize(element, workspace);
         setInitialized(true);
       }
     },

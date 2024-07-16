@@ -1,4 +1,18 @@
-import { AlignCenterIcon, AlignJustifyIcon, AlignLeftIcon, AlignRightIcon, ArrowDownZAIcon, BoldIcon, ChevronDownIcon, ItalicIcon, LigatureIcon, UnderlineIcon, WholeWordIcon } from "lucide-react";
+import {
+  AlignCenterIcon,
+  AlignJustifyIcon,
+  AlignLeftIcon,
+  AlignRightIcon,
+  ArrowDownZAIcon,
+  BoldIcon,
+  CaseLowerIcon,
+  CaseUpperIcon,
+  ChevronDownIcon,
+  ItalicIcon,
+  LigatureIcon,
+  UnderlineIcon,
+  WholeWordIcon,
+} from "lucide-react";
 import { observer } from "mobx-react";
 
 import { Button } from "@/components/ui/button";
@@ -98,7 +112,7 @@ function _TextToolbar() {
         </Toggle>
       </div>
       <Separator orientation="vertical" className="h-8 mx-4" />
-      <ToggleGroup type="single" value={selected.textAlign} onValueChange={(value) => editor.canvas.onChangeActiveTextboxProperty("textAlign", value)} className="flex items-center gap-1">
+      <ToggleGroup type="single" value={selected.textAlign} onValueChange={(value) => (value ? editor.canvas.onChangeActiveTextboxProperty("textAlign", value) : null)} className="flex items-center gap-1">
         <ToggleGroupItem variant="outline" size="sm" value="left" aria-label="left" className="data-[state=on]:bg-card data-[state=on]:text-primary">
           <AlignLeftIcon size={15} />
         </ToggleGroupItem>
@@ -110,6 +124,15 @@ function _TextToolbar() {
         </ToggleGroupItem>
         <ToggleGroupItem variant="outline" size="sm" value="justify" aria-label="justify" className="data-[state=on]:bg-card data-[state=on]:text-primary">
           <AlignJustifyIcon size={15} />
+        </ToggleGroupItem>
+      </ToggleGroup>
+      <Separator orientation="vertical" className="h-8 mx-4" />
+      <ToggleGroup type="single" value={selected.textTransform} onValueChange={(value) => editor.canvas.onChangeActiveTextboxProperty("textTransform", value)} className="flex items-center gap-1">
+        <ToggleGroupItem variant="outline" size="sm" value="uppercase" aria-label="uppercase" className="data-[state=on]:bg-card data-[state=on]:text-primary">
+          <CaseUpperIcon size={15} />
+        </ToggleGroupItem>
+        <ToggleGroupItem variant="outline" size="sm" value="lowercase" aria-label="lowercase" className="data-[state=on]:bg-card data-[state=on]:text-primary">
+          <CaseLowerIcon size={15} />
         </ToggleGroupItem>
       </ToggleGroup>
       <Separator orientation="vertical" className="h-8 mx-4" />

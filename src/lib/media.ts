@@ -1,5 +1,10 @@
 import { createInstance, createPromise } from "@/lib/utils";
 
+interface AudioWaveform {
+  thumbnail: string;
+  duration: number;
+}
+
 export function checkForAudioInVideo(source: string) {
   const video = document.createElement("video");
 
@@ -19,15 +24,20 @@ export function checkForAudioInVideo(source: string) {
 export async function extractThumbnailFromVideoURL(url: string) {
   return createInstance(Promise<string>, (resolve, reject) => {
     const video = document.createElement("video");
+
     video.crossOrigin = "anonymous";
     video.currentTime = 0.5;
+
     video.addEventListener("loadeddata", () => {
       video.height = video.videoHeight;
       video.width = video.videoWidth;
+
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d")!;
+
       canvas.height = video.videoHeight;
       canvas.width = video.videoWidth;
+
       context.drawImage(video, 0, 0);
       canvas.toBlob((blob) => {
         if (!blob) return reject();
@@ -35,16 +45,13 @@ export async function extractThumbnailFromVideoURL(url: string) {
         resolve(url);
       });
     });
+
     video.addEventListener("error", () => {
       reject();
     });
+
     video.src = url;
   });
-}
-
-interface AudioWaveform {
-  thumbnail: string;
-  duration: number;
 }
 
 export async function extractAudioWaveformFromAudioFile(file: File) {

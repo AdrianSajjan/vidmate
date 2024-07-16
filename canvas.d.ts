@@ -5209,6 +5209,10 @@ interface ITextboxOptions extends ITextOptions {
    */
   minWidth?: number | undefined;
   /**
+   * Text transform of the sentence
+   */
+  textTransform?: "none" | "uppercase" | "lowercase" | (string & {});
+  /**
    * Minimum calculated width of a textbox, in pixels.
    * fixed to 2 so that an empty textbox cannot go to 0
    * and is still selectable without text.

@@ -4,7 +4,7 @@ import { fabric } from "fabric";
 import { EditorAudioElement } from "@/types/editor";
 import { FabricUtils } from "@/fabric/utils";
 import { propertiesToInclude } from "@/fabric/constants";
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 
 export class CanvasSelection {
   private _canvas: Canvas;
@@ -29,25 +29,29 @@ export class CanvasSelection {
   }
 
   private _modifiedEvent(event: fabric.IEvent) {
-    if (!this.active || !event.target || this.active.name !== event.target.name) return;
-    this.active = event.target.toObject(propertiesToInclude);
+    runInAction(() => {
+      if (!this.active || !event.target || this.active.name !== event.target.name) return;
+      this.active = event.target.toObject(propertiesToInclude);
+    });
   }
 
   private _selectionEvent() {
-    const selection = this.canvas.getActiveObject();
-    if (FabricUtils.isActiveSelection(this.active)) {
-      const objects = this.active.objects.map((object) => this.canvas.getItemByName(object.name)).filter(Boolean) as fabric.Object[];
-      objects.forEach((object) => object.set({ hasBorders: true, hasControls: true }));
-    }
-    if (!selection || FabricUtils.isElementExcluded(selection)) {
-      this.active = null;
-    } else if (FabricUtils.isActiveSelection(selection)) {
-      selection.forEachObject((object) => object.set({ hasBorders: false, hasControls: false }));
-      this.active = selection.toObject(propertiesToInclude);
-    } else {
-      this.active = selection.toObject(propertiesToInclude);
-    }
-    this.canvas.requestRenderAll();
+    runInAction(() => {
+      const selection = this.canvas.getActiveObject();
+      if (FabricUtils.isActiveSelection(this.active)) {
+        const objects = this.active.objects.map((object) => this.canvas.getItemByName(object.name)).filter(Boolean) as fabric.Object[];
+        objects.forEach((object) => object.set({ hasBorders: true, hasControls: true }));
+      }
+      if (!selection || FabricUtils.isElementExcluded(selection)) {
+        this.active = null;
+      } else if (FabricUtils.isActiveSelection(selection)) {
+        selection.forEachObject((object) => object.set({ hasBorders: false, hasControls: false }));
+        this.active = selection.toObject(propertiesToInclude);
+      } else {
+        this.active = selection.toObject(propertiesToInclude);
+      }
+      this.canvas.requestRenderAll();
+    });
   }
 
   selectObject(name: string, multiple?: boolean) {
