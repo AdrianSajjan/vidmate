@@ -1,10 +1,12 @@
+import { fabric } from "fabric";
+import { makeAutoObservable, runInAction } from "mobx";
+
 import { createInstance } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
-import { fabric } from "fabric";
+
 import { EditorAudioElement } from "@/types/editor";
 import { FabricUtils } from "@/fabric/utils";
 import { propertiesToInclude } from "@/fabric/constants";
-import { makeAutoObservable, runInAction } from "mobx";
 
 export class CanvasSelection {
   private _canvas: Canvas;
@@ -24,6 +26,9 @@ export class CanvasSelection {
 
   private _initEvents() {
     this.canvas.on("object:modified", this._modifiedEvent.bind(this));
+    this.canvas.on("timeline:start", this._timelineRecorderStartEvent.bind(this));
+    this.canvas.on("recorder:start", this._timelineRecorderStartEvent.bind(this));
+
     this.canvas.on("selection:created", this._selectionEvent.bind(this));
     this.canvas.on("selection:updated", this._selectionEvent.bind(this));
     this.canvas.on("selection:cleared", this._selectionEvent.bind(this));
@@ -36,6 +41,12 @@ export class CanvasSelection {
     });
   }
 
+  private _timelineRecorderStartEvent() {
+    runInAction(() => {
+      this.canvas.discardActiveObject();
+    });
+  }
+
   private _selectionEvent() {
     runInAction(() => {
       const selection = this.canvas.getActiveObject();
@@ -43,7 +54,7 @@ export class CanvasSelection {
         const objects = this.active.objects.map((object) => this.canvas.getItemByName(object.name)).filter(Boolean) as fabric.Object[];
         objects.forEach((object) => object.set({ hasBorders: true, hasControls: true }));
       }
-      if (!selection || FabricUtils.isElementExcluded(selection)) {
+      if (!selection || selection.excludeFromTimeline) {
         this.active = null;
       } else if (FabricUtils.isActiveSelection(selection)) {
         selection.forEachObject((object) => object.set({ hasBorders: false, hasControls: false }));
@@ -55,7 +66,7 @@ export class CanvasSelection {
     });
   }
 
-  selectObject(name: string, multiple?: boolean) {
+  selectObjectByName(name: string, multiple?: boolean) {
     const object = this.canvas.getItemByName(name);
     if (!object) return;
     const selected = this.canvas.getActiveObject();
@@ -93,7 +104,7 @@ export class CanvasSelection {
     }
   }
 
-  selectGroup(group: string[]) {
+  selectMetaGroup(group: string[]) {
     if (!group.length) return;
     const elements = group.map((item) => this.canvas.getItemByName(item)).filter(Boolean) as fabric.Object[];
     const activeSelection = createInstance(fabric.ActiveSelection, elements, { canvas: this.canvas });

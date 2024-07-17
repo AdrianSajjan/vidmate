@@ -6,18 +6,11 @@ import { createInstance } from "@/lib/utils";
 export interface TransformChildren {
   object: fabric.Object;
   skip?: string[];
+  callback?: Function;
 }
 
 export abstract class FabricUtils {
   private static nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
-
-  static isElementExcluded(object?: fabric.Object) {
-    return object?.name!.startsWith("artboard") || object?.excludeFromExport || object?.excludeFromTimeline;
-  }
-
-  static isAlignmentExcluded(object?: fabric.Object) {
-    return object?.excludeFromExport || object?.excludeFromTimeline;
-  }
 
   static isActiveSelection(object?: fabric.Object | null): object is fabric.ActiveSelection {
     return object?.type === "activeSelection";
@@ -73,6 +66,7 @@ export abstract class FabricUtils {
 
       child.object.set(decompose);
       child.object.setCoords();
+      child.callback?.();
     }
   }
 

@@ -17,16 +17,10 @@ function _ClipMaskSidebar() {
   }, [editor.canvas.elements, editor.canvas.elements.length, selected]);
 
   const handleBasicShapeClipPath = (klass: string, params: any) => {
-    const image = selected.name!;
-    const object = editor.canvas.onAddBasicShape(klass, params)!;
-    editor.canvas.selection.selectObject(image);
-    editor.canvas.onAddClipPathToActiveImage(object);
+    editor.canvas.clipper.clipActiveObjectFromBasicShape(klass, params);
   };
 
-  const handleAbstractShapeClipPath = (path: string, name: any) => {
-    const object = editor.canvas.onAddAbstractShape(path, name);
-    if (object) editor.canvas.onAddClipPathToActiveImage(object);
-  };
+  const handleAbstractShapeClipPath = (path: string, name: any) => {};
 
   return (
     <div className="h-full" style={{ width: rightSidebarWidth }}>
@@ -119,9 +113,8 @@ function _SceneElement({ element }: { element: fabric.Object }) {
   }, [element, editor.canvas.instance]);
 
   const handleAddClipPath = () => {
-    const object = editor.canvas.instance?.getItemByName(element.name);
-    if (!object) return;
-    editor.canvas.onAddClipPathToActiveImage(object);
+    const object = editor.canvas.instance.getItemByName(element.name);
+    if (object) editor.canvas.clipper.clipActiveObjectFromSceneElement(object);
   };
 
   return (

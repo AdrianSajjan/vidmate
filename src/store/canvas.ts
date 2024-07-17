@@ -17,6 +17,7 @@ import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
 import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
+import { CanvasClipMask } from "@/plugins/mask";
 
 export class Canvas {
   artboard!: fabric.Rect;
@@ -26,14 +27,15 @@ export class Canvas {
   timeline!: CanvasTimeline;
   workspace!: CanvasWorkspace;
 
-  trim: EditorTrim;
   effects!: CanvasEffects;
   cropper!: CanvasCropper;
+  clipper!: CanvasClipMask;
 
   history!: CanvasHistory;
   selection!: CanvasSelection;
   alignment!: CanvasAlignment;
 
+  trim: EditorTrim;
   controls: boolean;
   elements: fabric.Object[];
 
@@ -44,18 +46,20 @@ export class Canvas {
     makeAutoObservable(this);
   }
 
-  private _refreshElements() {
-    this.elements = this.instance._objects.filter((object) => !FabricUtils.isElementExcluded(object)).map((object) => object.toObject(propertiesToInclude));
-  }
-
   private _toggleControls(object: fabric.Object, enabled: boolean) {
     object.hasControls = enabled;
     this.controls = enabled;
   }
 
+  private _refreshElements() {
+    runInAction(() => {
+      this.elements = this.instance._objects.filter((object) => object.excludeFromTimeline).map((object) => object.toObject(propertiesToInclude));
+    });
+  }
+
   private _objectAddedEvent(event: fabric.IEvent) {
     runInAction(() => {
-      if (!event.target || FabricUtils.isElementExcluded(event.target)) return;
+      if (!event.target || event.target.excludeFromTimeline) return;
       this.elements.push(event.target.toObject(propertiesToInclude));
     });
   }
@@ -65,7 +69,7 @@ export class Canvas {
       if (!event.target) return;
       this._toggleControls(event.target, true);
       const index = this.elements.findIndex((element) => element.name === event.target!.name);
-      if (index === -1 || FabricUtils.isElementExcluded(event.target)) return;
+      if (index === -1 || event.target.excludeFromTimeline) return;
       this.elements[index] = event.target.toObject(propertiesToInclude);
       if (event.target.name === this.trim?.selected.name) this.trim!.selected = event.target.toObject(propertiesToInclude);
     });
@@ -116,26 +120,28 @@ export class Canvas {
     this.instance.on("object:moving", this._objectMovingEvent.bind(this));
     this.instance.on("object:scaling", this._objectScalingEvent.bind(this));
     this.instance.on("object:rotating", this._objectRotatingEvent.bind(this));
+
+    this.instance.on("clip:added", this._refreshElements.bind(this));
+    this.instance.on("clip:removed", this._refreshElements.bind(this));
   }
 
   initialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
     const props = { width: workspace.offsetWidth, height: workspace.offsetHeight, backgroundColor: "#F0F0F0", selectionColor: "#2e73fc1c", selectionBorderColor: "#629bffcf", selectionLineWidth: 1.5 };
     this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, preserveObjectStacking: true, controlsAboveOverlay: true, ...props });
-    this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default" });
+    this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default", excludeFromTimeline: true });
 
     this.history = createInstance(CanvasHistory, this);
-    this.workspace = createInstance(CanvasWorkspace, this, workspace);
     this.alignment = createInstance(CanvasAlignment, this);
     this.audio = createInstance(CanvasAudio, this);
-
+    this.clipper = createInstance(CanvasClipMask, this);
     this.selection = createInstance(CanvasSelection, this);
     this.effects = createInstance(CanvasEffects, this);
     this.cropper = createInstance(CanvasCropper, this);
     this.timeline = createInstance(CanvasTimeline, this);
-
-    this._initEvents();
+    this.workspace = createInstance(CanvasWorkspace, this, workspace);
     CanvasGuidelines.initializeAligningGuidelines(this.instance);
 
+    this._initEvents();
     this.instance.add(this.artboard);
     this.instance.clipPath = this.artboard;
     this.instance.renderAll();
@@ -197,7 +203,7 @@ export class Canvas {
 
   *onAddImageFromThumbail(source: string, thumbnail: HTMLImageElement) {
     const id = FabricUtils.elementID("image");
-    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true };
+    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true };
 
     const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
     const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
@@ -208,7 +214,7 @@ export class Canvas {
     spinner.scaleToWidth(48);
     FabricUtils.objectSpinningAnimation(spinner);
 
-    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true });
+    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true });
     placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
     this.instance.add(placeholder);
     this.instance.setActiveObject(placeholder).requestRenderAll();
@@ -272,7 +278,7 @@ export class Canvas {
 
   *onAddVideoFromThumbail(source: string, thumbnail: HTMLImageElement) {
     const id = FabricUtils.elementID("video");
-    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true };
+    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true };
 
     const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
     const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
@@ -283,7 +289,7 @@ export class Canvas {
     spinner.scaleToWidth(48);
     FabricUtils.objectSpinningAnimation(spinner);
 
-    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true });
+    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true });
     placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
     this.instance.add(placeholder);
     this.instance.setActiveObject(placeholder).requestRenderAll();
@@ -387,7 +393,7 @@ export class Canvas {
   }
 
   *onReplaceImageSource(image: fabric.Image, source: string) {
-    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true };
+    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true };
     const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY, fill: "#000000", opacity: 0.25, ...props });
     const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + image.name, fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
 
@@ -433,34 +439,6 @@ export class Canvas {
     const object = this.instance.getActiveObject() as fabric.Image;
     if (!object || object.type !== "image") return;
     this.onReplaceImageSource(object, source);
-  }
-
-  onAddClipPathToImage(image: fabric.Image, clipPath: fabric.Object) {
-    const index = this.instance._objects.findIndex((object) => object === image);
-    if (index === -1) return;
-
-    const height = image.getScaledHeight();
-    const width = image.getScaledWidth();
-
-    if (height > width) clipPath.scaleToWidth(width / 2);
-    else clipPath.scaleToHeight(height / 2);
-
-    clipPath.moveTo(index - 1);
-    clipPath.set({ absolutePositioned: true }).setPositionByOrigin(image.getCenterPoint(), "center", "center");
-    image.set({ clipPath: clipPath });
-
-    const group = [clipPath.name, image.name];
-    clipPath.meta!.group = group;
-    image.meta!.group = group;
-
-    this.instance.requestRenderAll();
-    this._refreshElements();
-  }
-
-  onAddClipPathToActiveImage(clipPath: fabric.Object) {
-    const object = this.instance.getActiveObject() as fabric.Image | fabric.Video;
-    if (!object || !(object.type === "image" || object.type === "video")) return;
-    this.onAddClipPathToImage(object, clipPath);
   }
 
   onChangeObjectTimelineProperty(object: fabric.Object, property: string, value: number) {

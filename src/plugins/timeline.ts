@@ -34,13 +34,13 @@ export class CanvasTimeline {
   }
 
   private _objectAddedEvent(event: fabric.IEvent<MouseEvent>) {
-    if (!event.target || FabricUtils.isElementExcluded(event.target)) return;
+    if (!event.target || event.target.excludeFromTimeline) return;
     this._toggleElement(event.target, this.seek);
   }
 
   private _toggleElements(ms: number) {
     for (const object of this.canvas._objects) {
-      if (FabricUtils.isElementExcluded(object)) continue;
+      if (object.excludeFromTimeline) continue;
       this._toggleElement(object, ms);
     }
     this.canvas.requestRenderAll();
@@ -91,7 +91,7 @@ export class CanvasTimeline {
       this._timeline = null;
     }
     for (const object of this.canvas._objects) {
-      if (FabricUtils.isElementExcluded(object)) continue;
+      if (object.excludeFromTimeline) continue;
       object.set({ ...(object.anim?.state || {}) });
     }
     this._toggleElements(this.seek);

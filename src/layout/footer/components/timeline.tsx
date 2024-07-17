@@ -166,7 +166,7 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
 
       <Draggable axis={editor.canvas.timeline.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
         <button
-          onClick={(event) => (editor.canvas.timeline.playing ? null : editor.canvas.selection.selectObject(element.name!, event.shiftKey))}
+          onClick={(event) => (editor.canvas.timeline.playing ? null : editor.canvas.selection.selectObjectByName(element.name!, event.shiftKey))}
           className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-primary" : "border-gray-400")}
           style={style}
         >

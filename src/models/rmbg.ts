@@ -71,8 +71,6 @@ export class RmbgAI {
       context.drawImage(image.toCanvas(), 0, 0);
       const pixels = context.getImageData(0, 0, image.width, image.height);
 
-      mask.toBlob().then((blob) => console.log(URL.createObjectURL(blob)));
-
       for (let i = 0; i < mask.data.length; ++i) pixels.data[4 * i + 3] = mask.data[i];
       context.putImageData(pixels, 0, 0);
 

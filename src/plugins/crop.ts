@@ -41,20 +41,22 @@ export class CanvasCropper {
     this.selected = image;
     const element = image._originalElement as HTMLImageElement | HTMLVideoElement;
 
-    const props = { top: image.top, left: image.left, angle: image.angle, width: image.getScaledWidth(), height: image.getScaledHeight(), lockRotation: true, excludeFromExport: true };
-    const crop = createInstance(fabric.Cropper, { name: "crop_" + image.name, fill: "#ffffff", globalCompositeOperation: "overlay", ...props });
-    const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, selectable: false, fill: "#00000080", ...props });
+    const exclude = { excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true };
+    const props = { top: image.top, left: image.left, angle: image.angle, width: image.getScaledWidth(), height: image.getScaledHeight(), lockRotation: true };
+
+    const crop = createInstance(fabric.Cropper, { name: "crop_" + image.name, fill: "#ffffff", globalCompositeOperation: "overlay", ...props, ...exclude });
+    const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, selectable: false, fill: "#00000080", ...props, ...exclude });
 
     const verticals = Array.from({ length: 3 }, (_, index) => {
       const x = crop.left! + crop.width! * 0.25 * (index + 1);
-      const line = createInstance(fabric.Line, [x, crop.top!, x, crop.top! + crop.height!], { name: `crop_v_${index}_${image.name}`, stroke: "#ffffff", selectable: false, evented: false, excludeFromExport: true });
+      const line = createInstance(fabric.Line, [x, crop.top!, x, crop.top! + crop.height!], { name: `crop_v_${index}_${image.name}`, stroke: "#ffffff", selectable: false, evented: false, ...exclude });
       this.canvas.add(line);
       return line;
     });
 
     const horizontals = Array.from({ length: 3 }, (_, index) => {
       const y = crop.top! + crop.height! * 0.25 * (index + 1);
-      const line = createInstance(fabric.Line, [crop.left!, y, crop.left! + crop.width!, y], { name: `crop_h_${index}_${image.name}`, stroke: "#ffffff", selectable: false, evented: false, excludeFromExport: true });
+      const line = createInstance(fabric.Line, [crop.left!, y, crop.left! + crop.width!, y], { name: `crop_h_${index}_${image.name}`, stroke: "#ffffff", selectable: false, evented: false, ...exclude });
       this.canvas.add(line);
       return line;
     });

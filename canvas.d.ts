@@ -382,7 +382,9 @@ type EventName =
   | "timeline:start"
   | "timeline:stop"
   | "recorder:start"
-  | "recorder:stop";
+  | "recorder:stop"
+  | "clip:added"
+  | "clip:removed";
 
 interface IObservable<T> {
   /**
@@ -3169,6 +3171,12 @@ interface IObjectOptions {
    * @default false
    */
   excludeFromTimeline?: boolean | undefined;
+
+  /**
+   * When `true`, object is not be used to calculate object alignment
+   * @default false
+   */
+  excludeFromAlignment?: boolean | undefined;
 
   /**
    * When `true`, object is cached on an additional canvas.

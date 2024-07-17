@@ -1,4 +1,3 @@
-import { FabricUtils } from "@/fabric/utils";
 import anime from "animejs";
 
 export abstract class CanvasAnimations {
@@ -6,8 +5,7 @@ export abstract class CanvasAnimations {
     timeline.add({ targets: canvas, duration: duration });
 
     for (const object of canvas._objects) {
-      if (FabricUtils.isElementExcluded(object)) continue;
-
+      if (object.excludeFromTimeline) continue;
       object.anim!.state = { opacity: object.opacity, left: object.left, top: object.top, scaleX: object.scaleX, scaleY: object.scaleY, fill: object.fill, selectable: object.selectable };
       object.set({ selectable: false });
 

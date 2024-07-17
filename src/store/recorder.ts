@@ -40,7 +40,7 @@ export class Recorder {
 
   private *_toggleElements(ms: number) {
     for (const object of this.instance._objects) {
-      if (FabricUtils.isElementExcluded(object)) continue;
+      if (object.excludeFromTimeline) continue;
       const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
       object.visible = !hidden;
       if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder && !hidden) {
@@ -132,7 +132,7 @@ export class Recorder {
     this.instance.add(artboard);
 
     for (const object of this.canvas._objects) {
-      if (FabricUtils.isElementExcluded(object)) continue;
+      if (object.excludeFromTimeline) continue;
       const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
       this.instance.add(clone);
     }
