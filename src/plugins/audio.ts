@@ -136,18 +136,18 @@ export class CanvasAudio {
     return audio;
   }
 
-  *extract(ffmpeg: FFmpeg, { signal }: { signal?: AbortSignal }) {
+  *extract(videos: fabric.Video[], { ffmpeg, signal }: { ffmpeg: FFmpeg; signal?: AbortSignal }) {
     if (!ffmpeg.loaded) throw createInstance(Error, "FFmpeg is not loaded");
     const result: EditorAudioElement[] = [];
 
-    for (const object of this.canvas._objects) {
-      if (!FabricUtils.isVideoElement(object) || !object.hasAudio) continue;
-
+    for (const video of videos) {
+      if (!FabricUtils.isVideoElement(video) || !video.hasAudio) continue;
       signal?.throwIfAborted();
-      const input = object.name!;
-      const output = object.name! + ".wav";
 
-      const file: Uint8Array = yield fetchFile(object.getSrc());
+      const input = video.name!;
+      const output = video.name! + ".wav";
+
+      const file: Uint8Array = yield fetchFile(video.getSrc());
       yield ffmpeg.writeFile(input, file);
       yield ffmpeg.exec(["-i", input, "-q:a", "0", "-map", "a", output], undefined, { signal });
 
@@ -157,17 +157,16 @@ export class CanvasAudio {
       const id = FabricUtils.elementID("audio");
       const duration = buffer.duration;
 
-      const muted = object.muted();
-      const volume = object.volume();
+      const muted = video.muted();
+      const volume = video.volume();
 
-      const trim = object.trimStart / 1000;
-      const offset = object.meta!.offset / 1000;
-      const timeline = object.meta!.duration / 1000 - object.trimStart / 1000 - object.trimEnd / 1000;
+      const trim = video.trimStart / 1000;
+      const offset = video.meta!.offset / 1000;
+      const timeline = video.meta!.duration / 1000 - video.trimStart / 1000 - video.trimEnd / 1000;
 
       const source = this.context.createBufferSource();
       source.buffer = buffer;
       source.connect(this.context.destination);
-
       result.push({ id, buffer, duration, muted, volume, source, offset, timeline, trim, name: output, playing: false, url: "" });
     }
 

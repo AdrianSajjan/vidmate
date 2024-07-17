@@ -130,7 +130,8 @@ export class Recorder {
 
     const artboard: fabric.Object = yield createPromise<fabric.Object>((resolve) => this.artboard.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
     this.instance.add(artboard);
-    for (const object of this.instance._objects) {
+
+    for (const object of this.canvas._objects) {
       if (FabricUtils.isElementExcluded(object)) continue;
       const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
       this.instance.add(clone);

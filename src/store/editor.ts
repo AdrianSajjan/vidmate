@@ -8,6 +8,7 @@ import { Recorder } from "@/store/recorder";
 import { convertBufferToWaveBlob } from "@/lib/media";
 import { createInstance } from "@/lib/utils";
 import { EditorAudioElement } from "@/types/editor";
+import { FabricUtils } from "@/fabric/utils";
 
 export type ExportMode = "video" | "both";
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
@@ -111,8 +112,9 @@ export class Editor {
     if (this.exports === "video") return null;
     this.controller = createInstance(AbortController);
 
-    const tracks: EditorAudioElement[] = yield this.canvas.audio.extract(this.ffmpeg, { signal: this.controller.signal });
     const audios = this.canvas.audio.elements.filter((audio) => !audio.muted && !!audio.volume);
+    const videos = this.canvas.instance._objects.filter(FabricUtils.isVideoElement) as fabric.Video[];
+    const tracks: EditorAudioElement[] = yield this.canvas.audio.extract(videos, { ffmpeg: this.ffmpeg, signal: this.controller.signal });
     const combined = ([] as EditorAudioElement[]).concat(audios, tracks);
 
     if (!combined.length) return null;
@@ -147,10 +149,9 @@ export class Editor {
       this.onChangeExportStatus(ExportProgress.CaptureVideo);
       const frames: Uint8Array[] = yield this.recorder.capture(+this.fps, { signal: this.controller.signal, progress: this._progressEvent.bind(this) });
       this.recorder.stop();
-
       this.onChangeExportStatus(ExportProgress.CompileVideo);
       const blob: Blob = yield this.recorder.compile(frames, { ffmpeg: this.ffmpeg, codec: this.codec, fps: this.fps, signal: this.controller.signal, audio });
-
+      this.onChangeExportStatus(ExportProgress.Completed);
       return blob;
     } catch (error) {
       this.recorder.stop();
