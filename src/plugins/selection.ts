@@ -57,7 +57,12 @@ export class CanvasSelection {
       if (!selection || selection.excludeFromTimeline) {
         this.active = null;
       } else if (FabricUtils.isActiveSelection(selection)) {
-        selection.forEachObject((object) => object.set({ hasBorders: false, hasControls: false }));
+        let preserveAspectRatio = false;
+        selection.forEachObject((object) => {
+          object.set({ hasBorders: false, hasControls: false });
+          if (["image", "video", "textbox"].includes(object.type!)) preserveAspectRatio = true;
+        });
+        selection.setControlsVisibility({ mt: !preserveAspectRatio, mb: !preserveAspectRatio, mr: !preserveAspectRatio, ml: !preserveAspectRatio });
         this.active = selection.toObject(propertiesToInclude);
       } else {
         this.active = selection.toObject(propertiesToInclude);

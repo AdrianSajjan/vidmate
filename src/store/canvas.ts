@@ -96,22 +96,18 @@ export class Canvas {
   private _objectScalingEvent(event: fabric.IEvent) {
     runInAction(() => {
       if (!event.target) return;
-      switch (event.target.type) {
-        case "textbox":
-          const textbox = event.target as fabric.Textbox;
-          textbox.set({ fontSize: Math.round(textbox.fontSize! * textbox.scaleY!), width: textbox.width! * textbox.scaleX!, scaleY: 1, scaleX: 1 });
-          break;
-      }
       this._toggleControls(event.target, false);
+      if (FabricUtils.isActiveSelection(event.target)) event.target._objects.map((object) => FabricUtils.resizeTextboxDimensions(object, object!.scaleX!, object!.scaleY!));
+      else FabricUtils.resizeTextboxDimensions(event.target, event.target.scaleX!, event.target.scaleY!);
     });
   }
 
   private _objectRotatingEvent(event: fabric.IEvent<MouseEvent>) {
     runInAction(() => {
       if (!event.target) return;
+      this._toggleControls(event.target, false);
       if (event.e.shiftKey) event.target.set({ snapAngle: 45 });
       else event.target.set({ snapAngle: undefined });
-      this._toggleControls(event.target, false);
     });
   }
 

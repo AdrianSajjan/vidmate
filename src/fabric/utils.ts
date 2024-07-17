@@ -24,6 +24,10 @@ export abstract class FabricUtils {
     return object?.type === "video" && !object?.meta?.placeholder;
   }
 
+  static isTextboxElement(object?: fabric.Object | null): object is fabric.Textbox {
+    return object?.type === "textbox";
+  }
+
   static elementID(prefix: string) {
     return prefix.toLowerCase() + "_" + this.nanoid(4);
   }
@@ -81,8 +85,18 @@ export abstract class FabricUtils {
     }
   }
 
+  static resizeTextboxDimensions(object: fabric.Object, scaleX: number, scaleY: number) {
+    if (!this.isTextboxElement(object)) return;
+    object.set({ fontSize: Math.round(object.fontSize! * scaleY!), width: object.width! * scaleX!, scaleY: 1, scaleX: 1 });
+  }
+
   static applyObjectScaleToDimensions(object: fabric.Object) {
     switch (object.type) {
+      case "textbox": {
+        const textbox = object as fabric.Textbox;
+        textbox.set({ fontSize: Math.round(textbox.fontSize! * textbox.scaleY!), width: textbox.width! * textbox.scaleX!, scaleY: 1, scaleX: 1 });
+        break;
+      }
       case "rect": {
         const width = object.width! * object.scaleX!;
         const height = object.height! * object.scaleY!;
