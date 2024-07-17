@@ -10,22 +10,15 @@ import { useEditorContext } from "@/context/editor";
 import { ToolbarPositionOption } from "../common/position";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
-import { FabricUtils } from "@/fabric/utils";
 
 function _ImageToolbar() {
   const editor = useEditorContext();
   const selected = editor.canvas.selection.active as fabric.Image;
 
-  const handleCropStart = () => {
-    const image = editor.canvas.instance?.getActiveObject();
-    if (!FabricUtils.isImageElement(image)) return;
-    editor.canvas.cropper.start(image);
-  };
-
   return (
     <div className="flex items-center h-full w-full overflow-x-scroll scrollbar-hidden">
       <div className="flex items-center gap-2.5">
-        <Button onClick={handleCropStart} variant="outline" size="sm" className="gap-1.5">
+        <Button onClick={() => editor.canvas.cropper.cropActiveObject()} variant="outline" size="sm" className="gap-1.5">
           <CropIcon size={15} />
           <span className="text-xs font-normal">Crop</span>
         </Button>

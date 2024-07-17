@@ -11,8 +11,9 @@ function _CropToolbar() {
   const cropper = editor.canvas.cropper;
 
   const handleCropEnd = () => {
+    const active = cropper.active;
     editor.canvas.instance.discardActiveObject();
-    editor.canvas.instance.setActiveObject(cropper.active!);
+    if (active) editor.canvas.instance.setActiveObject(active);
   };
 
   const handleFlipImage = (property: "flipX" | "flipY") => {

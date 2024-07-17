@@ -34,15 +34,16 @@ export class CanvasCropper {
 
   private _mouseDoubleClickEvent(event: fabric.IEvent<MouseEvent>) {
     if (!(FabricUtils.isImageElement(event.target) || FabricUtils.isVideoElement(event.target)) || this.active === event.target || event.target.meta!.placeholder) return;
-    const image = event.target as fabric.Image;
-    if (image.clipPath) {
-      this.cropObjectWithClipPath(image);
-    } else {
-      this.cropObjectWithoutClipPath(image);
-    }
+    event.target.clipPath ? this.cropObjectWithClipPath(event.target) : this.cropObjectWithoutClipPath(event.target);
   }
 
-  cropObjectWithoutClipPath(image: fabric.Image) {
+  cropActiveObject() {
+    const object = this.canvas.getActiveObject();
+    if (!object || !(FabricUtils.isVideoElement(object) || FabricUtils.isImageElement(object))) return;
+    object.clipPath ? this.cropObjectWithClipPath(object) : this.cropObjectWithoutClipPath(object);
+  }
+
+  *cropObjectWithoutClipPath(image: fabric.Image) {
     this.active = image;
     this.canvas.fire("crop:start", { target: image });
     const element = image._originalElement as HTMLImageElement | HTMLVideoElement;

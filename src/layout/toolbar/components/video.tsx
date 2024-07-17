@@ -16,12 +16,6 @@ function _VideoToolbar() {
   const editor = useEditorContext();
   const selected = editor.canvas.selection.active as fabric.Video;
 
-  const handleCropStart = () => {
-    const video = editor.canvas.instance?.getActiveObject();
-    if (!FabricUtils.isVideoElement(video)) return;
-    editor.canvas.cropper.start(video);
-  };
-
   const handleTrimStart = () => {
     const video = editor.canvas.instance?.getActiveObject();
     if (!FabricUtils.isVideoElement(video)) return;
@@ -35,7 +29,7 @@ function _VideoToolbar() {
           <ClapperboardIcon size={15} />
           <span className="text-xs font-normal">Trim</span>
         </Button>
-        <Button onClick={handleCropStart} variant="outline" size="sm" className="gap-1.5">
+        <Button onClick={() => editor.canvas.cropper.cropActiveObject()} variant="outline" size="sm" className="gap-1.5">
           <CropIcon size={15} />
           <span className="text-xs font-normal">Crop</span>
         </Button>

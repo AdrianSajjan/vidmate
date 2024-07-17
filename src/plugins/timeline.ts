@@ -54,6 +54,7 @@ export class CanvasTimeline {
         if (hidden) object.pause();
         else object.play();
       } else {
+        object.pause();
         object.seek((ms - object.meta!.offset) / 1000);
       }
     }
