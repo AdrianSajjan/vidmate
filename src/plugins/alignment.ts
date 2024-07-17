@@ -1,12 +1,14 @@
 import { createInstance } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
 import { fabric } from "fabric";
+import { makeAutoObservable } from "mobx";
 
 export class CanvasAlignment {
   private _canvas: Canvas;
 
   constructor(canvas: Canvas) {
     this._canvas = canvas;
+    makeAutoObservable(this);
   }
 
   private get canvas() {

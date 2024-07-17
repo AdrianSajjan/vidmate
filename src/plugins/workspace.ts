@@ -124,7 +124,8 @@ export class CanvasWorkspace {
 
   changeZoom(zoom: number) {
     this.zoom = zoom;
-    this.canvas.setZoom(zoom);
+    const center = this.canvas.getCenter();
+    this.canvas.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
   }
 
   changeFill(fill: string) {

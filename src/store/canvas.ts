@@ -62,17 +62,21 @@ export class Canvas {
 
   private _objectModifiedEvent(event: fabric.IEvent) {
     runInAction(() => {
-      if (!event.target || FabricUtils.isElementExcluded(event.target)) return;
+      if (!event.target) return;
+      this._toggleControls(event.target, true);
       const index = this.elements.findIndex((element) => element.name === event.target!.name);
-      if (index === -1) return;
-      const element = event.target.toObject(propertiesToInclude);
-      this.elements[index] = element;
-      if (event.target.name === this.trim?.selected.name) this.trim!.selected = element;
+      if (index === -1 || FabricUtils.isElementExcluded(event.target)) return;
+      this.elements[index] = event.target.toObject(propertiesToInclude);
+      if (event.target.name === this.trim?.selected.name) this.trim!.selected = event.target.toObject(propertiesToInclude);
     });
   }
 
-  private _objectDeletedEvent(_: fabric.IEvent) {
-    this._refreshElements();
+  private _objectDeletedEvent(event: fabric.IEvent) {
+    runInAction(() => {
+      const index = this.elements.findIndex((element) => element.name === event.target!.name);
+      if (index === -1) return;
+      this.elements.splice(index, 1);
+    });
   }
 
   private _objectMovingEvent(event: fabric.IEvent) {

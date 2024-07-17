@@ -11,12 +11,12 @@ export interface TransformChildren {
 export abstract class FabricUtils {
   private static nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
 
-  static isElementExcluded(object: fabric.Object) {
-    return object.name!.startsWith("artboard") || object.excludeFromExport;
+  static isElementExcluded(object?: fabric.Object) {
+    return object?.name!.startsWith("artboard") || object?.excludeFromExport || object?.excludeFromTimeline;
   }
 
-  static isAlignmentExcluded(object: fabric.Object) {
-    return object.excludeFromExport;
+  static isAlignmentExcluded(object?: fabric.Object) {
+    return object?.excludeFromExport || object?.excludeFromTimeline;
   }
 
   static isActiveSelection(object?: fabric.Object | null): object is fabric.ActiveSelection {

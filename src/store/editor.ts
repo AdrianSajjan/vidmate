@@ -83,12 +83,12 @@ export class Editor {
 
   private _progressEvent({ progress, frame }: { progress: number; frame?: string }) {
     switch (this.exporting) {
-      case ExportProgress.CompileVideo:
-        this.progress.compile = progress * 100;
-        break;
-      case ExportProgress.CaptureAudio:
+      case ExportProgress.CaptureVideo:
         this.progress.capture = progress * 100;
         this.frame = frame;
+        break;
+      case ExportProgress.CompileVideo:
+        this.progress.compile = progress * 100;
         break;
     }
   }
@@ -143,7 +143,6 @@ export class Editor {
       this.onChangeExportStatus(ExportProgress.CaptureAudio);
       const audio: Blob = yield this.exportAudio();
       this.controller = createInstance(AbortController);
-
       yield this.recorder.start();
       this.onChangeExportStatus(ExportProgress.CaptureVideo);
       const frames: Uint8Array[] = yield this.recorder.capture(+this.fps, { signal: this.controller.signal, progress: this._progressEvent.bind(this) });
@@ -151,7 +150,7 @@ export class Editor {
 
       this.onChangeExportStatus(ExportProgress.CompileVideo);
       const blob: Blob = yield this.recorder.compile(frames, { ffmpeg: this.ffmpeg, codec: this.codec, fps: this.fps, signal: this.controller.signal, audio });
-      this.blob = blob;
+
       return blob;
     } catch (error) {
       this.recorder.stop();

@@ -13,6 +13,7 @@ export class CanvasSelection {
   constructor(canvas: Canvas) {
     this._canvas = canvas;
     this.active = null;
+
     this._initEvents();
     makeAutoObservable(this);
   }

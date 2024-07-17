@@ -146,7 +146,7 @@ export abstract class CanvasGuidelines {
     });
 
     canvas.on("before:render", function () {
-      if (canvas.contextTop) canvas.clearContext(canvas.contextTop);
+      canvas.clearContext(canvas.contextTop);
     });
 
     canvas.on("after:render", function () {

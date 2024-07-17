@@ -9,6 +9,7 @@ import { propertiesToInclude } from "@/fabric/constants";
 import { CanvasAnimations } from "@/plugins/animations";
 import { dataURLToUInt8Array } from "@/lib/media";
 import { fetchExtensionByCodec } from "@/constants/recorder";
+import { makeAutoObservable } from "mobx";
 
 export class Recorder {
   private _editor: Editor;
@@ -18,6 +19,7 @@ export class Recorder {
 
   constructor(editor: Editor) {
     this._editor = editor;
+    makeAutoObservable(this);
   }
 
   private get canvas() {
@@ -68,20 +70,20 @@ export class Recorder {
       for (let frame = 0; frame < frames.length; frame++) {
         signal?.throwIfAborted();
         const name = pattern.replace("%d", String(frame));
-        yield ffmpeg.writeFile(name, frames[frame], { signal: signal });
+        yield ffmpeg.writeFile(name, frames[frame], { signal });
         cleanup = frame;
       }
 
       if (audio) {
         const buffer: ArrayBuffer = yield audio.arrayBuffer();
-        yield ffmpeg.writeFile(music, createUint8Array(buffer), { signal: signal });
+        yield ffmpeg.writeFile(music, createUint8Array(buffer), { signal });
         yield ffmpeg.exec(["-framerate", fps, "-i", pattern, "-i", music, "-c:v", command, "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", output], undefined, { signal });
-        const data: Uint8Array = yield ffmpeg.readFile(output, undefined, { signal: signal });
+        const data: Uint8Array = yield ffmpeg.readFile(output, undefined, { signal });
         return createInstance(Blob, [data.buffer], { type: mimetype });
       }
 
-      yield ffmpeg.exec(["-framerate", fps, "-i", pattern, "-c:v", command, "-preset", "ultrafast", "-pix_fmt", "yuv420p", output], undefined, { signal: signal });
-      const data: Uint8Array = yield ffmpeg.readFile(output, undefined, { signal: signal });
+      yield ffmpeg.exec(["-framerate", fps, "-i", pattern, "-c:v", command, "-preset", "ultrafast", "-pix_fmt", "yuv420p", output], undefined, { signal });
+      const data: Uint8Array = yield ffmpeg.readFile(output, undefined, { signal });
       return createInstance(Blob, [data.buffer], { type: mimetype });
     } finally {
       try {
@@ -100,7 +102,7 @@ export class Recorder {
     }
   }
 
-  *capture(fps: number, { progress, signal }: { progress?: (value: { progress: number; preview: string }) => void; signal?: AbortSignal }) {
+  *capture(fps: number, { progress, signal }: { progress?: (value: { progress: number; frame: string }) => void; signal?: AbortSignal }) {
     const interval = 1000 / fps;
     const frames: Uint8Array[] = [];
     const count = this.preview.duration / interval;
@@ -114,7 +116,7 @@ export class Recorder {
       const buffer = dataURLToUInt8Array(base64);
       frames.push(buffer);
 
-      progress?.({ progress: (frame + 1) / count, preview: base64 });
+      progress?.({ progress: (frame + 1) / count, frame: base64 });
       signal?.throwIfAborted();
     }
 

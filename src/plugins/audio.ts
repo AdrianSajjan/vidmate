@@ -16,6 +16,7 @@ export class CanvasAudio {
     this._canvas = canvas;
     this.elements = [];
     this.context = createInstance(AudioContext);
+
     this._initEvents();
     makeAutoObservable(this);
   }

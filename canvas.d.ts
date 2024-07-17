@@ -3158,11 +3158,17 @@ interface IObjectOptions {
   lockScalingFlip?: boolean | undefined;
 
   /**
-   * When `true`, object is not exported in OBJECT/JSON
+   * When `true`, object is not exported in OBJECT/JSON and not shown in Timeline
    * since 1.6.3
-   * @default
+   * @default false
    */
   excludeFromExport?: boolean | undefined;
+
+  /**
+   * When `true`, object is not shown in Timeline but will be exported in OBJECT/JSON
+   * @default false
+   */
+  excludeFromTimeline?: boolean | undefined;
 
   /**
    * When `true`, object is cached on an additional canvas.
