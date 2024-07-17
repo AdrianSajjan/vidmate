@@ -144,19 +144,14 @@ fabric.Object.prototype.controls.mtr = new fabric.Control({
   render: renderIconRotate,
 });
 
-fabric.Textbox.prototype.controls.mtr = fabric.Object.prototype.controls.mtr;
 fabric.Textbox.prototype.controls.tr = fabric.Object.prototype.controls.tr;
 fabric.Textbox.prototype.controls.br = fabric.Object.prototype.controls.br;
 fabric.Textbox.prototype.controls.tl = fabric.Object.prototype.controls.tl;
 fabric.Textbox.prototype.controls.bl = fabric.Object.prototype.controls.bl;
+fabric.Textbox.prototype.controls.mtr = fabric.Object.prototype.controls.mtr;
 
-fabric.Textbox.prototype.controls.mt = new fabric.Control({
-  visible: false,
-});
-
-fabric.Textbox.prototype.controls.mb = new fabric.Control({
-  visible: false,
-});
+fabric.Textbox.prototype.controls.mt = new fabric.Control({ visible: false });
+fabric.Textbox.prototype.controls.mb = new fabric.Control({ visible: false });
 
 fabric.Textbox.prototype.controls.ml = new fabric.Control({
   x: -0.5,
@@ -207,6 +202,7 @@ fabric.Canvas.prototype.indexOf = function (object) {
 };
 
 fabric.Object.NUM_FRACTION_DIGITS = 5;
+
 fabric.Object.prototype.set({
   transparentCorners: false,
   borderColor: "#2563EB",
@@ -216,4 +212,13 @@ fabric.Object.prototype.set({
   cornerStrokeColor: "#2563EB",
   borderOpacityWhenMoving: 1,
   strokeUniform: true,
+});
+
+fabric.Image.prototype.set({
+  _controlsVisibility: {
+    mt: false,
+    mb: false,
+    ml: false,
+    mr: false,
+  },
 });

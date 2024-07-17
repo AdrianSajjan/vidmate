@@ -1,7 +1,8 @@
-import { createInstance } from "@/lib/utils";
-import { Canvas } from "@/store/canvas";
 import { makeAutoObservable } from "mobx";
 import { fabric } from "fabric";
+
+import { createInstance } from "@/lib/utils";
+import { Canvas } from "@/store/canvas";
 import { FabricUtils } from "@/fabric/utils";
 
 const _fabric = fabric as any;
@@ -14,26 +15,40 @@ export class CanvasClipMask {
     makeAutoObservable(this);
   }
 
-  get canvas() {
+  private get canvas() {
     return this._canvas.instance!;
   }
 
-  clipObjectFromSceneElement(image: fabric.Image, clipPath: fabric.Object) {
-    const index = this.canvas._objects.findIndex((object) => object === image);
-    if (index === -1) return;
+  private _crop(image: fabric.Image, clip: fabric.Object) {
+    const cropX = (clip.left! - image.left!) / image.scaleX!;
+    const cropY = (clip.top! - image.top!) / image.scaleY!;
+    const width = (clip.width! * clip.scaleX!) / image.scaleX!;
+    const height = (clip.height! * clip.scaleY!) / image.scaleY!;
+    image.set({ height, width, cropX, cropY, top: clip.top, left: clip.left });
+  }
 
-    const height = clipPath.getScaledHeight();
-    const width = clipPath.getScaledWidth();
+  clipObjectFromSceneElement(image: fabric.Image, clip: fabric.Object) {
+    const height = clip.getScaledHeight();
+    const width = clip.getScaledWidth();
 
-    clipPath.set({ absolutePositioned: true }).moveTo(index);
-    width > height ? image.scaleToWidth(width) : image.scaleToHeight(height);
-    image.set({ clipPath: clipPath }).setPositionByOrigin(clipPath.getCenterPoint(), "center", "center");
+    const props = { absolutePositioned: true, opacity: 0.01, selectable: false, evented: false, excludeFromTimeline: true, excludeFromAlignment: true };
+    clip.set(props);
 
-    const group = [clipPath.name, image.name];
-    clipPath.meta!.group = group;
-    image.meta!.group = group;
+    height > width ? image.scaleToHeight(height / 2) : image.scaleToWidth(width / 2);
+    image.setPositionByOrigin(clip.getCenterPoint(), "center", "center");
+    image.setCoords();
 
-    this.canvas.requestRenderAll();
+    this._crop(image, clip);
+    FabricUtils.bindObjectTransformToParent(image, [clip]);
+    const handler = () => FabricUtils.updateObjectTransformToParent(image, [{ object: clip }]);
+
+    image.on("moving", handler);
+    image.on("scaling", handler);
+    image.on("rotating", handler);
+    handler();
+
+    image.set({ clipPath: clip }).setCoords();
+    this.canvas.setActiveObject(image).requestRenderAll();
     this.canvas.fire("clip:added", { target: image });
   }
 
@@ -48,29 +63,26 @@ export class CanvasClipMask {
     const height = image.getScaledHeight();
     const width = image.getScaledWidth();
 
-    const clip: fabric.Object = createInstance(_fabric[klass], { name, ...params, absolutePositioned: true });
-    const shell: fabric.Object = createInstance(_fabric[klass], { name, ...params, objectCaching: true, opacity: 0 });
+    const props = { absolutePositioned: true, opacity: 0.01, selectable: false, evented: false, excludeFromTimeline: true, excludeFromAlignment: true };
+    const clip: fabric.Object = createInstance(_fabric[klass], { name, ...params, ...props });
 
-    height > width ? shell.scaleToWidth(width) : shell.scaleToHeight(height);
-    shell.setPositionByOrigin(image.getCenterPoint(), "center", "center");
-    shell.setCoords();
+    height > width ? clip.scaleToWidth(width) : clip.scaleToHeight(height);
+    clip.setPositionByOrigin(image.getCenterPoint(), "center", "center");
+    clip.setCoords();
 
-    FabricUtils.initializeMetaProperties(shell);
-    FabricUtils.initializeAnimationProperties(shell);
-    FabricUtils.bindObjectTransformToParent(shell, [clip]);
+    this._crop(image, clip);
+    FabricUtils.initializeMetaProperties(clip);
+    FabricUtils.initializeAnimationProperties(clip);
+    FabricUtils.bindObjectTransformToParent(image, [clip]);
 
-    const handler = () => FabricUtils.updateObjectTransformToParent(shell, [{ object: clip, callback: () => image.set({ dirty: true }) }]);
-    shell.on("moving", handler);
-    shell.on("scaling", handler);
-    shell.on("rotating", handler);
+    const handler = () => FabricUtils.updateObjectTransformToParent(image, [{ object: clip }]);
+    image.on("moving", handler);
+    image.on("scaling", handler);
+    image.on("rotating", handler);
     handler();
 
-    const group = [shell.name, image.name];
-    shell.meta!.group = group;
-    image.meta!.group = group;
-
-    image.set({ clipPath: clip });
-    this.canvas.add(shell);
+    image.set({ clipPath: clip }).setCoords();
+    this.canvas.add(clip);
     this.canvas.setActiveObject(image).requestRenderAll();
     this.canvas.fire("clip:added", { target: image });
   }

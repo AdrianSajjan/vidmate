@@ -47,13 +47,15 @@ export class Canvas {
   }
 
   private _toggleControls(object: fabric.Object, enabled: boolean) {
-    object.hasControls = enabled;
-    this.controls = enabled;
+    runInAction(() => {
+      object.hasControls = enabled;
+      this.controls = enabled;
+    });
   }
 
   private _refreshElements() {
     runInAction(() => {
-      this.elements = this.instance._objects.filter((object) => object.excludeFromTimeline).map((object) => object.toObject(propertiesToInclude));
+      this.elements = this.instance._objects.filter((object) => !object.excludeFromTimeline).map((object) => object.toObject(propertiesToInclude));
     });
   }
 
@@ -77,9 +79,10 @@ export class Canvas {
 
   private _objectDeletedEvent(event: fabric.IEvent) {
     runInAction(() => {
+      if (!event.target) return;
       const index = this.elements.findIndex((element) => element.name === event.target!.name);
-      if (index === -1) return;
-      this.elements.splice(index, 1);
+      if (index !== -1) this.elements.splice(index, 1);
+      if (event.target.clipPath) this.instance.remove(event.target.clipPath);
     });
   }
 

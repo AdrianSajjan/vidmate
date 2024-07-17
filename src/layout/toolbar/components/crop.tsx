@@ -11,12 +11,12 @@ function _CropToolbar() {
   const cropper = editor.canvas.cropper;
 
   const handleCropEnd = () => {
-    editor.canvas.instance?.discardActiveObject();
-    editor.canvas.instance?.setActiveObject(cropper.selected!);
+    editor.canvas.instance.discardActiveObject();
+    editor.canvas.instance.setActiveObject(cropper.active!);
   };
 
   const handleFlipImage = (property: "flipX" | "flipY") => {
-    editor.canvas.onChangeImageProperty(cropper.selected!, property, !cropper.selected![property]);
+    editor.canvas.onChangeImageProperty(cropper.active!, property, !cropper.active![property]);
   };
 
   return (

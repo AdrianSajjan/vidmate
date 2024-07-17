@@ -20,7 +20,7 @@ function _ClipMaskSidebar() {
     editor.canvas.clipper.clipActiveObjectFromBasicShape(klass, params);
   };
 
-  const handleAbstractShapeClipPath = (path: string, name: any) => {};
+  const handleAbstractShapeClipPath = (_path: string, _name: any) => {};
 
   return (
     <div className="h-full" style={{ width: rightSidebarWidth }}>

@@ -50,23 +50,76 @@ export abstract class FabricUtils {
     for (const child of children) {
       if (!child.meta) child.meta = {};
       child.meta.relationship = fabric.util.multiplyTransformMatrices(invertedTransform, parent.calcTransformMatrix());
+      child.meta.originalScaleX = child.scaleX;
+      child.meta.originalScaleY = child.scaleY;
+      child.meta.initialParentScaleX = parent.scaleX;
+      child.meta.initialParentScaleY = parent.scaleY;
     }
   }
 
   static updateObjectTransformToParent(parent: fabric.Object, children: Array<TransformChildren>) {
     for (const child of children) {
-      if (!child.object.meta?.relationship || !Array.isArray(child.object.meta?.relationship)) return;
+      if (!child.object.meta || !child.object.meta.relationship || !Array.isArray(child.object.meta.relationship)) continue;
 
       const transform = fabric.util.multiplyTransformMatrices(parent.calcTransformMatrix(), child.object.meta.relationship);
+
       let decompose: Record<string, number> = fabric.util.qrDecompose(transform);
       if (child.skip) decompose = omit(decompose, child.skip);
 
       child.object.set({ flipX: false, flipY: false });
       child.object.setPositionByOrigin(createInstance(fabric.Point, decompose.translateX, decompose.translateY), "center", "center");
 
-      child.object.set(decompose);
+      const scaleFactorX = parent.scaleX! / child.object.meta.initialParentScaleX;
+      const scaleFactorY = parent.scaleY! / child.object.meta.initialParentScaleY;
+      const adjustedScaleX = child.object.meta.originalScaleX * scaleFactorX;
+      const adjustedScaleY = child.object.meta.originalScaleY * scaleFactorY;
+
+      child.object.set({ ...decompose, scaleX: adjustedScaleX, scaleY: adjustedScaleY });
       child.object.setCoords();
+
       child.callback?.();
+    }
+  }
+
+  static applyObjectScaleToDimensions(object: fabric.Object) {
+    switch (object.type) {
+      case "rect": {
+        const width = object.width! * object.scaleX!;
+        const height = object.height! * object.scaleY!;
+        object.set({ width: width, height: height, scaleX: 1, scaleY: 1 });
+        break;
+      }
+      case "triangle": {
+        const width = object.width! * object.scaleX!;
+        const height = object.height! * object.scaleY!;
+        object.set({ width: width, height: height, scaleX: 1, scaleY: 1 });
+        break;
+      }
+      case "ellipse": {
+        const ellipse = object as fabric.Ellipse;
+        const rx = ellipse.rx! * object.scaleX!;
+        const actualRy = ellipse.ry! * object.scaleY!;
+        ellipse.set({ rx: rx, ry: actualRy, scaleX: 1, scaleY: 1 });
+        break;
+      }
+      case "circle": {
+        const circle = object as fabric.Circle;
+        const radius = circle.radius! * object.scaleX!;
+        circle.set({ radius: radius, scaleX: 1, scaleY: 1 });
+        break;
+      }
+      case "path": {
+        const path = object as Required<fabric.Path>;
+        const scaleX = 1 / path.scaleX;
+        const scaleY = 1 / path.scaleY;
+        const points = path.path as unknown as number[][];
+        points.forEach((point) => {
+          if (point[1] !== undefined) point[1] *= scaleX;
+          if (point[2] !== undefined) point[2] *= scaleY;
+        });
+        object.set({ scaleX: 1, scaleY: 1 });
+        break;
+      }
     }
   }
 

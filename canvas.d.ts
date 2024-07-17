@@ -384,7 +384,9 @@ type EventName =
   | "recorder:start"
   | "recorder:stop"
   | "clip:added"
-  | "clip:removed";
+  | "clip:removed"
+  | "crop:start"
+  | "crop:end";
 
 interface IObservable<T> {
   /**
