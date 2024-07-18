@@ -85,54 +85,51 @@ export abstract class FabricUtils {
     }
   }
 
-  static resizeTextboxDimensions(object: fabric.Object, scaleX: number, scaleY: number) {
-    if (!this.isTextboxElement(object)) return;
-    object.set({ fontSize: Math.round(object.fontSize! * scaleY!), width: object.width! * scaleX!, scaleY: 1, scaleX: 1 });
-  }
-
-  static applyObjectScaleToDimensions(object: fabric.Object) {
-    switch (object.type) {
-      case "textbox": {
-        const textbox = object as fabric.Textbox;
-        textbox.set({ fontSize: Math.round(textbox.fontSize! * textbox.scaleY!), width: textbox.width! * textbox.scaleX!, scaleY: 1, scaleX: 1 });
-        break;
-      }
-      case "rect": {
-        const width = object.width! * object.scaleX!;
-        const height = object.height! * object.scaleY!;
-        object.set({ width: width, height: height, scaleX: 1, scaleY: 1 });
-        break;
-      }
-      case "triangle": {
-        const width = object.width! * object.scaleX!;
-        const height = object.height! * object.scaleY!;
-        object.set({ width: width, height: height, scaleX: 1, scaleY: 1 });
-        break;
-      }
-      case "ellipse": {
-        const ellipse = object as fabric.Ellipse;
-        const rx = ellipse.rx! * object.scaleX!;
-        const actualRy = ellipse.ry! * object.scaleY!;
-        ellipse.set({ rx: rx, ry: actualRy, scaleX: 1, scaleY: 1 });
-        break;
-      }
-      case "circle": {
-        const circle = object as fabric.Circle;
-        const radius = circle.radius! * object.scaleX!;
-        circle.set({ radius: radius, scaleX: 1, scaleY: 1 });
-        break;
-      }
-      case "path": {
-        const path = object as Required<fabric.Path>;
-        const scaleX = 1 / path.scaleX;
-        const scaleY = 1 / path.scaleY;
-        const points = path.path as unknown as number[][];
-        points.forEach((point) => {
-          if (point[1] !== undefined) point[1] *= scaleX;
-          if (point[2] !== undefined) point[2] *= scaleY;
-        });
-        object.set({ scaleX: 1, scaleY: 1 });
-        break;
+  static applyObjectScaleToDimensions(object: fabric.Object, list?: string[]) {
+    if (!list || list.includes(object.type!)) {
+      switch (object.type) {
+        case "textbox": {
+          const textbox = object as fabric.Textbox;
+          textbox.set({ fontSize: Math.round(textbox.fontSize! * textbox.scaleY!), width: textbox.width! * textbox.scaleX!, scaleY: 1, scaleX: 1 });
+          break;
+        }
+        case "rect": {
+          const width = object.width! * object.scaleX!;
+          const height = object.height! * object.scaleY!;
+          object.set({ width: width, height: height, scaleX: 1, scaleY: 1 });
+          break;
+        }
+        case "triangle": {
+          const width = object.width! * object.scaleX!;
+          const height = object.height! * object.scaleY!;
+          object.set({ width: width, height: height, scaleX: 1, scaleY: 1 });
+          break;
+        }
+        case "ellipse": {
+          const ellipse = object as fabric.Ellipse;
+          const rx = ellipse.rx! * object.scaleX!;
+          const ry = ellipse.ry! * object.scaleY!;
+          ellipse.set({ rx: rx, ry: ry, scaleX: 1, scaleY: 1 });
+          break;
+        }
+        case "circle": {
+          const circle = object as fabric.Circle;
+          const radius = circle.radius! * object.scaleX!;
+          circle.set({ radius: radius, scaleX: 1, scaleY: 1 });
+          break;
+        }
+        case "path": {
+          const path = object as Required<fabric.Path>;
+          const scaleX = 1 / path.scaleX;
+          const scaleY = 1 / path.scaleY;
+          const points = path.path as unknown as number[][];
+          points.forEach((point) => {
+            if (point[1] !== undefined) point[1] *= scaleX;
+            if (point[2] !== undefined) point[2] *= scaleY;
+          });
+          object.set({ scaleX: 1, scaleY: 1 });
+          break;
+        }
       }
     }
   }

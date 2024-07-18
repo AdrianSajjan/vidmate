@@ -69,9 +69,13 @@ export class Canvas {
   private _objectModifiedEvent(event: fabric.IEvent) {
     runInAction(() => {
       if (!event.target) return;
+
       this._toggleControls(event.target, true);
+      FabricUtils.applyObjectScaleToDimensions(event.target, ["rect"]);
+
       const index = this.elements.findIndex((element) => element.name === event.target!.name);
       if (index === -1 || event.target.excludeFromTimeline) return;
+
       this.elements[index] = event.target.toObject(propertiesToInclude);
       if (event.target.name === this.trim?.selected.name) this.trim!.selected = event.target.toObject(propertiesToInclude);
     });
@@ -97,8 +101,7 @@ export class Canvas {
     runInAction(() => {
       if (!event.target) return;
       this._toggleControls(event.target, false);
-      if (FabricUtils.isActiveSelection(event.target)) event.target._objects.map((object) => FabricUtils.resizeTextboxDimensions(object, object!.scaleX!, object!.scaleY!));
-      else FabricUtils.resizeTextboxDimensions(event.target, event.target.scaleX!, event.target.scaleY!);
+      FabricUtils.applyObjectScaleToDimensions(event.target, ["textbox"]);
     });
   }
 

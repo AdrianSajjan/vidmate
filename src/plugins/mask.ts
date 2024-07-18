@@ -27,27 +27,47 @@ export class CanvasClipMask {
     image.set({ height, width, cropX, cropY, top: clip.top, left: clip.left });
   }
 
+  private _remove(image: fabric.Image) {
+    if (!image || !image.clipPath) return;
+
+    image.off("moving");
+    image.off("scaling");
+    image.off("rotating");
+
+    const clip = image.clipPath;
+    image.clipPath = undefined;
+
+    if (!clip.meta || !clip.meta.scene) {
+      this.canvas.remove(clip);
+    } else {
+      clip.set({ absolutePositioned: false, opacity: 1, selectable: true, evented: true, excludeFromTimeline: false, excludeFromAlignment: false });
+    }
+  }
+
   clipObjectFromSceneElement(image: fabric.Image, clip: fabric.Object) {
     const height = clip.getScaledHeight();
     const width = clip.getScaledWidth();
 
-    const props = { absolutePositioned: true, opacity: 0.01, selectable: false, evented: false, excludeFromTimeline: true, excludeFromAlignment: true };
-    clip.set(props);
+    clip.set({ absolutePositioned: true, opacity: 0.01, selectable: false, evented: false, excludeFromTimeline: true, excludeFromAlignment: true });
+    clip.meta!.scene = true;
 
     height > width ? image.scaleToHeight(height / 2) : image.scaleToWidth(width / 2);
     image.setPositionByOrigin(clip.getCenterPoint(), "center", "center");
     image.setCoords();
 
+    this._remove(image);
     this._crop(image, clip);
     FabricUtils.bindObjectTransformToParent(image, [clip]);
-    const handler = () => FabricUtils.updateObjectTransformToParent(image, [{ object: clip }]);
 
+    const handler = () => FabricUtils.updateObjectTransformToParent(image, [{ object: clip }]);
     image.on("moving", handler);
     image.on("scaling", handler);
     image.on("rotating", handler);
     handler();
 
-    image.set({ clipPath: clip }).setCoords();
+    image.clipPath = clip;
+    image.setCoords();
+
     this.canvas.setActiveObject(image).requestRenderAll();
     this.canvas.fire("clip:added", { target: image });
   }
@@ -70,7 +90,9 @@ export class CanvasClipMask {
     clip.setPositionByOrigin(image.getCenterPoint(), "center", "center");
     clip.setCoords();
 
+    this._remove(image);
     this._crop(image, clip);
+
     FabricUtils.initializeMetaProperties(clip);
     FabricUtils.initializeAnimationProperties(clip);
     FabricUtils.bindObjectTransformToParent(image, [clip]);
@@ -81,7 +103,9 @@ export class CanvasClipMask {
     image.on("rotating", handler);
     handler();
 
-    image.set({ clipPath: clip }).setCoords();
+    image.clipPath = clip;
+    image.setCoords();
+
     this.canvas.add(clip);
     this.canvas.setActiveObject(image).requestRenderAll();
     this.canvas.fire("clip:added", { target: image });
@@ -91,5 +115,50 @@ export class CanvasClipMask {
     const object = this.canvas.getActiveObject() as fabric.Image | fabric.Video;
     if (!object || !(object.type === "image" || object.type === "video")) return;
     this.clipObjectFromBasicShape(object, klass, params);
+  }
+
+  clipObjectFromAdvancedShape(image: fabric.Image, path: string, name = "shape") {
+    const id = FabricUtils.elementID(name);
+    const height = image.getScaledHeight();
+    const width = image.getScaledWidth();
+
+    const props = { absolutePositioned: true, opacity: 0.01, selectable: false, evented: false, excludeFromTimeline: true, excludeFromAlignment: true };
+    const clip: fabric.Object = createInstance(fabric.Path, path, { name: id, ...props });
+
+    height > width ? clip.scaleToWidth(width) : clip.scaleToHeight(height);
+    clip.setPositionByOrigin(image.getCenterPoint(), "center", "center");
+    clip.setCoords();
+
+    this._remove(image);
+    this._crop(image, clip);
+
+    FabricUtils.initializeMetaProperties(clip);
+    FabricUtils.initializeAnimationProperties(clip);
+    FabricUtils.bindObjectTransformToParent(image, [clip]);
+
+    const handler = () => FabricUtils.updateObjectTransformToParent(image, [{ object: clip }]);
+    image.on("moving", handler);
+    image.on("scaling", handler);
+    image.on("rotating", handler);
+    handler();
+
+    image.clipPath = clip;
+    image.setCoords();
+
+    this.canvas.add(clip);
+    this.canvas.setActiveObject(image).requestRenderAll();
+    this.canvas.fire("clip:added", { target: image });
+  }
+
+  clipActiveObjectFromAdvancedShape(path: string, name = "shape") {
+    const object = this.canvas.getActiveObject() as fabric.Image | fabric.Video;
+    if (!object || !(object.type === "image" || object.type === "video")) return;
+    this.clipObjectFromAdvancedShape(object, path, name);
+  }
+
+  removeClipMaskFromActiveObject() {
+    const object = this.canvas.getActiveObject() as fabric.Image | fabric.Video;
+    this._remove(object);
+    this.canvas.requestRenderAll().fire("clip:removed", { target: object });
   }
 }

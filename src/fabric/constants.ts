@@ -1,7 +1,23 @@
 import { createInstance } from "@/lib/utils";
 import { fabric } from "fabric";
 
-export const propertiesToInclude = ["name", "meta", "anim", "effects", "adjustments", "previousFill", "trimStart", "trimEnd", "hasAudio", "selectable", "evented", "hasControls", "textTransform"];
+export const propertiesToInclude = [
+  "name",
+  "meta",
+  "anim",
+  "effects",
+  "adjustments",
+  "previousFill",
+  "trimStart",
+  "trimEnd",
+  "hasAudio",
+  "selectable",
+  "evented",
+  "hasControls",
+  "textTransform",
+  "excludeFromTimeline",
+  "excludeFromAlignment",
+];
 
 export const textLayoutProperties = ["textTransform"];
 

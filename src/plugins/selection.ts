@@ -32,6 +32,9 @@ export class CanvasSelection {
     this.canvas.on("selection:created", this._selectionEvent.bind(this));
     this.canvas.on("selection:updated", this._selectionEvent.bind(this));
     this.canvas.on("selection:cleared", this._selectionEvent.bind(this));
+
+    this.canvas.on("clip:added", this._modifiedEvent.bind(this));
+    this.canvas.on("clip:removed", this._modifiedEvent.bind(this));
   }
 
   private _modifiedEvent(event: fabric.IEvent) {

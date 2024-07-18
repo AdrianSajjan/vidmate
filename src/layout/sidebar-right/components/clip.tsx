@@ -3,24 +3,38 @@ import { XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 
 import { Button } from "@/components/ui/button";
-import { rightSidebarWidth } from "@/constants/layout";
-import { useEditorContext } from "@/context/editor";
 import { Skeleton } from "@/components/ui/skeleton";
+
+import { useEditorContext } from "@/context/editor";
+import { rightSidebarWidth } from "@/constants/layout";
 import { advancedShapes, basicShapes } from "@/constants/elements";
+import { propertiesToInclude } from "@/fabric/constants";
 
 function _ClipMaskSidebar() {
   const editor = useEditorContext();
   const selected = editor.canvas.selection.active!;
 
+  const [clipMask, setClipMask] = useState<string>();
+
+  useEffect(() => {
+    if (!selected.clipPath) {
+      setClipMask(undefined);
+    } else {
+      const clipPath = editor.canvas.instance.getItemByName(selected.clipPath.name);
+      if (clipPath) {
+        clipPath.clone((clone: fabric.Object) => {
+          clone.set({ visible: true, opacity: 1 });
+          setClipMask(clone.toDataURL({ format: "image/webp" }));
+        }, propertiesToInclude);
+      } else {
+        setClipMask(undefined);
+      }
+    }
+  }, [selected]);
+
   const scene = useMemo(() => {
-    return editor.canvas.elements.filter((element) => element.name !== selected.name && element.type !== "textbox");
+    return editor.canvas.elements.filter((element) => element.name !== selected.name);
   }, [editor.canvas.elements, editor.canvas.elements.length, selected]);
-
-  const handleBasicShapeClipPath = (klass: string, params: any) => {
-    editor.canvas.clipper.clipActiveObjectFromBasicShape(klass, params);
-  };
-
-  const handleAbstractShapeClipPath = (_path: string, _name: any) => {};
 
   return (
     <div className="h-full" style={{ width: rightSidebarWidth }}>
@@ -31,26 +45,16 @@ function _ClipMaskSidebar() {
         </Button>
       </div>
       <div className="p-4 flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-4">
-            <h4 className="text-xs font-semibold line-clamp-1">Scene Elements</h4>
-            <Button size="sm" variant="link" className="text-primary font-medium line-clamp-1">
-              See All
+        {clipMask ? (
+          <div className="flex flex-col gap-3 pb-2">
+            <div className="bg-transparent-pattern p-6">
+              <img src={clipMask} className="w-full h-auto" />
+            </div>
+            <Button size="sm" variant="outline" className="w-full" onClick={() => editor.canvas.clipper.removeClipMaskFromActiveObject()}>
+              Remove clip mask
             </Button>
           </div>
-          <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
-            {scene.length ? (
-              scene.map((element) => <SceneElement key={element.name} element={element} />)
-            ) : (
-              <Fragment>
-                {Array.from({ length: 3 }, (_, index) => (
-                  <Skeleton key={index} className="h-16 flex-1 rounded-md" />
-                ))}
-                <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Elements</span>
-              </Fragment>
-            )}
-          </div>
-        </div>
+        ) : null}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-4">
             <h4 className="text-xs font-semibold line-clamp-1">Basic Shapes</h4>
@@ -62,7 +66,7 @@ function _ClipMaskSidebar() {
             {basicShapes.map(({ name, path, klass, params }) => (
               <button
                 key={name}
-                onClick={() => handleBasicShapeClipPath(klass, params)}
+                onClick={() => editor.canvas.clipper.clipActiveObjectFromBasicShape(klass, params)}
                 className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
               >
                 <svg viewBox="0 0 48 48" aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
@@ -83,7 +87,7 @@ function _ClipMaskSidebar() {
             {advancedShapes.map(({ name, path, viewbox = "0 0 48 48" }) => (
               <button
                 key={name}
-                onClick={() => handleAbstractShapeClipPath(path, name)}
+                onClick={() => editor.canvas.clipper.clipActiveObjectFromAdvancedShape(path, name)}
                 className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
               >
                 <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
@@ -91,6 +95,26 @@ function _ClipMaskSidebar() {
                 </svg>
               </button>
             ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-4">
+            <h4 className="text-xs font-semibold line-clamp-1">Scene Elements</h4>
+            <Button size="sm" variant="link" className="text-primary font-medium line-clamp-1">
+              See All
+            </Button>
+          </div>
+          <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            {scene.length ? (
+              scene.map((element) => <SceneElement key={element.name} element={element} />)
+            ) : (
+              <Fragment>
+                {Array.from({ length: 3 }, (_, index) => (
+                  <Skeleton key={index} className="h-16 flex-1 rounded-md" />
+                ))}
+                <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">No Elements</span>
+              </Fragment>
+            )}
           </div>
         </div>
       </div>

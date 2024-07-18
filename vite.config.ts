@@ -7,9 +7,13 @@ export default defineConfig({
     react(),
     {
       name: "full-reload",
-      handleHotUpdate({ server }) {
-        server.ws.send({ type: "full-reload" });
-        return [];
+      handleHotUpdate({ server, file }) {
+        if (file.includes("/src/stores/") || file.includes("/src/fabric/") || file.includes("/src/plugins/") || file.includes("/src/models/")) {
+          server.ws.send({
+            type: "full-reload",
+          });
+          return [];
+        }
       },
     },
   ],

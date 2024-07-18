@@ -47,6 +47,7 @@ function _PreviewModalContent() {
       createFileDownload(blob, file);
     } catch (e) {
       const error = e as Error;
+      console.warn(error);
       toast.error(error.message || "Failed to export video");
     }
   };
