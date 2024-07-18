@@ -43,7 +43,7 @@ export class CanvasCropper {
     object.clipPath ? this.cropObjectWithClipPath(object) : this.cropObjectWithoutClipPath(object);
   }
 
-  *cropObjectWithoutClipPath(image: fabric.Image) {
+  cropObjectWithoutClipPath(image: fabric.Image) {
     this.active = image;
     this.canvas.fire("crop:start", { target: image });
     const element = image._originalElement as HTMLImageElement | HTMLVideoElement;
@@ -157,34 +157,38 @@ export class CanvasCropper {
     });
   }
 
-  *cropObjectWithClipPath(image: fabric.Image) {
-    this.canvas.fire("crop:start", { target: image });
-    const index = this.canvas._objects.findIndex((object) => object === image);
+  cropObjectWithClipPath(image: fabric.Image) {
     this.active = image;
+    this.canvas.fire("crop:start", { target: image });
 
     const clipPath = image.clipPath!;
-    const element = image.getElement() as HTMLImageElement;
+    const element = image.getElement();
 
-    const left = image.left!;
+    const index = this.canvas._objects.findIndex((object) => object === image);
+    const fill = clipPath.fill;
+
     const top = image.top!;
+    const left = image.left!;
     const x = image.cropX! * image.scaleX!;
     const y = image.cropY! * image.scaleY!;
+
+    const width = isVideoElement(element) ? element.videoWidth : element.naturalWidth;
+    const height = isVideoElement(element) ? element.videoHeight : element.naturalHeight;
 
     image.off("moving");
     image.off("scaling");
     image.off("rotating");
 
-    image.set({ left: left - x, top: top - y, width: element.naturalWidth, height: element.naturalHeight, cropX: 0, cropY: 0, opacity: 0.35 });
+    image.set({ left: left - x, top: top - y, height: height, width: width, cropX: 0, cropY: 0 });
     image.set({ dirty: false, clipPath: undefined, lockRotation: true, lockScalingFlip: true });
+    image.bringToFront();
 
-    const clone: fabric.Image = yield createInstance(Promise, (resolve) =>
-      image.clone((clone: fabric.Image) => {
-        clone.set({ name: "clone_" + image.name, scaleX: image.scaleX, scaleY: image.scaleY, clipPath: clipPath, opacity: 1 });
-        clone.set({ selectable: false, evented: false, excludeFromAlignment: true, excludeFromExport: true, excludeFromTimeline: true });
-        this.canvas!.insertAt(clone, index + 1, false);
-        resolve(clone);
-      }),
-    );
+    const props = { top: image.top, left: image.left, angle: image.angle, width: image.width, height: image.height, scaleX: image.scaleX, scaleY: image.scaleY };
+    const overlay = createInstance(fabric.Rect, { selectable: false, excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true, evented: false, fill: "#00000080", ...props });
+    this.canvas.add(overlay);
+
+    clipPath.set({ globalCompositeOperation: "overlay", opacity: 1, fill: "#ffffff" });
+    clipPath.bringToFront();
 
     image.on("moving", () => {
       const imageHeight = image.getScaledHeight();
@@ -197,15 +201,15 @@ export class CanvasCropper {
       if (image.left! + imageWidth <= clipPath.left! + clipPathWidth) image.left = clipPath.left! - (imageWidth - clipPathWidth);
       if (image.top! + imageHeight <= clipPath.top! + clipPathHeight) image.top = clipPath.top! - (imageHeight - clipPathHeight);
 
-      clone.left = image.left;
-      clone.top = image.top;
+      overlay.left = image.left;
+      overlay.top = image.top;
     });
 
     image.on("scaling", () => {
-      clone.scaleX = image.scaleX;
-      clone.scaleY = image.scaleY;
-      clone.left = image.left;
-      clone.top = image.top;
+      overlay.scaleX = image.scaleX;
+      overlay.scaleY = image.scaleY;
+      overlay.left = image.left;
+      overlay.top = image.top;
     });
 
     image.on("mouseup", () => {
@@ -245,10 +249,10 @@ export class CanvasCropper {
         image.set({ scaleY: image.scaleX });
       }
 
-      clone.scaleX = image.scaleX;
-      clone.scaleY = image.scaleY;
-      clone.left = image.left;
-      clone.top = image.top;
+      overlay.scaleX = image.scaleX;
+      overlay.scaleY = image.scaleY;
+      overlay.left = image.left;
+      overlay.top = image.top;
     });
 
     image.on("deselected", () => {
@@ -257,8 +261,10 @@ export class CanvasCropper {
       const width = (clipPath.width! * clipPath.scaleX!) / image.scaleX!;
       const height = (clipPath.height! * clipPath.scaleY!) / image.scaleY!;
 
-      image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: clipPath.top!, left: clipPath.left!, clipPath: clipPath });
-      image.set({ lockRotation: false, lockScalingFlip: false, opacity: 1 });
+      image.moveTo(index);
+      clipPath.moveTo(index);
+      image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: clipPath.top!, left: clipPath.left!, clipPath: clipPath, lockRotation: false, lockScalingFlip: false });
+      clipPath.set({ globalCompositeOperation: undefined, fill: fill, opacity: 0.01 });
 
       image.off("scaling");
       image.off("deselected");
@@ -271,7 +277,7 @@ export class CanvasCropper {
       image.on("rotating", handler);
       handler();
 
-      this.canvas.remove(clone);
+      this.canvas.remove(overlay);
       this.canvas.requestRenderAll().fire("crop:end", { target: image });
 
       runInAction(() => (this.active = null));
