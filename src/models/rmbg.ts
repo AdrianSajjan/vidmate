@@ -80,9 +80,6 @@ export class RmbgAI {
           resolve(blob);
         });
       });
-    } catch (error) {
-      console.warn(error);
-      throw error;
     } finally {
       this.pending.delete(id);
     }
