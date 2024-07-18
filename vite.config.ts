@@ -1,22 +1,9 @@
 import path from "path";
 import react from "@vitejs/plugin-react-swc";
-import { defineConfig } from "vite";
+import { defineConfig, PluginOption } from "vite";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    {
-      name: "full-reload",
-      handleHotUpdate({ server, file }) {
-        if (file.includes("/src/stores/") || file.includes("/src/fabric/") || file.includes("/src/plugins/") || file.includes("/src/models/")) {
-          server.ws.send({
-            type: "full-reload",
-          });
-          return [];
-        }
-      },
-    },
-  ],
+  plugins: [react(), selectiveHotModuleReload()],
   build: {
     target: "esnext",
   },
@@ -32,3 +19,17 @@ export default defineConfig({
     hmr: {},
   },
 });
+
+function selectiveHotModuleReload(): PluginOption {
+  return {
+    name: "selective-hmr",
+    handleHotUpdate({ server, file }) {
+      if (file.includes("/src/stores/") || file.includes("/src/fabric/") || file.includes("/src/plugins/") || file.includes("/src/models/")) {
+        server.ws.send({
+          type: "full-reload",
+        });
+        return [];
+      }
+    },
+  };
+}
