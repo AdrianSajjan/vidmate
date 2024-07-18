@@ -147,4 +147,21 @@ export abstract class FabricUtils {
       easing: this.linearEasing,
     });
   }
+
+  static applyTransformationsAfterLoad(canvas: fabric.Canvas | fabric.StaticCanvas) {
+    canvas.forEachObject((object) => {
+      if (object.clipPath) {
+        const existing = canvas.getItemByName(object.clipPath.name);
+        if (existing) canvas.remove(existing);
+
+        canvas.add(object.clipPath);
+        FabricUtils.bindObjectTransformToParent(object, [object.clipPath]);
+        const handler = () => FabricUtils.updateObjectTransformToParent(object, [{ object: object.clipPath! }]);
+
+        object.on("moving", handler);
+        object.on("scaling", handler);
+        object.on("rotating", handler);
+      }
+    });
+  }
 }

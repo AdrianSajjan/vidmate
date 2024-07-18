@@ -40,20 +40,9 @@ export class CanvasHistory {
   private *_load(history: string) {
     return createPromise<void>((resolve) => {
       this.canvas.loadFromJSON(history, () => {
-        this.canvas.forEachObject((object) => {
-          if (object.clipPath) {
-            const existing = this.canvas.getItemByName(object.clipPath.name);
-            if (existing) this.canvas.remove(existing);
-            this.canvas.add(object.clipPath);
-            FabricUtils.bindObjectTransformToParent(object, [object.clipPath]);
-            const handler = () => FabricUtils.updateObjectTransformToParent(object, [{ object: object.clipPath! }]);
-            object.on("moving", handler);
-            object.on("scaling", handler);
-            object.on("rotating", handler);
-          }
-        });
-        this.canvas.renderAll();
+        FabricUtils.applyTransformationsAfterLoad(this.canvas);
         runInAction(() => (this.status = "idle"));
+        this.canvas.renderAll();
         resolve();
       });
     });

@@ -101,7 +101,7 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
     const object = editor.canvas.instance!.getItemByName(element.name);
     if (!object) return;
     object.clone((clone: fabric.Object) => {
-      clone.set({ opacity: 1, visible: true });
+      clone.set({ opacity: 1, visible: true, clipPath: undefined });
       if (FabricUtils.isVideoElement(clone) && !clone.meta!.placeholder) {
         clone.seek(1);
         setTimeout(() => {

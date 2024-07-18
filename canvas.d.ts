@@ -1300,6 +1300,12 @@ export class StaticCanvas {
   setBackgroundColor(backgroundColor: string | Pattern | Gradient, callback: Function): Canvas;
 
   /**
+   * Returns the fabric object with the provided name
+   * @return {fabric.Object | null} active object
+   */
+  getItemByName(name?: string): Object | null;
+
+  /**
    * Returns canvas width (in px)
    * @return {Number}
    */
@@ -2090,11 +2096,6 @@ export class Canvas {
    */
   getActiveObjects(): Object[];
   /**
-   * Returns the fabric object with the provided name
-   * @return {fabric.Object | null} active object
-   */
-  getItemByName(name?: string): Object | null;
-  /**
    * Returns the index of the fabric object
    * @return {number} index of object
    */
@@ -2784,7 +2785,7 @@ export type EntryAnimation = "none" | "fade-in" | (string & {});
 
 export type ExitAnimation = "none" | "fade-out" | (string & {});
 
-interface AnimationTimeline {
+export interface AnimationTimeline {
   in: {
     name: EntryAnimation;
     duration: number;

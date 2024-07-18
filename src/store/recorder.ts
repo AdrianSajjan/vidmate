@@ -136,6 +136,8 @@ export class Recorder {
       const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
       this.instance.add(clone);
     }
+
+    FabricUtils.applyTransformationsAfterLoad(this.instance);
     this.instance.renderAll();
 
     this.timeline = anime.timeline({ duration: this.preview.duration, loop: false, autoplay: false, update: this.instance.requestRenderAll.bind(this.instance) });

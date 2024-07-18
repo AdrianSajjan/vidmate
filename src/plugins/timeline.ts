@@ -94,6 +94,7 @@ export class CanvasTimeline {
     for (const object of this.canvas._objects) {
       if (object.excludeFromTimeline) continue;
       object.set({ ...(object.anim?.state || {}) });
+      if (object.clipPath) object.clipPath.set({ ...(object.clipPath.anim?.state || {}) });
     }
     this._toggleElements(this.seek);
   }

@@ -173,7 +173,7 @@ fabric.Textbox.prototype.controls.mr = new fabric.Control({
   render: renderIcon,
 });
 
-fabric.Canvas.prototype.getItemByName = function (name) {
+fabric.StaticCanvas.prototype.getItemByName = function (name) {
   let object: fabric.Object | null = null;
   const objects = this._objects;
   for (let i = 0, len = this.size(); i < len; i++) {
