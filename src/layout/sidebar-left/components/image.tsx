@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { flowResult } from "mobx";
 import { observer } from "mobx-react";
-import { Fragment, MouseEventHandler } from "react";
+import { Fragment, MouseEvent } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,30 +28,24 @@ function _ImageSidebar() {
   });
 
   const handleUpload = (files: FileList | null) => {
-    if (!files || !files.item(0)) return;
-    toast.promise(upload.mutateAsync(files.item(0)!), {
-      loading: `Your image asset is being uploaded...`,
-      success: `Image has been successfully uploaded`,
-      error: `Ran into an error while uploading the image`,
-    });
+    if (!files || !files.length) return;
+    const promise = upload.mutateAsync(files[0]);
+    toast.promise(promise, { loading: `The image is being uploaded`, success: `The image has been successfully uploaded`, error: `Ran into an error while uploading the image` });
   };
 
-  const handleClick =
-    (source: string): MouseEventHandler<HTMLButtonElement> =>
-    (event) => {
-      const thumbnail = event.currentTarget.querySelector("img");
-      if (!thumbnail || !isImageLoaded(thumbnail)) {
-        toast.promise(flowResult(editor.canvas.onAddImageFromSource(source)), {
-          loading: "The image asset is being loaded...",
-          success: () => "The image asset has been added to artboard",
-          error: () => "Ran into an error adding the image asset",
-        });
-      } else {
-        toast.promise(flowResult(editor.canvas.onAddImageFromThumbail(source, thumbnail)), {
-          error: () => "Ran into an error adding the image asset",
-        });
-      }
-    };
+  const handleClick = (source: string) => (event: MouseEvent<HTMLButtonElement>) => {
+    const thumbnail = event.currentTarget.querySelector("img");
+    if (editor.canvas.replacer.active?.type === "image") {
+      const promise = flowResult(editor.canvas.replacer.replace(source));
+      toast.promise(promise, { loading: "The image is being replaced", success: "The image has been replaced", error: "Ran into an error while replacing the image" });
+    } else if (!thumbnail || !isImageLoaded(thumbnail)) {
+      const promise = flowResult(editor.canvas.onAddImageFromSource(source));
+      toast.promise(promise, { loading: "The image is being loaded", success: "The image has been added to artboard", error: "Ran into an error while adding the image" });
+    } else {
+      const promise = flowResult(editor.canvas.onAddImageFromThumbail(source, thumbnail));
+      toast.promise(promise, { error: "Ran into an error while adding the image" });
+    }
+  };
 
   return (
     <div className="h-full" style={{ width: leftSidebarWidth }}>

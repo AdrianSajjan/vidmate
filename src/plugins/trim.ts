@@ -2,7 +2,7 @@ import { propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { Canvas } from "@/store/canvas";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 
 export class CanvasTrimmer {
   private _canvas: Canvas;
@@ -31,13 +31,17 @@ export class CanvasTrimmer {
   }
 
   private _objectModifiedEvent(event: fabric.IEvent) {
-    if (!event.target || !this.active) return;
-    if (event.target.name === this.active.object.name) this.active.object = event.target.toObject(propertiesToInclude);
+    runInAction(() => {
+      if (!event.target || !this.active) return;
+      if (event.target.name === this.active.object.name) this.active.object = event.target.toObject(propertiesToInclude);
+    });
   }
 
   private _timelineRecorderStartEvent() {
-    this.active = null;
-    this.canvas.discardActiveObject();
+    runInAction(() => {
+      this.active = null;
+      this.canvas.discardActiveObject();
+    });
   }
 
   private _trimAudioStart(audio: EditorAudioElement) {

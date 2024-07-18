@@ -222,12 +222,12 @@ export class Canvas {
     this.instance.add(placeholder);
     this.instance.setActiveObject(placeholder).requestRenderAll();
 
-    return createPromise<fabric.Image>((resolve, reject) => {
+    return createPromise<fabric.Image | null>((resolve, reject) => {
       fabric.Image.fromURL(
         source,
         (image) => {
           if (!this.instance!.contains(placeholder)) {
-            return;
+            return resolve(null);
           }
 
           if (!image._originalElement) {
@@ -237,7 +237,6 @@ export class Canvas {
 
           image.set({ scaleX: placeholder.getScaledWidth() / image.getScaledWidth(), scaleY: placeholder.getScaledHeight() / image.getScaledHeight() });
           image.setPositionByOrigin(placeholder.getCenterPoint(), "center", "center");
-
           FabricUtils.initializeMetaProperties(image);
           FabricUtils.initializeAnimationProperties(image);
 

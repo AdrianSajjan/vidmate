@@ -75,7 +75,7 @@ function _EditorElementControlsBase() {
         </div>
       ) : selected.type === "image" || selected.type === "video" ? (
         <div className="flex items-center p-1" onClick={handleReplaceObject}>
-          <Button size="sm" variant={editor.canvas.replacer.active ? "default" : "ghost"} className="gap-1.5 rounded-sm h-7 px-2">
+          <Button size="sm" variant={editor.canvas.replacer.active ? "default" : "ghost"} className="gap-1.5 rounded-sm h-7 px-2 transition-none">
             <RepeatIcon size={14} />
             <span>Replace</span>
           </Button>

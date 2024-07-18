@@ -3,7 +3,7 @@ import { createPromise } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
 import { EditorReplace } from "@/types/editor";
 import { fabric } from "fabric";
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 
 export class CanvasReplace {
   private _canvas: Canvas;
@@ -21,13 +21,23 @@ export class CanvasReplace {
   }
 
   private _initEvents() {
+    this.canvas.on("selection:cleared", this._selectionEvent.bind(this));
+    this.canvas.on("selection:updated", this._selectionEvent.bind(this));
     this.canvas.on("timeline:start", this._timelineRecorderStartEvent.bind(this));
     this.canvas.on("recorder:start", this._timelineRecorderStartEvent.bind(this));
   }
 
+  private _selectionEvent() {
+    runInAction(() => {
+      this.active = null;
+    });
+  }
+
   private _timelineRecorderStartEvent() {
-    this.active = null;
-    this.canvas.discardActiveObject();
+    runInAction(() => {
+      this.active = null;
+      this.canvas.discardActiveObject();
+    });
   }
 
   *replaceImage(image: fabric.Image, source: string) {
