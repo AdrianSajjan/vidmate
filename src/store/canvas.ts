@@ -18,6 +18,7 @@ import { createInstance, createPromise } from "@/lib/utils";
 import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 import { CanvasClipMask } from "@/plugins/mask";
 import { CanvasTrimmer } from "@/plugins/trim";
+import { CanvasReplace } from "@/plugins/replace";
 
 export class Canvas {
   artboard!: fabric.Rect;
@@ -26,6 +27,7 @@ export class Canvas {
   audio!: CanvasAudio;
   timeline!: CanvasTimeline;
   workspace!: CanvasWorkspace;
+  replacer!: CanvasReplace;
 
   effects!: CanvasEffects;
   cropper!: CanvasCropper;
@@ -129,12 +131,15 @@ export class Canvas {
 
     this.history = createInstance(CanvasHistory, this);
     this.alignment = createInstance(CanvasAlignment, this);
-    this.audio = createInstance(CanvasAudio, this);
-    this.clipper = createInstance(CanvasClipMask, this);
     this.selection = createInstance(CanvasSelection, this);
+    this.replacer = createInstance(CanvasReplace, this);
+
     this.effects = createInstance(CanvasEffects, this);
+    this.clipper = createInstance(CanvasClipMask, this);
     this.cropper = createInstance(CanvasCropper, this);
     this.trimmer = createInstance(CanvasTrimmer, this);
+
+    this.audio = createInstance(CanvasAudio, this);
     this.timeline = createInstance(CanvasTimeline, this);
     this.workspace = createInstance(CanvasWorkspace, this, workspace);
     CanvasGuidelines.initializeAligningGuidelines(this.instance);
@@ -367,55 +372,6 @@ export class Canvas {
     this.instance.setActiveObject(line).requestRenderAll();
 
     return line;
-  }
-
-  *onReplaceImageSource(image: fabric.Image, source: string) {
-    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true };
-    const overlay = createInstance(fabric.Rect, { name: "overlay_" + image.name, height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY, fill: "#000000", opacity: 0.25, ...props });
-    const spinner = createInstance(fabric.Path, activityIndicator, { name: "overlay_" + image.name, fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
-
-    overlay.setPositionByOrigin(image.getCenterPoint(), "center", "center");
-    spinner.scaleToWidth(48).setPositionByOrigin(image.getCenterPoint(), "center", "center");
-
-    image.meta!.replace = true;
-    this.instance.add(overlay, spinner);
-    this.instance.requestRenderAll();
-
-    FabricUtils.objectSpinningAnimation(spinner);
-    FabricUtils.bindObjectTransformToParent(image, [overlay, spinner]);
-
-    const children = [{ object: overlay }, { object: spinner, skip: ["angle", "scaleX", "scaleY"] }];
-    image.on("moving", () => FabricUtils.updateObjectTransformToParent(image, children));
-    image.on("scaling", () => FabricUtils.updateObjectTransformToParent(image, children));
-    image.on("rotating", () => FabricUtils.updateObjectTransformToParent(image, children));
-
-    return createPromise<fabric.Image>((resolve, reject) => {
-      fabric.util.loadImage(
-        source,
-        (element) => {
-          if (!element || !element.height || !element.width) return reject();
-
-          image.setElement(element);
-          image.meta!.replace = false;
-          image.set({ scaleX: image.scaleX, scaleY: image.scaleY, left: image.left, top: image.top, angle: image.angle, cropX: image.cropX, cropY: image.cropY });
-
-          image.off("moving");
-          image.off("scaling");
-          image.off("rotating");
-
-          this.instance!.remove(overlay, spinner).requestRenderAll();
-          resolve(image);
-        },
-        null,
-        "anonymous",
-      );
-    });
-  }
-
-  *onReplaceActiveImageSource(source: string) {
-    const object = this.instance.getActiveObject() as fabric.Image;
-    if (!object || object.type !== "image") return;
-    this.onReplaceImageSource(object, source);
   }
 
   onChangeObjectTimelineProperty(object: fabric.Object, property: string, value: number) {

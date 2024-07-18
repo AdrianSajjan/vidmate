@@ -133,23 +133,21 @@ function _BGRemovalPlugin({}: Omit<SelectPluginProps, "plugin">) {
     if (!entry) return;
     const { scaleX, scaleY, cropX, cropY, angle, height, width, top = 0, left = 0 } = selected;
     const promise = flowResult(editor.canvas.onAddImageFromSource(entry.modified, { top: top + 50, left: left + 50, scaleX, scaleY, cropX, cropY, angle, height, width }, true));
-    toast.promise(promise, {
-      loading: "Adding the modified image to your artboard...",
-      success: () => "The modified image has been added to your artboard",
-      error: () => "Failed to add the modified image to the artboard",
-    });
+    toast.promise(promise, { loading: "Adding the modified image to your artboard...", success: "The modified image has been added to your artboard", error: "Failed to add the modified image to the artboard" });
   };
 
   const handleReplaceOriginal = () => {
     if (!entry) return;
-    editor.canvas.onReplaceActiveImageSource(entry.modified);
-    rmbgAI.updateCacheEntry(selected.name!, { usage: "modified" });
+    editor.canvas.replacer.mark(editor.canvas.instance.getActiveObject());
+    const promise = flowResult(editor.canvas.replacer.replace(entry.modified)).then(() => rmbgAI.updateCacheEntry(selected.name!, { usage: "modified" }));
+    toast.promise(promise, { loading: "Loading the replacement image...", success: "The selected image has been replaced", error: "Failed to replace the selected image" });
   };
 
   const handleRestoreOriginal = () => {
     if (!entry) return;
-    editor.canvas.onReplaceActiveImageSource(entry.original);
-    rmbgAI.updateCacheEntry(selected.name!, { usage: "original" });
+    editor.canvas.replacer.mark(editor.canvas.instance.getActiveObject());
+    const promise = flowResult(editor.canvas.replacer.replace(entry.original)).then(() => rmbgAI.updateCacheEntry(selected.name!, { usage: "original" }));
+    toast.promise(promise, { loading: "Restoring the original image...", success: "The selected image has been restored", error: "Failed to restore the selected image" });
   };
 
   return (

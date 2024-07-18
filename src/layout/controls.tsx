@@ -22,10 +22,11 @@ function _EditorElementControlsBase() {
   const selected = editor.canvas.selection.active!;
 
   const style = useMemo(() => {
-    const selected = editor.canvas.instance?.getActiveObject();
-    if (!editor.canvas.instance || !selected) return;
-
+    const selected = editor.canvas.instance.getActiveObject();
     const viewport = workspace.viewportTransform;
+
+    if (!selected) return;
+
     const offsetX = viewport[4];
     const offsetY = viewport[5];
 
@@ -37,6 +38,15 @@ function _EditorElementControlsBase() {
       left: left,
     };
   }, [selected, workspace.viewportTransform, workspace.height, workspace.width, workspace.zoom]);
+
+  const handleReplaceObject = () => {
+    if (editor.canvas.replacer.active) {
+      editor.canvas.replacer.mark(null);
+    } else {
+      const replace = editor.canvas.replacer.mark(editor.canvas.instance.getActiveObject());
+      if (replace) editor.setActiveSidebarLeft(`${replace.type}s`);
+    }
+  };
 
   return (
     <motion.div style={style} className="absolute border bg-popover text-popover-foreground shadow rounded-md outline-none items-center divide-x flex -translate-x-1/2">
@@ -64,8 +74,8 @@ function _EditorElementControlsBase() {
           </Button>
         </div>
       ) : selected.type === "image" || selected.type === "video" ? (
-        <div className="flex items-center p-1">
-          <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2">
+        <div className="flex items-center p-1" onClick={handleReplaceObject}>
+          <Button size="sm" variant={editor.canvas.replacer.active ? "default" : "ghost"} className="gap-1.5 rounded-sm h-7 px-2">
             <RepeatIcon size={14} />
             <span>Replace</span>
           </Button>

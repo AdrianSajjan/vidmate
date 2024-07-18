@@ -36,3 +36,20 @@ export interface EditorTrimAudio {
 }
 
 export type EditorTrim = EditorTrimAudio | EditorTrimVideo | null;
+
+export interface EditorReplaceVideo {
+  object: fabric.Video;
+  type: "video";
+}
+
+export interface EditorReplaceImage {
+  object: fabric.Image;
+  type: "image";
+}
+
+export interface EditorReplaceAudio {
+  object: EditorAudioElement;
+  type: "audio";
+}
+
+export type EditorReplace = EditorReplaceVideo | EditorReplaceImage | EditorReplaceAudio | null;
