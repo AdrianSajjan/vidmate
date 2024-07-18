@@ -152,10 +152,10 @@ export class CanvasCropper {
       image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: image.top! + cropY * image.scaleY!, left: image.left! + cropX * image.scaleX!, selectable: true });
       image.setCoords();
 
-      this.canvas.remove(overlay, crop, ...verticals, ...horizontals);
-      this.canvas.setActiveObject(image).requestRenderAll().fire("crop:start", { target: image });
-
       runInAction(() => (this.active = null));
+      this.canvas.remove(overlay, crop, ...verticals, ...horizontals);
+      this.canvas.setActiveObject(image).requestRenderAll();
+      this.canvas.fire("crop:end", { target: image }).fire("object:modified", { target: image });
     });
   }
 
@@ -171,6 +171,7 @@ export class CanvasCropper {
 
     const top = image.top!;
     const left = image.left!;
+
     const x = image.cropX! * image.scaleX!;
     const y = image.cropY! * image.scaleY!;
 
@@ -189,100 +190,105 @@ export class CanvasCropper {
     const overlay = createInstance(fabric.Rect, { selectable: false, excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true, evented: false, fill: "#00000080", ...props });
     this.canvas.add(overlay);
 
-    clipPath.set({ globalCompositeOperation: "overlay", opacity: 1, fill: "#ffffff" });
+    clipPath.set({ globalCompositeOperation: "overlay", opacity: 1, fill: "#ffffff", lockScalingFlip: false, lockRotation: true, selectable: true, evented: true });
     clipPath.bringToFront();
 
-    image.on("moving", () => {
+    const handlerMoving = () => {
       const imageHeight = image.getScaledHeight();
       const imageWidth = image.getScaledWidth();
+
       const clipPathHeight = clipPath.getScaledHeight();
       const clipPathWidth = clipPath.getScaledWidth();
 
-      if (image.left! >= clipPath.left!) image.left = clipPath.left!;
       if (image.top! >= clipPath.top!) image.top = clipPath.top!;
-      if (image.left! + imageWidth <= clipPath.left! + clipPathWidth) image.left = clipPath.left! - (imageWidth - clipPathWidth);
+      if (image.left! >= clipPath.left!) image.left = clipPath.left!;
+
       if (image.top! + imageHeight <= clipPath.top! + clipPathHeight) image.top = clipPath.top! - (imageHeight - clipPathHeight);
+      if (image.left! + imageWidth <= clipPath.left! + clipPathWidth) image.left = clipPath.left! - (imageWidth - clipPathWidth);
 
-      overlay.left = image.left;
-      overlay.top = image.top;
-    });
+      image.setCoords();
+      overlay.set({ left: image.left, top: image.top });
+      clipPath.setCoords();
+    };
 
-    image.on("scaling", () => {
-      overlay.scaleX = image.scaleX;
-      overlay.scaleY = image.scaleY;
-      overlay.left = image.left;
-      overlay.top = image.top;
-    });
+    const handlerScaling = () => {
+      image.setCoords();
+      overlay.set({ scaleX: image.scaleX, scaleY: image.scaleY, left: image.left, top: image.top });
+      clipPath.setCoords();
+    };
 
-    image.on("mouseup", () => {
+    const handlerMouseUp = () => {
       if (image.left! > clipPath.left!) {
-        const offsetX = image.left! - clipPath.left!;
-        const scaleX = offsetX / image.width!;
+        const scaleX = (image.left! - clipPath.left!) / image.width!;
         image.set({ left: clipPath.left, scaleX: image.scaleX! + scaleX });
       }
 
       if (image.top! > clipPath.top!) {
-        const offsetY = image.top! - clipPath.top!;
-        const scaleY = offsetY / image.height!;
+        const scaleY = (image.top! - clipPath.top!) / image.height!;
         image.set({ top: clipPath.top, scaleY: image.scaleY! + scaleY });
       }
 
       if (image.left! + image.getScaledWidth() < clipPath.left! + clipPath.getScaledWidth()) {
-        const offsetX = clipPath.left! + clipPath.getScaledWidth() - (image.left! + image.getScaledWidth());
-        const scaleX = offsetX / image.width!;
+        const scaleX = (clipPath.left! + clipPath.getScaledWidth() - (image.left! + image.getScaledWidth())) / image.width!;
         image.set({ scaleX: Math.abs(image.scaleX! + scaleX) });
       }
 
       if (image.top! + image.getScaledHeight() < clipPath.top! + clipPath.getScaledHeight()) {
-        const offsetY = clipPath.top! + clipPath.getScaledHeight() - (image.top! + image.getScaledHeight());
-        const scaleY = offsetY / image.height!;
+        const scaleY = (clipPath.top! + clipPath.getScaledHeight() - (image.top! + image.getScaledHeight())) / image.height!;
         image.set({ scaleY: Math.abs(image.scaleY! + scaleY) });
       }
 
-      const originalAspectRatio = image.width! / image.height!;
-      const scaledAspectRatio = image.getScaledWidth() / image.getScaledHeight();
-      const difference = originalAspectRatio - scaledAspectRatio;
+      const difference = image.width! / image.height! - image.getScaledWidth() / image.getScaledHeight();
+      if (difference > 0.025) image.set({ scaleX: image.scaleY });
+      if (difference < 0.025) image.set({ scaleY: image.scaleX });
 
-      if (difference > 0.025) {
-        image.set({ scaleX: image.scaleY });
-      }
+      image.setCoords();
+      overlay.set({ scaleX: image.scaleX, scaleY: image.scaleY, left: image.left, top: image.top });
+      clipPath.setCoords();
+    };
 
-      if (difference < 0.025) {
-        image.set({ scaleY: image.scaleX });
-      }
+    const handlerDeselected = () => {
+      if (this.canvas._activeObject === clipPath || this.canvas._activeObject === image) return;
 
-      overlay.scaleX = image.scaleX;
-      overlay.scaleY = image.scaleY;
-      overlay.left = image.left;
-      overlay.top = image.top;
-    });
-
-    image.on("deselected", () => {
       const cropX = (clipPath.left! - image.left!) / image.scaleX!;
       const cropY = (clipPath.top! - image.top!) / image.scaleY!;
+
       const width = (clipPath.width! * clipPath.scaleX!) / image.scaleX!;
       const height = (clipPath.height! * clipPath.scaleY!) / image.scaleY!;
 
       image.moveTo(index);
       clipPath.moveTo(index);
-      image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: clipPath.top!, left: clipPath.left!, clipPath: clipPath, lockRotation: false, lockScalingFlip: false });
-      clipPath.set({ globalCompositeOperation: undefined, fill: fill, opacity: 0.01 });
+
+      image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: clipPath.top, left: clipPath.left, clipPath: clipPath, lockRotation: false, lockScalingFlip: false });
+      clipPath.set({ globalCompositeOperation: undefined, fill: fill, opacity: 0.01, evented: false, selectable: false, lockRotation: false, lockScalingFlip: true });
 
       image.off("scaling");
       image.off("deselected");
       image.off("moving");
 
+      clipPath.off("moving");
+      clipPath.off("mouseup");
+      clipPath.off("deselected");
+
       FabricUtils.bindObjectTransformToParent(image, [clipPath]);
       const handler = () => FabricUtils.updateObjectTransformToParent(image, [{ object: clipPath }]);
+
       image.on("moving", handler);
       image.on("scaling", handler);
       image.on("rotating", handler);
-      handler();
-
-      this.canvas.remove(overlay);
-      this.canvas.requestRenderAll().fire("crop:end", { target: image });
 
       runInAction(() => (this.active = null));
-    });
+      this.canvas.remove(overlay).requestRenderAll();
+      this.canvas.fire("crop:end", { target: image }).fire("object:modified", { target: image });
+    };
+
+    image.on("moving", handlerMoving);
+    image.on("scaling", handlerScaling);
+    image.on("mouseup", handlerMouseUp);
+    image.on("deselected", handlerDeselected);
+
+    clipPath.on("moving", handlerMoving);
+    clipPath.on("mouseup", handlerMouseUp);
+    clipPath.on("deselected", handlerDeselected);
   }
 }

@@ -37,11 +37,8 @@ export class CanvasClipMask {
     const clip = image.clipPath;
     image.clipPath = undefined;
 
-    if (!clip.meta || !clip.meta.scene) {
-      this.canvas.remove(clip);
-    } else {
-      clip.set({ absolutePositioned: false, opacity: 1, selectable: true, evented: true, excludeFromTimeline: false, excludeFromAlignment: false });
-    }
+    if (!clip.meta || !clip.meta.scene) this.canvas.remove(clip);
+    else clip.set({ absolutePositioned: false, opacity: 1, selectable: true, evented: true, excludeFromTimeline: false, excludeFromAlignment: false });
   }
 
   clipObjectFromSceneElement(image: fabric.Image, clip: fabric.Object) {
@@ -63,12 +60,11 @@ export class CanvasClipMask {
     image.on("moving", handler);
     image.on("scaling", handler);
     image.on("rotating", handler);
-    handler();
 
-    image.clipPath = clip;
-    image.setCoords();
-
+    image.set({ clipPath: clip }).setCoords();
     this.canvas.setActiveObject(image).requestRenderAll();
+
+    this.canvas.fire("object:modified", { target: image });
     this.canvas.fire("clip:added", { target: image });
   }
 
@@ -101,13 +97,12 @@ export class CanvasClipMask {
     image.on("moving", handler);
     image.on("scaling", handler);
     image.on("rotating", handler);
-    handler();
 
-    image.clipPath = clip;
-    image.setCoords();
-
+    image.set({ clipPath: clip }).setCoords();
     this.canvas.add(clip);
     this.canvas.setActiveObject(image).requestRenderAll();
+
+    this.canvas.fire("object:modified", { target: image });
     this.canvas.fire("clip:added", { target: image });
   }
 
@@ -140,13 +135,12 @@ export class CanvasClipMask {
     image.on("moving", handler);
     image.on("scaling", handler);
     image.on("rotating", handler);
-    handler();
 
-    image.clipPath = clip;
-    image.setCoords();
-
+    image.set({ clipPath: clip }).setCoords();
     this.canvas.add(clip);
     this.canvas.setActiveObject(image).requestRenderAll();
+
+    this.canvas.fire("object:modified", { target: image });
     this.canvas.fire("clip:added", { target: image });
   }
 
@@ -159,6 +153,7 @@ export class CanvasClipMask {
   removeClipMaskFromActiveObject() {
     const object = this.canvas.getActiveObject() as fabric.Image | fabric.Video;
     this._remove(object);
+    this.canvas.fire("object:modified", { target: object });
     this.canvas.requestRenderAll().fire("clip:removed", { target: object });
   }
 }
