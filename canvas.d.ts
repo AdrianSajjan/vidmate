@@ -4060,6 +4060,10 @@ export class Object {
   /**
    * @param {CanvasRenderingContext2D} ctx Context to render on
    */
+  _renderControls(ctx: CanvasRenderingContext2D, options?: any): void;
+  /**
+   * @param {CanvasRenderingContext2D} ctx Context to render on
+   */
   _renderFill(ctx: CanvasRenderingContext2D): void;
   /**
    * @param ctx
