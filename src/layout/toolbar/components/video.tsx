@@ -19,7 +19,7 @@ function _VideoToolbar() {
   const handleTrimStart = () => {
     const video = editor.canvas.instance?.getActiveObject();
     if (!FabricUtils.isVideoElement(video)) return;
-    editor.canvas.onTrimVideoStart(video);
+    editor.canvas.trimmer.start();
   };
 
   return (

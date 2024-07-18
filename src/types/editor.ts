@@ -26,12 +26,12 @@ export interface EditorAudioElement {
 }
 
 export interface EditorTrimVideo {
-  selected: fabric.Video;
+  object: fabric.Video;
   type: "video";
 }
 
 export interface EditorTrimAudio {
-  selected: EditorAudioElement;
+  object: EditorAudioElement;
   type: "audio";
 }
 

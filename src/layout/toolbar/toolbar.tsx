@@ -29,7 +29,7 @@ const toolbarComponentMap: Record<string, () => JSX.Element> = {
 function _EditorToolbar() {
   const editor = useEditorContext();
 
-  const type = editor.canvas.cropper?.active ? "crop" : editor.canvas.trim ? "trim" : editor.canvas.selection?.active?.type;
+  const type = editor.canvas.cropper?.active ? "crop" : editor.canvas.trimmer?.active ? "trim" : editor.canvas.selection?.active?.type;
   const Toolbar = toolbarComponentMap[type!];
 
   if (!Toolbar) {

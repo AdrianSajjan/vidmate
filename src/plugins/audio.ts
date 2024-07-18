@@ -101,7 +101,7 @@ export class CanvasAudio {
 
     runInAction(() => {
       if (this.selection.active?.id === audio.id) this.selection.active = null;
-      if (this._canvas.trim?.selected.id === audio.id) this._canvas.trim = null;
+      if (this._canvas.trimmer.active?.object.id === audio.id) this._canvas.trimmer.active = null;
     });
   }
 

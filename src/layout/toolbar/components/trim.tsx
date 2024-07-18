@@ -18,7 +18,7 @@ const handleWidth = 16;
 
 function _TrimToolbar() {
   const editor = useEditorContext();
-  const type = editor.canvas.trim!.type;
+  const type = editor.canvas.trimmer.active!.type;
 
   switch (type) {
     case "video":
@@ -30,7 +30,7 @@ function _TrimToolbar() {
 
 function _TrimToolbarVideo() {
   const editor = useEditorContext();
-  const trim = editor.canvas.trim!.selected as fabric.Video;
+  const trim = editor.canvas.trimmer.active!.object as fabric.Video;
 
   const [ref, dimensions] = useMeasure();
   const containerWidth = dimensions.width - handleWidth;
@@ -73,7 +73,7 @@ function _TrimToolbarVideo() {
     const trimEnd = ((containerWidth - data.trimEndX) / containerWidth) * data.duration;
     editor.canvas.onChangeActiveVideoProperty("trimStart", trimStart);
     editor.canvas.onChangeActiveVideoProperty("trimEnd", trimEnd);
-    editor.canvas.onTrimVideoEnd();
+    editor.canvas.trimmer.exit();
   };
 
   const style = {
@@ -119,7 +119,7 @@ function _TrimToolbarVideo() {
 
 function _TrimToolbarAudio() {
   const editor = useEditorContext();
-  const audio = editor.canvas.trim!.selected as EditorAudioElement;
+  const audio = editor.canvas.trimmer.active!.object as EditorAudioElement;
 
   const [ref, dimensions] = useMeasure();
   const containerWidth = dimensions.width - handleWidth;
@@ -145,7 +145,7 @@ function _TrimToolbarAudio() {
     const _trim = (trim / containerWidth) * audio.duration;
     const _timeline = ((containerWidth - timeline) / containerWidth) * audio.duration;
     editor.canvas.audio.update(audio.id, { trim: _trim, timeline: audio.duration - _trim - _timeline });
-    editor.canvas.onTrimAudioEnd();
+    editor.canvas.trimmer.exit();
   };
 
   const absoluteDuration = audio.duration - (trim / containerWidth) * audio.duration - ((containerWidth - timeline) / containerWidth) * audio.duration;

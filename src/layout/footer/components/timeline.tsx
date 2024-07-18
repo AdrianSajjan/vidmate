@@ -210,8 +210,8 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
   }, []);
 
   useEffect(() => {
-    if (editor.canvas.trim?.selected.id === audio.id && !isSelected) editor.canvas.onTrimAudioEnd();
-  }, [isSelected, editor.canvas.trim]);
+    if (editor.canvas.trimmer.active!.object.id === audio.id && !isSelected) editor.canvas.trimmer.exit();
+  }, [isSelected, editor.canvas.trimmer.active, audio.id]);
 
   const handleDragTrack = (value: number) => {
     if (editor.canvas.timeline.playing) return;

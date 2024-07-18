@@ -15,9 +15,9 @@ import { CanvasSelection } from "@/plugins/selection";
 
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
-import { EditorAudioElement, EditorTrim } from "@/types/editor";
 import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 import { CanvasClipMask } from "@/plugins/mask";
+import { CanvasTrimmer } from "@/plugins/trim";
 
 export class Canvas {
   artboard!: fabric.Rect;
@@ -30,18 +30,17 @@ export class Canvas {
   effects!: CanvasEffects;
   cropper!: CanvasCropper;
   clipper!: CanvasClipMask;
+  trimmer!: CanvasTrimmer;
 
   history!: CanvasHistory;
   selection!: CanvasSelection;
   alignment!: CanvasAlignment;
 
-  trim: EditorTrim;
   controls: boolean;
   elements: fabric.Object[];
 
   constructor() {
     this.elements = [];
-    this.trim = null;
     this.controls = true;
     makeAutoObservable(this);
   }
@@ -69,15 +68,11 @@ export class Canvas {
   private _objectModifiedEvent(event: fabric.IEvent) {
     runInAction(() => {
       if (!event.target) return;
-
       this._toggleControls(event.target, true);
       FabricUtils.applyObjectScaleToDimensions(event.target, ["rect"]);
-
       const index = this.elements.findIndex((element) => element.name === event.target!.name);
       if (index === -1 || event.target.excludeFromTimeline) return;
-
       this.elements[index] = event.target.toObject(propertiesToInclude);
-      if (event.target.name === this.trim?.selected.name) this.trim!.selected = event.target.toObject(propertiesToInclude);
     });
   }
 
@@ -139,6 +134,7 @@ export class Canvas {
     this.selection = createInstance(CanvasSelection, this);
     this.effects = createInstance(CanvasEffects, this);
     this.cropper = createInstance(CanvasCropper, this);
+    this.trimmer = createInstance(CanvasTrimmer, this);
     this.timeline = createInstance(CanvasTimeline, this);
     this.workspace = createInstance(CanvasWorkspace, this, workspace);
     CanvasGuidelines.initializeAligningGuidelines(this.instance);
@@ -371,27 +367,6 @@ export class Canvas {
     this.instance.setActiveObject(line).requestRenderAll();
 
     return line;
-  }
-
-  onTrimAudioStart(audio: EditorAudioElement) {
-    this.trim = Object.assign({ type: "audio" as "audio" }, { selected: audio });
-  }
-
-  onTrimAudioEnd() {
-    this.trim = null;
-  }
-
-  onTrimVideoStart(video: fabric.Video) {
-    this.trim = Object.assign({ type: "video" as "video" }, { selected: video.toObject(propertiesToInclude) });
-    video.on("deselected", () => this.onTrimVideoEnd());
-  }
-
-  onTrimVideoEnd() {
-    const object = this.instance.getItemByName(this.trim?.selected.name);
-    this.trim = null;
-    if (!FabricUtils.isVideoElement(object)) return;
-    object.seek(this.timeline.seek);
-    this.instance.requestRenderAll();
   }
 
   *onReplaceImageSource(image: fabric.Image, source: string) {

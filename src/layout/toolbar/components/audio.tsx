@@ -20,7 +20,7 @@ function _AudioToolbar() {
   return (
     <div className="flex items-center h-full w-full overflow-x-scroll scrollbar-hidden">
       <div className="flex items-center gap-2.5">
-        <Button onClick={() => editor.canvas.onTrimAudioStart(selected)} variant="outline" size="sm" className="gap-1.5">
+        <Button onClick={() => editor.canvas.trimmer.start()} variant="outline" size="sm" className="gap-1.5">
           <AudioWaveformIcon size={15} />
           <span className="text-xs font-normal">Trim</span>
         </Button>

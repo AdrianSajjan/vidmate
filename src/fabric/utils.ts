@@ -1,7 +1,8 @@
-import { fabric } from "fabric";
-import { customAlphabet } from "nanoid";
-import { omit } from "lodash";
 import { createInstance } from "@/lib/utils";
+import { EditorAudioElement } from "@/types/editor";
+import { fabric } from "fabric";
+import { omit } from "lodash";
+import { customAlphabet } from "nanoid";
 
 export interface TransformChildren {
   object: fabric.Object;
@@ -12,19 +13,23 @@ export interface TransformChildren {
 export abstract class FabricUtils {
   private static nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
 
-  static isActiveSelection(object?: fabric.Object | null): object is fabric.ActiveSelection {
+  static isActiveSelection(object?: any): object is fabric.ActiveSelection {
     return object?.type === "activeSelection";
   }
 
-  static isImageElement(object?: fabric.Object | null): object is fabric.Image {
+  static isImageElement(object?: any): object is fabric.Image {
     return object?.type === "image" && !object?.meta?.placeholder;
   }
 
-  static isVideoElement(object?: fabric.Object | null): object is fabric.Video {
+  static isVideoElement(object?: any): object is fabric.Video {
     return object?.type === "video" && !object?.meta?.placeholder;
   }
 
-  static isTextboxElement(object?: fabric.Object | null): object is fabric.Textbox {
+  static isAudioElement(object?: any): object is EditorAudioElement {
+    return object?.type === "audio";
+  }
+
+  static isTextboxElement(object?: any): object is fabric.Textbox {
     return object?.type === "textbox";
   }
 
