@@ -1,7 +1,7 @@
 import { useEditorContext } from "@/context/editor";
 import { useCallback, useState } from "react";
 
-export function useInitializeCanvas() {
+export function useInitializeCanvas(index: number) {
   const editor = useEditorContext();
   const [isInitialized, setInitialized] = useState(false);
 
@@ -9,10 +9,10 @@ export function useInitializeCanvas() {
     (element: HTMLCanvasElement) => {
       const workspace = document.getElementById("workspace") as HTMLDivElement;
       if (!element) {
-        editor.canvas.destroy();
+        editor.pages[index].destroy();
         setInitialized(false);
       } else {
-        editor.canvas.initialize(element, workspace);
+        editor.pages[index].initialize(element, workspace);
         setInitialized(true);
       }
     },

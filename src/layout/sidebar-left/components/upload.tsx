@@ -64,8 +64,8 @@ function _UploadSidebar() {
   });
 
   const handleUpload = (files: FileList | null, type: "image" | "video" | "audio") => {
-    if (!files || !files.item(0)) return;
-    toast.promise(upload.mutateAsync({ type: type, file: files.item(0)! }), {
+    if (!files || !files.length) return;
+    toast.promise(upload.mutateAsync({ type: type, file: files[0] }), {
       loading: `Your ${type} asset is being uploaded...`,
       success: `${upperFirst(type)} has been successfully uploaded`,
       error: `Ran into an error while uploading the ${type}`,

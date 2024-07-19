@@ -48,3 +48,11 @@ export function createFileDownload(file: File | Blob, name: string) {
   anchor.click();
   URL.revokeObjectURL(href);
 }
+
+export function createBase64Download(data: any, type: string, name: string) {
+  const href = `data:${type};charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`;
+  const anchor = document.createElement("a");
+  anchor.download = name;
+  anchor.href = href;
+  anchor.click();
+}

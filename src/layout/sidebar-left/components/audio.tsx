@@ -31,8 +31,8 @@ function _AudioSidebar() {
   });
 
   const handleUpload = (files: FileList | null) => {
-    if (!files || !files.item(0)) return;
-    toast.promise(upload.mutateAsync(files.item(0)!), {
+    if (!files || !files.length) return;
+    toast.promise(upload.mutateAsync(files[0]), {
       loading: `Your audio asset is being uploaded...`,
       success: `Audio has been successfully uploaded`,
       error: `Ran into an error while uploading the audio`,

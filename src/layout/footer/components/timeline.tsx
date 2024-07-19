@@ -64,7 +64,7 @@ function _EditorTimeline() {
   };
 
   return (
-    <div className={cn("flex flex-1 shrink select-none", editor.isTimelineOpen ? "h-auto" : "h-0 overflow-hidden appearance-none")}>
+    <div className={cn("flex flex-1 shrink select-none", editor.timelineOpen ? "h-auto" : "h-0 overflow-hidden appearance-none")}>
       <div className="bg-background shrink-0 w-2">
         <div className="h-8 w-full bg-card/40 dark:bg-gray-900/40 flex justify-center items-center"></div>
       </div>
@@ -210,7 +210,7 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
   }, []);
 
   useEffect(() => {
-    if (editor.canvas.trimmer.active!.object.id === audio.id && !isSelected) editor.canvas.trimmer.exit();
+    if (editor.canvas.trimmer.active?.object.id === audio.id && !isSelected) editor.canvas.trimmer.exit();
   }, [isSelected, editor.canvas.trimmer.active, audio.id]);
 
   const handleDragTrack = (value: number) => {

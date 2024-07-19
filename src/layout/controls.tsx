@@ -49,7 +49,7 @@ function _EditorElementControlsBase() {
   };
 
   return (
-    <motion.div style={style} className="absolute border bg-popover text-popover-foreground shadow rounded-md outline-none items-center divide-x flex -translate-x-1/2">
+    <motion.div style={style} className="absolute border bg-popover text-popover-foreground shadow rounded-md outline-none items-center divide-x flex -translate-x-1/2 z-20">
       {selected.meta?.group ? (
         <div className="flex items-center p-1">
           <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.canvas.selection.selectMetaGroup(selected.meta!.group)}>

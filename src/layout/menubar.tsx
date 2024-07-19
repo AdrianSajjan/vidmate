@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ImageIcon, RedoIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { ChevronDownIcon, CloudUploadIcon, ImageIcon, RedoIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { flowResult } from "mobx";
 import { toast } from "sonner";
@@ -8,12 +8,24 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { ToggleTheme } from "@/components/ui/theme-toggle";
 
 import { useEditorContext } from "@/context/editor";
-import { createFileDownload } from "@/lib/utils";
+import { createBase64Download, createFileDownload } from "@/lib/utils";
 import { fetchExtensionByCodec } from "@/constants/recorder";
+import { Spinner } from "@/components/ui/spinner";
+import { useMutation } from "@tanstack/react-query";
+import { EditorTemplate } from "@/types/editor";
 
 function _EditorMenubar() {
   const editor = useEditorContext();
   const codec = fetchExtensionByCodec(editor.codec);
+
+  const upload = useMutation({
+    mutationFn: async () => {
+      const name = "Template 1";
+      const pages = await flowResult(editor.exportTemplate());
+      const template = { name, pages } as EditorTemplate;
+      createBase64Download(template, "text/json", `template-${Date.now()}.json`);
+    },
+  });
 
   const handleExportVideo = async () => {
     try {
@@ -25,6 +37,11 @@ function _EditorMenubar() {
       const error = e as Error;
       toast.error(error.message || "Failed to export video");
     }
+  };
+
+  const handleSaveTemplate = async () => {
+    const promise = upload.mutateAsync();
+    toast.promise(promise, { loading: "Your template is being saved", success: "Your template has been saved successfully", error: "Ran into an error while saving the template" });
   };
 
   if (!editor.canvas.workspace || !editor.canvas.history) return null;
@@ -68,16 +85,16 @@ function _EditorMenubar() {
             <ZoomInIcon size={16} />
           </Button>
         </div>
-        <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90 w-40" onClick={() => handleExportVideo()}>
-          <ImageIcon size={15} />
+        <Button size="sm" className="gap-2 w-40" disabled={upload.isPending} onClick={handleSaveTemplate}>
+          {editor.saving ? <Spinner className="h-4 w-4 text-primary-foreground" /> : <CloudUploadIcon size={15} />}
           <span className="font-medium">Save Template</span>
         </Button>
         <div className="flex gap-px">
-          <Button size="sm" className="gap-2 rounded-r-none bg-primary hover:bg-primary/90 w-36" onClick={() => handleExportVideo()}>
+          <Button size="sm" className="gap-2 rounded-r-none w-36" onClick={handleExportVideo}>
             <ImageIcon size={15} />
             <span className="font-medium">Export Video</span>
           </Button>
-          <Button size="icon" className="rounded-l-none bg-primary hover:bg-primary/90" onClick={() => editor.onTogglePreviewModal("open")}>
+          <Button size="icon" className="rounded-l-none" onClick={() => editor.onTogglePreviewModal("open")}>
             <ChevronDownIcon size={15} />
           </Button>
         </div>

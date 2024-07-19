@@ -56,7 +56,9 @@ function _Editor() {
             <section className="flex-1 flex flex-col relative w-0">
               <EditorToolbar />
               <div className="flex-1 relative" id="workspace">
-                <EditorCanvas page={0} />
+                {editor.pages.map((_, index) => (
+                  <EditorCanvas page={index} />
+                ))}
                 <EditorRecorder />
                 <EditorFAB />
                 <EditorPreviewModal />

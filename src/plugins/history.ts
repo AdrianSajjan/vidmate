@@ -40,6 +40,7 @@ export class CanvasHistory {
   private *_load(history: string) {
     return createPromise<void>((resolve) => {
       this.canvas.loadFromJSON(history, () => {
+        this.canvas.insertAt(this._canvas.artboard, 0, false);
         FabricUtils.applyTransformationsAfterLoad(this.canvas);
         runInAction(() => (this.status = "idle"));
         this.canvas.renderAll();

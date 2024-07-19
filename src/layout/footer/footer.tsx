@@ -21,7 +21,7 @@ function _EditorFooter() {
   if (!editor.canvas.timeline) return;
 
   return (
-    <footer style={{ height: editor.isTimelineOpen ? 288 : 64 }} className="flex flex-col bg-card dark:bg-gray-900/40 border-t shrink-0 overflow-hidden">
+    <footer style={{ height: editor.timelineOpen ? 288 : 64 }} className="flex flex-col bg-card dark:bg-gray-900/40 border-t shrink-0 overflow-hidden">
       <div className="h-16 px-4 flex items-center gap-12 justify-between border-b shrink-0 overflow-x-scroll">
         <div className="flex gap-px">
           <Popover>
@@ -80,7 +80,7 @@ function _EditorFooter() {
           <Button size="sm" variant="secondary" className="gap-1.5" onClick={() => editor.onToggleTimeline()}>
             <GanttChartIcon size={15} />
             <span>Timeline</span>
-            <span className={cn(editor.isTimelineOpen ? "rotate-180" : "rotate-0")}>
+            <span className={cn(editor.timelineOpen ? "rotate-180" : "rotate-0")}>
               <ChevronUpIcon size={15} />
             </span>
           </Button>

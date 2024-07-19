@@ -19,6 +19,7 @@ import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/
 import { CanvasClipMask } from "@/plugins/mask";
 import { CanvasTrimmer } from "@/plugins/trim";
 import { CanvasReplace } from "@/plugins/replace";
+import { CanvasTemplate } from "@/plugins/template";
 
 export class Canvas {
   artboard!: fabric.Rect;
@@ -34,6 +35,7 @@ export class Canvas {
   clipper!: CanvasClipMask;
   trimmer!: CanvasTrimmer;
 
+  template!: CanvasTemplate;
   history!: CanvasHistory;
   selection!: CanvasSelection;
   alignment!: CanvasAlignment;
@@ -44,6 +46,7 @@ export class Canvas {
   constructor() {
     this.elements = [];
     this.controls = true;
+    this.template = createInstance(CanvasTemplate, this);
     makeAutoObservable(this);
   }
 
@@ -124,10 +127,10 @@ export class Canvas {
     this.instance.on("clip:removed", this._refreshElements.bind(this));
   }
 
-  initialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
+  *initialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
     const props = { width: workspace.offsetWidth, height: workspace.offsetHeight, backgroundColor: "#F0F0F0", selectionColor: "#2e73fc1c", selectionBorderColor: "#629bffcf", selectionLineWidth: 1.5 };
     this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, preserveObjectStacking: true, controlsAboveOverlay: true, ...props });
-    this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default", excludeFromTimeline: true });
+    this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default", excludeFromExport: true, excludeFromTimeline: true });
 
     this.history = createInstance(CanvasHistory, this);
     this.alignment = createInstance(CanvasAlignment, this);
@@ -142,12 +145,17 @@ export class Canvas {
     this.audio = createInstance(CanvasAudio, this);
     this.timeline = createInstance(CanvasTimeline, this);
     this.workspace = createInstance(CanvasWorkspace, this, workspace);
-    CanvasGuidelines.initializeAligningGuidelines(this.instance);
 
     this._initEvents();
-    this.instance.add(this.artboard);
-    this.instance.clipPath = this.artboard;
-    this.instance.renderAll();
+    CanvasGuidelines.initializeAligningGuidelines(this.instance);
+
+    if (this.template.pending) {
+      yield this.template.load();
+    } else {
+      this.instance.insertAt(this.artboard, 0, false);
+      this.instance.clipPath = this.artboard;
+      this.instance.renderAll();
+    }
   }
 
   onDeleteObject(object?: fabric.Object) {

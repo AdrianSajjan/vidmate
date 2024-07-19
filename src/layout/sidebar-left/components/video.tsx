@@ -30,8 +30,8 @@ function _VideoSidebar() {
   });
 
   const handleUpload = (files: FileList | null) => {
-    if (!files || !files.item(0)) return;
-    toast.promise(upload.mutateAsync(files.item(0)!), {
+    if (!files || !files.length) return;
+    toast.promise(upload.mutateAsync(files[0]), {
       loading: `Your video asset is being uploaded...`,
       success: `Video has been successfully uploaded`,
       error: `Ran into an error while uploading the video`,

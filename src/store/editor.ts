@@ -7,8 +7,9 @@ import { Recorder } from "@/store/recorder";
 
 import { convertBufferToWaveBlob } from "@/lib/media";
 import { createInstance } from "@/lib/utils";
-import { EditorAudioElement } from "@/types/editor";
+import { EditorAudioElement, EditorTemplate, EditorTemplatePage } from "@/types/editor";
 import { FabricUtils } from "@/fabric/utils";
+import { propertiesToInclude } from "@/fabric/constants";
 
 export type ExportMode = "video" | "both";
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
@@ -34,7 +35,7 @@ export class Editor {
 
   sidebarLeft: string | null;
   sidebarRight: string | null;
-  isTimelineOpen: boolean;
+  timelineOpen: boolean;
 
   blob?: Blob;
   frame?: string;
@@ -44,6 +45,7 @@ export class Editor {
   codec: string;
   exports: ExportMode;
 
+  saving: boolean;
   preview: boolean;
   recorder: Recorder;
   progress: EditorProgress;
@@ -60,6 +62,7 @@ export class Editor {
     this.recorder = createInstance(Recorder, this);
     this.controller = createInstance(AbortController);
 
+    this.saving = false;
     this.preview = false;
     this.progress = { capture: 0, compile: 0 };
 
@@ -73,8 +76,7 @@ export class Editor {
 
     this.sidebarLeft = null;
     this.sidebarRight = null;
-    this.isTimelineOpen = false;
-
+    this.timelineOpen = false;
     makeAutoObservable(this);
   }
 
@@ -160,6 +162,25 @@ export class Editor {
     }
   }
 
+  *exportTemplate() {
+    const templates: EditorTemplatePage[] = [];
+    for (const page of this.pages) {
+      const json = JSON.stringify(page.instance.toDatalessJSON(propertiesToInclude));
+      templates.push({ data: json, height: page.workspace.height, width: page.workspace.width });
+    }
+    return templates;
+  }
+
+  *loadTemplate(template: EditorTemplate) {
+    for (let index = 0; index < template.pages.length; index++) {
+      const page = template.pages[index];
+      const initialized = !!this.pages[index];
+      if (!initialized) this.pages[index] = createInstance(Canvas);
+      this.pages[index].template.set(page);
+      if (initialized) yield this.pages[index].template.load();
+    }
+  }
+
   onResetProgress() {
     this.progress = { capture: 0, compile: 0 };
   }
@@ -196,6 +217,11 @@ export class Editor {
     this.pages.push(createInstance(Canvas));
   }
 
+  onChangeActivePage(index: number) {
+    console.log(index);
+    this.page = index;
+  }
+
   onTogglePreviewModal(mode: "open" | "close") {
     switch (mode) {
       case "open":
@@ -211,13 +237,13 @@ export class Editor {
   onToggleTimeline(mode?: "open" | "close") {
     switch (mode) {
       case "close":
-        this.isTimelineOpen = false;
+        this.timelineOpen = false;
         break;
       case "open":
-        this.isTimelineOpen = true;
+        this.timelineOpen = true;
         break;
       default:
-        this.isTimelineOpen = !this.isTimelineOpen;
+        this.timelineOpen = !this.timelineOpen;
         break;
     }
   }

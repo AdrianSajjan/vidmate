@@ -1,3 +1,14 @@
+export type EditorTemplate = {
+  name: string;
+  pages: EditorTemplatePage[];
+};
+
+export interface EditorTemplatePage {
+  data: string;
+  height: number;
+  width: number;
+}
+
 export interface EditorMedia {
   source: string;
   thumbnail: string;
