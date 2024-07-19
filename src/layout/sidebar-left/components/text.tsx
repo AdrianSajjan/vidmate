@@ -57,7 +57,7 @@ function _TextSidebar() {
                 {Array.from({ length: 3 }, (_, index) => (
                   <Skeleton key={index} className="h-16 w-full rounded-md" />
                 ))}
-                <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none">Coming Soon</span>
+                <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">Coming Soon</span>
               </Fragment>
             </div>
           </div>

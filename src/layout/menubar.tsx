@@ -49,12 +49,12 @@ function _EditorMenubar() {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="sm" className="rounded-none gap-1.5 justify-between w-32">
+              <Button variant="secondary" size="sm" className="rounded-none gap-1.5 justify-between w-28">
                 <span className="font-medium">{Math.round(editor.canvas.workspace.zoom * 100)}%</span>
                 <ChevronDownIcon size={15} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="min-w-32">
+            <DropdownMenuContent className="min-w-28">
               <DropdownMenuGroup>
                 {[25, 50, 75, 100, 125, 150, 175, 200].map((percentage) => (
                   <DropdownMenuItem key={percentage} className="text-xs" onClick={() => editor.canvas.workspace.changeZoom(percentage / 100)}>
@@ -68,6 +68,10 @@ function _EditorMenubar() {
             <ZoomInIcon size={16} />
           </Button>
         </div>
+        <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90 w-40" onClick={() => handleExportVideo()}>
+          <ImageIcon size={15} />
+          <span className="font-medium">Save Template</span>
+        </Button>
         <div className="flex gap-px">
           <Button size="sm" className="gap-2 rounded-r-none bg-primary hover:bg-primary/90 w-36" onClick={() => handleExportVideo()}>
             <ImageIcon size={15} />

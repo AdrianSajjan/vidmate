@@ -36,7 +36,7 @@ function _ImageSidebar() {
   const handleClick = (source: string) => (event: MouseEvent<HTMLButtonElement>) => {
     const thumbnail = event.currentTarget.querySelector("img");
     if (editor.canvas.replacer.active?.type === "image") {
-      const promise = flowResult(editor.canvas.replacer.replace(source));
+      const promise = flowResult(editor.canvas.replacer.replace(source, true));
       toast.promise(promise, { loading: "The image is being replaced", success: "The image has been replaced", error: "Ran into an error while replacing the image" });
     } else if (!thumbnail || !isImageLoaded(thumbnail)) {
       const promise = flowResult(editor.canvas.onAddImageFromSource(source));

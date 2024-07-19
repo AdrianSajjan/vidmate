@@ -31,7 +31,7 @@ function _TemplateSidebar() {
             {Array.from({ length: 6 }, (_, index) => (
               <Skeleton className="w-full aspect-square rounded-md" key={index} />
             ))}
-            <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 leading-none line-clamp-1">Coming Soon</span>
+            <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 line-clamp-1">Coming Soon</span>
           </Fragment>
         </div>
       </section>

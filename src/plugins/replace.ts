@@ -1,5 +1,6 @@
 import { FabricUtils } from "@/fabric/utils";
 import { createPromise } from "@/lib/utils";
+import { rmbgAI } from "@/models/rmbg";
 import { Canvas } from "@/store/canvas";
 import { EditorReplace } from "@/types/editor";
 import { fabric } from "fabric";
@@ -70,9 +71,10 @@ export class CanvasReplace {
     return this.active;
   }
 
-  *replace(source: string) {
+  *replace(source: string, cache?: boolean) {
     if (!this.active) return;
     if (this.active.type === "image") this.replaceImage(this.active.object, source);
+    if (cache) rmbgAI.removeCacheEntry(this.active.object.name!);
     this.active = null;
   }
 }
