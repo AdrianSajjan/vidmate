@@ -166,7 +166,7 @@ export class Editor {
     const templates: EditorTemplatePage[] = [];
     for (const page of this.pages) {
       const json = JSON.stringify(page.instance.toDatalessJSON(propertiesToInclude));
-      templates.push({ data: json, height: page.workspace.height, width: page.workspace.width });
+      templates.push({ data: json, fill: page.workspace.fill, height: page.workspace.height, width: page.workspace.width });
     }
     return templates;
   }
@@ -177,7 +177,7 @@ export class Editor {
       const initialized = !!this.pages[index];
       if (!initialized) this.pages[index] = createInstance(Canvas);
       this.pages[index].template.set(page);
-      if (initialized) yield this.pages[index].template.load();
+      if (initialized) this.pages[index].template.load();
     }
   }
 
@@ -218,7 +218,6 @@ export class Editor {
   }
 
   onChangeActivePage(index: number) {
-    console.log(index);
     this.page = index;
   }
 

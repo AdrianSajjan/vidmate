@@ -48,15 +48,20 @@ export class CanvasTemplate {
           this.status = "error";
           reject();
         } else {
+          this.workspace.changeFill("#CCCCCC");
+          this.workspace.resizeArtboard({ height: this.page!.height, width: this.page!.width });
           this.canvas.loadFromJSON(this.page.data, () => {
-            this.canvas.insertAt(this.artboard, 0, false);
-            this.canvas.clipPath = this.artboard;
-            this.workspace.resizeArtboard({ height: this.page!.height, width: this.page!.width });
-            FabricUtils.applyTransformationsAfterLoad(this.canvas);
-            this.history.clear();
-            this.canvas.renderAll();
-            this.status = "completed";
-            resolve();
+            runInAction(() => {
+              this.canvas.insertAt(this.artboard, 0, false);
+              this.canvas.clipPath = this.artboard;
+              this.workspace.changeFill(this.page!.fill || "#FFFFFF");
+              this.workspace.resizeArtboard({ height: this.page!.height || 1080, width: this.page!.width || 1080 });
+              FabricUtils.applyTransformationsAfterLoad(this.canvas);
+              this.history.clear();
+              this.canvas.renderAll();
+              this.status = "completed";
+              resolve();
+            });
           });
         }
       });

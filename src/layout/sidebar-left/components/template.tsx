@@ -6,12 +6,12 @@ import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEditorContext } from "@/context/editor";
 import { Skeleton } from "@/components/ui/skeleton";
+
+import { useEditorContext } from "@/context/editor";
 import { leftSidebarWidth } from "@/constants/layout";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorTemplate } from "@/types/editor";
-import { toast } from "sonner";
 
 function _TemplateSidebar() {
   const editor = useEditorContext();
@@ -31,10 +31,9 @@ function _TemplateSidebar() {
     },
   });
 
-  const handleLoadJSON = (files: FileList | null) => {
+  const handleLoadJSON = async (files: FileList | null) => {
     if (!files || !files.length) return;
-    const promise = loadJSON.mutateAsync(files[0]);
-    toast.promise(promise, { loading: "The JSON template is being loaded", success: "The JSON template has been loaded", error: "Ran into an error while loading the template" });
+    await loadJSON.mutateAsync(files[0]);
   };
 
   return (

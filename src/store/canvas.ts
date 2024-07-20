@@ -149,13 +149,9 @@ export class Canvas {
     this._initEvents();
     CanvasGuidelines.initializeAligningGuidelines(this.instance);
 
-    if (this.template.pending) {
-      yield this.template.load();
-    } else {
-      this.instance.insertAt(this.artboard, 0, false);
-      this.instance.clipPath = this.artboard;
-      this.instance.renderAll();
-    }
+    this.instance.clipPath = this.artboard;
+    this.instance.add(this.artboard).renderAll();
+    if (this.template.pending) yield this.template.load();
   }
 
   onDeleteObject(object?: fabric.Object) {

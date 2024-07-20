@@ -5,6 +5,7 @@ export type EditorTemplate = {
 
 export interface EditorTemplatePage {
   data: string;
+  fill: string;
   height: number;
   width: number;
 }
