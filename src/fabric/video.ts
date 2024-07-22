@@ -83,20 +83,26 @@ const Video = fabric.util.createClass(fabric.Image, {
 
 Video.fromURL = function (url: string, callback: (video: fabric.Video | null) => void, options?: fabric.IVideoOptions) {
   const element = document.createElement("video");
+
   element.currentTime = 0;
   element.playsInline = true;
   element.crossOrigin = options?.crossOrigin ?? null;
-  element.addEventListener(
-    "loadeddata",
-    async () => {
-      element.height = element.videoHeight;
-      element.width = element.videoWidth;
-      const hasAudio = await checkForAudioInVideo(url);
-      callback(createInstance(Video, element, Object.assign({ hasAudio }, options)));
-    },
-    { once: true },
-  );
-  element.addEventListener("error", () => callback(null), { once: true });
+
+  element.onloadeddata = async () => {
+    element.onloadeddata = null;
+    element.onerror = null;
+
+    element.height = element.videoHeight;
+    element.width = element.videoWidth;
+
+    const hasAudio = await checkForAudioInVideo(url);
+    callback(createInstance(Video, element, Object.assign({ hasAudio }, options)));
+  };
+  element.onerror = () => {
+    element.onloadeddata = null;
+    element.onerror = null;
+    callback(null);
+  };
 
   element.src = url;
   element.load();

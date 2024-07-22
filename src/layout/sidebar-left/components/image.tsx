@@ -36,10 +36,10 @@ function _ImageSidebar() {
     const thumbnail = event.currentTarget.querySelector("img");
     if (editor.canvas.replacer.active?.type === "image") {
       const promise = flowResult(editor.canvas.replacer.replace(source, true));
-      toast.promise(promise, { loading: "The image is being replaced", success: "The image has been replaced", error: "Ran into an error while replacing the image" });
+      toast.promise(promise, { loading: "The image is being replaced...", success: "The image has been replaced", error: "Ran into an error while replacing the image" });
     } else if (!thumbnail || !isImageLoaded(thumbnail)) {
       const promise = flowResult(editor.canvas.onAddImageFromSource(source));
-      toast.promise(promise, { loading: "The image is being loaded", success: "The image has been added to artboard", error: "Ran into an error while adding the image" });
+      toast.promise(promise, { loading: "The image is being loaded...", success: "The image has been added to artboard", error: "Ran into an error while adding the image" });
     } else {
       const promise = flowResult(editor.canvas.onAddImageFromThumbail(source, thumbnail));
       toast.promise(promise, { error: "Ran into an error while adding the image" });

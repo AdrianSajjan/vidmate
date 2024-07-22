@@ -1,12 +1,12 @@
-import "@/fabric/video";
 import "@/fabric/cropper";
 import "@/fabric/textbox";
+import "@/fabric/video";
 
 import { fabric } from "fabric";
 
 import EdgeControl from "@/assets/editor/controls/edge-control.svg";
-import MiddleControl from "@/assets/editor/controls/middle-control.svg";
 import MiddleControlHoz from "@/assets/editor/controls/middle-control-hoz.svg";
+import MiddleControl from "@/assets/editor/controls/middle-control.svg";
 import RotationControl from "@/assets/editor/controls/rotate-icon.svg";
 
 const middleControl = document.createElement("img");
@@ -199,6 +199,30 @@ fabric.StaticCanvas.prototype.getItemByName = function (name) {
 
 fabric.Canvas.prototype.indexOf = function (object) {
   return this._objects.findIndex((element) => element === object);
+};
+
+fabric.util.loadVideo = function (url, callback, _, crossOrigin) {
+  const element = document.createElement("video");
+
+  element.currentTime = 0;
+  element.playsInline = true;
+  element.crossOrigin = crossOrigin ?? null;
+
+  element.onloadeddata = async () => {
+    element.onloadeddata = null;
+    element.onerror = null;
+    element.height = element.videoHeight;
+    element.width = element.videoWidth;
+    callback(element);
+  };
+  element.onerror = () => {
+    element.onloadeddata = null;
+    element.onerror = null;
+    callback(null);
+  };
+
+  element.src = url;
+  element.load();
 };
 
 fabric.Object.NUM_FRACTION_DIGITS = 5;

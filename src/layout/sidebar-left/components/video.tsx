@@ -38,7 +38,10 @@ function _VideoSidebar() {
     (source: string): MouseEventHandler<HTMLButtonElement> =>
     async (event) => {
       const thumbnail = event.currentTarget.querySelector("img");
-      if (!thumbnail || !isImageLoaded(thumbnail)) {
+      if (editor.canvas.replacer.active?.type === "video") {
+        const promise = flowResult(editor.canvas.replacer.replace(source, true));
+        toast.promise(promise, { loading: "The video is being replaced...", success: "The video has been replaced", error: "Ran into an error while replacing the video" });
+      } else if (!thumbnail || !isImageLoaded(thumbnail)) {
         const promise = flowResult(editor.canvas.onAddVideoFromSource(source));
         toast.promise(promise, { loading: "The video asset is being loaded...", success: "The video asset has been added to artboard", error: "Ran into an error adding the video asset" });
       } else {

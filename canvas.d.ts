@@ -6346,7 +6346,16 @@ interface IUtilMisc {
    * @param [context] Context to invoke callback in
    * @param [crossOrigin] crossOrigin value to set image element to
    */
-  loadImage(url: string, callback: (image: HTMLImageElement) => void, context?: any, crossOrigin?: string): void;
+  loadImage(url: string, callback: (image: HTMLImageElement | null) => void, context?: any, crossOrigin?: string): void;
+
+  /**
+   * Loads video element from given url and passes it to a callback
+   * @param url URL representing an video
+   * @param callback Callback; invoked with loaded video
+   * @param [context] Context to invoke callback in
+   * @param [crossOrigin] crossOrigin value to set video element to
+   */
+  loadVideo(url: string, callback: (image: HTMLVideoElement | null) => void, context?: any, crossOrigin?: string): void;
 
   /**
    * Creates corresponding fabric instances from their object representations

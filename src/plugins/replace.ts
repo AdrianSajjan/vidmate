@@ -1,4 +1,5 @@
 import { FabricUtils } from "@/fabric/utils";
+import { checkForAudioInVideo } from "@/lib/media";
 import { createPromise } from "@/lib/utils";
 import { rmbgAI } from "@/models/rmbg";
 import { Canvas } from "@/store/canvas";
@@ -51,10 +52,42 @@ export class CanvasReplace {
             reject();
           } else {
             image.setElement(element);
-            image.set({ scaleX: image.scaleX, scaleY: image.scaleY, left: image.left, top: image.top, angle: image.angle, cropX: image.cropX, cropY: image.cropY });
             image.meta!.replacing = false;
+            image.set({ scaleX: image.scaleX, scaleY: image.scaleY, left: image.left, top: image.top, angle: image.angle, cropX: image.cropX, cropY: image.cropY });
+
             this.canvas.requestRenderAll();
             resolve(image);
+          }
+        },
+        null,
+        "anonymous",
+      );
+    });
+  }
+
+  *replaceVideo(video: fabric.Video, source: string) {
+    video.meta!.replacing = true;
+    return createPromise<fabric.Video>((resolve, reject) => {
+      fabric.util.loadVideo(
+        source,
+        async (element) => {
+          if (!element || !element.height || !element.width) {
+            reject();
+          } else {
+            const hasAudio = await checkForAudioInVideo(source);
+
+            element.loop = false;
+            element.currentTime = 0;
+
+            element.muted = video.muted() ?? false;
+            element.crossOrigin = video.crossOrigin ?? null;
+
+            video.setElement(element);
+            video.meta!.replacing = false;
+            video.set({ scaleX: video.scaleX, scaleY: video.scaleY, left: video.left, top: video.top, angle: video.angle, cropX: video.cropX, cropY: video.cropY, hasAudio: hasAudio });
+
+            this.canvas.requestRenderAll();
+            resolve(video);
           }
         },
         null,
@@ -73,8 +106,16 @@ export class CanvasReplace {
 
   *replace(source: string, cache?: boolean) {
     if (!this.active) return;
-    if (this.active.type === "image") this.replaceImage(this.active.object, source);
-    if (cache) rmbgAI.removeCacheEntry(this.active.object.name!);
+    switch (this.active.type) {
+      case "image":
+        this.replaceImage(this.active.object, source);
+        if (cache) rmbgAI.removeCacheEntry(this.active.object.name!);
+        break;
+      case "video":
+        this.replaceVideo(this.active.object, source);
+        break;
+    }
+
     this.active = null;
   }
 }
