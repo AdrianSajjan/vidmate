@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+
 import { fabric } from "fabric";
 import { floor } from "lodash";
 import { EntryAnimation, ExitAnimation } from "canvas";
@@ -12,16 +14,14 @@ import { CanvasAudio } from "@/plugins/audio";
 import { CanvasEffects } from "@/plugins/filters";
 import { CanvasAlignment } from "@/plugins/alignment";
 import { CanvasSelection } from "@/plugins/selection";
-
-import { FabricUtils } from "@/fabric/utils";
-import { createInstance, createPromise } from "@/lib/utils";
-import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 import { CanvasClipMask } from "@/plugins/mask";
 import { CanvasTrimmer } from "@/plugins/trim";
 import { CanvasReplace } from "@/plugins/replace";
 import { CanvasTemplate } from "@/plugins/template";
-import { nanoid } from "nanoid";
 
+import { FabricUtils } from "@/fabric/utils";
+import { createInstance, createPromise } from "@/lib/utils";
+import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 export class Canvas {
   id: string;
   name: string;
@@ -218,7 +218,7 @@ export class Canvas {
 
   *onAddImageFromThumbail(source: string, thumbnail: HTMLImageElement) {
     const id = FabricUtils.elementID("image");
-    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true };
+    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromAlignment: true };
 
     const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
     const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
@@ -229,8 +229,11 @@ export class Canvas {
     spinner.scaleToWidth(48);
     FabricUtils.objectSpinningAnimation(spinner);
 
-    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true });
+    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true });
     placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
+    FabricUtils.initializeMetaProperties(placeholder, { thumbnail: true });
+    FabricUtils.initializeAnimationProperties(placeholder);
+
     this.instance.add(placeholder);
     this.instance.setActiveObject(placeholder).requestRenderAll();
 
@@ -292,7 +295,7 @@ export class Canvas {
 
   *onAddVideoFromThumbail(source: string, thumbnail: HTMLImageElement) {
     const id = FabricUtils.elementID("video");
-    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true };
+    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromAlignment: true };
 
     const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
     const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
@@ -303,8 +306,11 @@ export class Canvas {
     spinner.scaleToWidth(48);
     FabricUtils.objectSpinningAnimation(spinner);
 
-    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true });
+    const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true });
     placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
+    FabricUtils.initializeMetaProperties(placeholder, { thumbnail: true });
+    FabricUtils.initializeAnimationProperties(placeholder);
+
     this.instance.add(placeholder);
     this.instance.setActiveObject(placeholder).requestRenderAll();
 

@@ -50,7 +50,7 @@ function _EditorMenubar() {
 
   const handleSaveTemplate = async () => {
     const promise = upload.mutateAsync();
-    toast.promise(promise, { loading: "Your template is being saved", success: "Your template has been saved successfully", error: "Ran into an error while saving the template" });
+    toast.promise(promise, { loading: "The template is being saved...", success: "The template has been saved successfully", error: "Ran into an error while saving the template" });
   };
 
   if (!editor.canvas.workspace || !editor.canvas.history) return null;
