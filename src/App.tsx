@@ -17,6 +17,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { EditorCanvas, EditorRecorder } from "@/components/editor";
 import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useIsTablet } from "./hooks/use-media-query";
 
 export function App() {
   return (
@@ -29,6 +30,7 @@ export function App() {
 }
 
 function _Editor() {
+  const isTablet = useIsTablet();
   const editor = useEditorContext();
 
   useEffect(() => {
@@ -48,6 +50,7 @@ function _Editor() {
       );
 
     case "complete":
+      const position = isTablet ? "bottom-right" : ("top-center" as const);
       return (
         <section className="h-[100dvh] overflow-hidden flex flex-col select-none">
           <EditorMenubar />
@@ -62,7 +65,7 @@ function _Editor() {
                 <EditorRecorder />
                 <EditorFAB />
                 <EditorPreviewModal />
-                <Toaster richColors position="bottom-right" offset={24} visibleToasts={6} />
+                <Toaster richColors position={position} offset={24} visibleToasts={6} />
               </div>
               <EditorFooter />
             </section>

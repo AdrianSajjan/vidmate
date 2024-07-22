@@ -1,9 +1,10 @@
+import { PlusIcon } from "lucide-react";
+import { observer } from "mobx-react";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEditorContext } from "@/context/editor";
 import { cn } from "@/lib/utils";
-import { PlusIcon } from "lucide-react";
-import { observer } from "mobx-react";
 
 function _EditorFAB() {
   const editor = useEditorContext();

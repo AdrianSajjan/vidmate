@@ -1,8 +1,8 @@
-import { createInstance } from "@/lib/utils";
-import { Canvas } from "@/store/canvas";
 import { makeAutoObservable, runInAction } from "mobx";
 import { fabric } from "fabric";
 import { throttle } from "lodash";
+import { createInstance } from "@/lib/utils";
+import { Canvas } from "@/store/canvas";
 
 interface WorkspaceDimensions {
   height?: number;
@@ -12,6 +12,9 @@ interface WorkspaceDimensions {
 export class CanvasWorkspace {
   private _canvas: Canvas;
   private _workspace: HTMLDivElement;
+
+  private _touchZoomScale: number;
+  private _canTouchScale: boolean;
 
   fill: string;
   width: number;
@@ -23,6 +26,9 @@ export class CanvasWorkspace {
   constructor(canvas: Canvas, workspace: HTMLDivElement) {
     this._canvas = canvas;
     this._workspace = workspace;
+
+    this._touchZoomScale = 0.5;
+    this._canTouchScale = true;
 
     this.width = 1080;
     this.height = 1080;
@@ -68,7 +74,39 @@ export class CanvasWorkspace {
   }
 
   private _initEvents() {
-    this.canvas!.on("mouse:wheel", this._mouseWheelEvent.bind(this));
+    this.canvas.on("mouse:wheel", this._mouseWheelEvent.bind(this));
+    this.canvas.on("touch:gesture", this._touchGestureEvent.bind(this));
+    this.canvas.on("selection:created", this._selectionCreatedEvent.bind(this));
+    this.canvas.on("selection:cleared", this._selectionClearedEvent.bind(this));
+  }
+
+  private _selectionCreatedEvent() {
+    runInAction(() => {
+      this._canTouchScale = false;
+    });
+  }
+
+  private _selectionClearedEvent() {
+    runInAction(() => {
+      this._canTouchScale = true;
+    });
+  }
+
+  private _touchGestureEvent(event: fabric.IEvent<TouchEvent>) {
+    if (!event.e.touches || event.e.touches.length !== 2 || !this._canTouchScale) return;
+
+    const touch = event as any;
+    if (touch.self.state == "start") this._touchZoomScale = this.canvas.getZoom();
+    const delta = this._touchZoomScale * touch.self.scale;
+
+    const center = this.canvas.getCenter();
+    this.canvas.zoomToPoint(createInstance(fabric.Point, center.left, center.top), delta);
+    this.canvas.requestRenderAll();
+
+    runInAction(() => {
+      this.zoom = delta;
+      this.viewportTransform = [...this.canvas.viewportTransform!];
+    });
   }
 
   private _mouseWheelEvent(event: fabric.IEvent<WheelEvent>) {

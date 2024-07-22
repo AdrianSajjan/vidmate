@@ -396,6 +396,8 @@ interface IObservable<T> {
    */
   on(eventName: EventName, handler: (e: IEvent<MouseEvent>) => void): T;
   on(eventName: "mouse:wheel", handler: (e: IEvent<WheelEvent>) => void): T;
+  on(eventName: "touch:gesture", handler: (e: IEvent<TouchEvent>) => void): T;
+  on(eventName: "touch:drag", handler: (e: IEvent<TouchEvent>) => void): T;
   on(eventName: string, handler: (e: IEvent) => void): T;
 
   /**
