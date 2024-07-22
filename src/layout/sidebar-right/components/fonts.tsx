@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { EditorFont, fonts } from "@/constants/fonts";
-import { rightSidebarWidth } from "@/constants/layout";
+
 import { useEditorContext } from "@/context/editor";
 
 function _FontSidebar() {
@@ -24,7 +24,7 @@ function _FontSidebar() {
   };
 
   return (
-    <div className="h-full" style={{ width: rightSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center h-14 border-b px-4 gap-2.5">
         <h2 className="font-semibold">Fonts</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7 ml-auto" onClick={() => editor.setActiveSidebarRight(null)}>

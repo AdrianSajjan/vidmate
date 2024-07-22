@@ -1,15 +1,14 @@
+import { useMutation } from "@tanstack/react-query";
+import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
+import { flowResult } from "mobx";
 import { observer } from "mobx-react";
 import { Fragment } from "react";
-import { flowResult } from "mobx";
-import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useEditorContext } from "@/context/editor";
-import { leftSidebarWidth } from "@/constants/layout";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorTemplate } from "@/types/editor";
 
@@ -37,7 +36,7 @@ function _TemplateSidebar() {
   };
 
   return (
-    <div className="h-full" style={{ width: leftSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center justify-between h-14 border-b px-4">
         <h2 className="font-semibold">Templates</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7" onClick={() => editor.setActiveSidebarLeft(null)}>

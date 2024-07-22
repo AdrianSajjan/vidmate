@@ -13,7 +13,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { rmbgAI } from "@/models/rmbg";
 
 import { useEditorContext } from "@/context/editor";
-import { rightSidebarWidth } from "@/constants/layout";
 
 interface SelectPluginProps {
   plugin: string;
@@ -38,7 +37,7 @@ function _AISidebar() {
 
   if (!plugin) {
     return (
-      <div className="h-full" style={{ width: rightSidebarWidth }}>
+      <div className="h-full w-full">
         <div className="flex items-center h-14 border-b px-4 gap-2.5">
           <h2 className="font-semibold">AI Magic</h2>
           <Button size="icon" variant="outline" className="bg-card h-7 w-7 ml-auto" onClick={() => editor.setActiveSidebarRight(null)}>
@@ -53,7 +52,7 @@ function _AISidebar() {
   }
 
   return (
-    <div className="h-full" style={{ width: rightSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center h-14 border-b px-4 gap-2.5">
         <h2 className="font-semibold">{label}</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7 ml-auto" onClick={handleClosePlugin}>

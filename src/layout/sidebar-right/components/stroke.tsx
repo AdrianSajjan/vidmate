@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import { SketchPicker, ColorResult } from "react-color";
 
 import { Button } from "@/components/ui/button";
-import { rightSidebarWidth } from "@/constants/layout";
+
 import { useEditorContext } from "@/context/editor";
 import { cn } from "@/lib/utils";
 import { darkHexCodes, lightHexCodes, pastelHexCodes } from "@/constants/editor";
@@ -27,7 +27,7 @@ function _StrokeSidebar() {
   const color = disabled ? "#ffffff" : selected.stroke;
 
   return (
-    <div className="h-full" style={{ width: rightSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center h-14 border-b px-4 gap-2.5">
         <h2 className="font-semibold">Stroke</h2>
         <Button size="icon" variant="ghost" className="ml-auto h-7 w-7" onClick={() => editor.canvas.onChangeActiveObjectProperty("stroke", disabled ? "#000000" : "")}>

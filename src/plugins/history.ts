@@ -16,10 +16,11 @@ export class CanvasHistory {
 
   constructor(canvas: Canvas) {
     this.status = "idle";
-
-    this._redo = [];
-    this._undo = [];
     this._canvas = canvas;
+
+    const history = this._next();
+    this._undo = [history];
+    this._redo = [];
 
     this._initEvents();
     makeAutoObservable(this);

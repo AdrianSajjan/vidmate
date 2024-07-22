@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GradientSlider } from "@/components/slider/gradient";
 
 import { darkHexCodes, lightHexCodes, pastelHexCodes } from "@/constants/editor";
-import { rightSidebarWidth } from "@/constants/layout";
+
 import { useEditorContext } from "@/context/editor";
 import { defaultFill, defaultGradient } from "@/fabric/constants";
 import { cn } from "@/lib/utils";
@@ -115,7 +115,7 @@ function _FillSidebar() {
   const disabled = !selected || !selected.fill;
 
   return (
-    <div className="h-full" style={{ width: rightSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center h-14 border-b px-4 gap-2.5">
         <h2 className="font-semibold">Fill</h2>
         <Button size="icon" variant="ghost" className="ml-auto h-7 w-7" onClick={onToggleFill}>

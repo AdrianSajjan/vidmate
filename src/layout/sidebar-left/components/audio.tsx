@@ -1,7 +1,7 @@
-import { Fragment, MouseEventHandler, useEffect, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { PauseIcon, PlayIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { useMutation } from "@tanstack/react-query";
+import { Fragment, MouseEventHandler, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useEditorContext } from "@/context/editor";
-import { leftSidebarWidth } from "@/constants/layout";
-
-import { mock, useMockStore } from "@/constants/mock";
-import { EditorAudio } from "@/types/editor";
 import { uploadAssetToS3 } from "@/api/upload";
+import { mock, useMockStore } from "@/constants/mock";
 import { extractAudioWaveformFromAudioFile } from "@/lib/media";
 import { formatMediaDuration } from "@/lib/time";
+import { EditorAudio } from "@/types/editor";
 
 function _AudioSidebar() {
   const store = useMockStore();
@@ -44,7 +42,7 @@ function _AudioSidebar() {
   };
 
   return (
-    <div className="h-full" style={{ width: leftSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center justify-between h-14 border-b px-4">
         <h2 className="font-semibold">Audios</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7" onClick={() => editor.setActiveSidebarLeft(null)}>

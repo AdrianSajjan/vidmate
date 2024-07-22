@@ -164,12 +164,14 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
         </Draggable>
       ) : null}
 
-      <Draggable axis={editor.canvas.timeline.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
-        <button
-          onClick={(event) => (editor.canvas.timeline.playing ? null : editor.canvas.selection.selectObjectByName(element.name!, event.shiftKey))}
-          className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-primary" : "border-gray-400")}
-          style={style}
-        >
+      <Draggable
+        axis={editor.canvas.timeline.playing ? "none" : "x"}
+        bounds={{ left: 0, right: trackWidth - width }}
+        position={{ y: 0, x: offset }}
+        onDrag={(_, data) => handleDragTrack(data.x)}
+        onMouseDown={(event) => (editor.canvas.timeline.playing ? null : editor.canvas.selection.selectObjectByName(element.name!, event.shiftKey))}
+      >
+        <button className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-primary" : "border-gray-400")} style={style}>
           <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-2.5 capitalize", isSelected ? "left-5" : "left-1")}>
             <span className="text-xxs">{formatMediaDuration(element.meta!.duration)}</span>
             <ElementDescription name={element.name} type={element.type} />
@@ -252,12 +254,14 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
           </button>
         </Draggable>
       ) : null}
-      <Draggable axis={editor.canvas.timeline.playing ? "none" : "x"} bounds={{ left: 0, right: trackWidth - width }} position={{ y: 0, x: offset }} onDrag={(_, data) => handleDragTrack(data.x)}>
-        <button
-          onClick={() => (editor.canvas.timeline.playing ? null : editor.canvas.selection.selectAudio(isSelected ? null : audio))}
-          className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-primary" : "border-gray-400")}
-          style={style}
-        >
+      <Draggable
+        axis={editor.canvas.timeline.playing ? "none" : "x"}
+        bounds={{ left: 0, right: trackWidth - width }}
+        position={{ y: 0, x: offset }}
+        onDrag={(_, data) => handleDragTrack(data.x)}
+        onMouseDown={() => (editor.canvas.timeline.playing ? null : editor.canvas.selection.selectAudio(isSelected ? null : audio))}
+      >
+        <button className={cn("absolute top-0 h-full z-0 border-3 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing", isSelected ? "border-primary" : "border-gray-400")} style={style}>
           <span className={cn("absolute top-1 bg-foreground/50 text-card rounded-sm backdrop-blur-sm px-2 py-1 flex items-center gap-2.5 capitalize", isSelected ? "left-5" : "left-1")}>
             <span className="text-xxs">{formatMediaDuration(audio.timeline * 1000)}</span>
             <div className="inline-flex items-center gap-1.5">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useEditorContext } from "@/context/editor";
-import { rightSidebarWidth } from "@/constants/layout";
+
 import { advancedShapes, basicShapes } from "@/constants/elements";
 import { propertiesToInclude } from "@/fabric/constants";
 
@@ -37,7 +37,7 @@ function _ClipMaskSidebar() {
   }, [editor.canvas.elements, editor.canvas.elements.length, selected]);
 
   return (
-    <div className="h-full" style={{ width: rightSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center h-14 border-b px-4 gap-2.5">
         <h2 className="font-semibold">Clip Mask</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7 ml-auto" onClick={() => editor.setActiveSidebarRight(null)}>

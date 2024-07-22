@@ -53,7 +53,7 @@ function _Editor() {
           <EditorMenubar />
           <main className="flex-1 flex w-full">
             <EditorSidebarLeft />
-            <section className="flex-1 flex flex-col relative w-0">
+            <section className="flex-1 flex flex-col relative w-0 pb-16 sm:pb-0">
               <EditorToolbar />
               <div className="flex-1 relative" id="workspace">
                 {editor.pages.map((_, index) => (

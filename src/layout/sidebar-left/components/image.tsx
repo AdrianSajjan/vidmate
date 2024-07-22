@@ -10,10 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { uploadAssetToS3 } from "@/api/upload";
-import { leftSidebarWidth } from "@/constants/layout";
+import { mock, useMockStore } from "@/constants/mock";
 import { useEditorContext } from "@/context/editor";
 import { isImageLoaded } from "@/lib/utils";
-import { mock, useMockStore } from "@/constants/mock";
 
 function _ImageSidebar() {
   const store = useMockStore();
@@ -48,7 +47,7 @@ function _ImageSidebar() {
   };
 
   return (
-    <div className="h-full" style={{ width: leftSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center justify-between h-14 border-b px-4">
         <h2 className="font-semibold">Images</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7" onClick={() => editor.setActiveSidebarLeft(null)}>

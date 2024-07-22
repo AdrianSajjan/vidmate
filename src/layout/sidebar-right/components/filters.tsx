@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { HTMLAttributes } from "react";
 
 import { Button } from "@/components/ui/button";
-import { rightSidebarWidth } from "@/constants/layout";
+
 import { Label } from "@/components/ui/label";
 import { Toggle } from "@/components/ui/toggle";
 import { FilterSlider } from "@/components/slider/filter";
@@ -43,7 +43,7 @@ function _FilterSidebar() {
   };
 
   return (
-    <div className="h-full" style={{ width: rightSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center h-14 border-b px-4 gap-2.5">
         <h2 className="font-semibold">Filters</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7 ml-auto" onClick={() => editor.setActiveSidebarRight(null)}>

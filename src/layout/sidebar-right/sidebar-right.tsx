@@ -1,7 +1,6 @@
 import { observer } from "mobx-react";
 import { useEffect } from "react";
 
-import { rightSidebarWidth } from "@/constants/layout";
 import { useEditorContext } from "@/context/editor";
 
 import { AnimationSidebar } from "./components/animations";
@@ -11,6 +10,7 @@ import { FilterSidebar } from "./components/filters";
 import { FontSidebar } from "./components/fonts";
 import { StrokeSidebar } from "./components/stroke";
 import { AISidebar } from "./components/ai";
+import { rightSidebarWidth } from "@/constants/layout";
 
 interface SidebarMapValue {
   Component: () => JSX.Element;

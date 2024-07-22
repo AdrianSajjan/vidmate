@@ -54,7 +54,7 @@ function _PreviewModalContent() {
 
   return (
     <div className="grid grid-cols-12 gap-6">
-      <div className="col-span-7">
+      <div className="col-span-12 md:col-span-7">
         <div className="relative flex items-center justify-center h-96 p-3 w-full bg-transparent-pattern">
           {editor.blob ? (
             <video controls className="h-full w-full object-contain">
@@ -65,7 +65,7 @@ function _PreviewModalContent() {
           ) : null}
         </div>
       </div>
-      <div className="col-span-5 flex flex-col">
+      <div className="col-span-12 md:col-span-5 flex flex-col gap-6">
         <div className="flex flex-col">
           <label className="text-xs font-semibold">Export Settings</label>
           <div className="flex flex-col px-2.5 pt-3.5 gap-3">
@@ -102,7 +102,7 @@ function _PreviewModalContent() {
             <div className="grid grid-cols-12 items-center">
               <Label className="text-xs col-span-3">File Name</Label>
               <div className="flex col-span-9">
-                <Input value={editor.file} onChange={(event) => editor.onChangeFileName(event.target.value)} className="flex-1 text-xs h-8 rounded-r-none" placeholder="output" />
+                <Input value={editor.file} onChange={(event) => editor.onChangeFileName(event.target.value)} className="flex-1 text-xs h-8 rounded-r-none max-w-72" placeholder="output" />
                 <div className="shrink-0 text-xs h-8 px-3 border grid place-items-center rounded-md rounded-l-none shadow-sm text-muted-foreground w-16">.{codec.extension}</div>
               </div>
             </div>

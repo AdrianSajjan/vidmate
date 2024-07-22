@@ -1,18 +1,17 @@
-import { Fragment } from "react";
 import { SearchIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
+import { Fragment } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEditorContext } from "@/context/editor";
 import { Skeleton } from "@/components/ui/skeleton";
-import { leftSidebarWidth } from "@/constants/layout";
+import { useEditorContext } from "@/context/editor";
 
 function _TextSidebar() {
   const editor = useEditorContext();
 
   return (
-    <div className="h-full" style={{ width: leftSidebarWidth }}>
+    <div className="h-full w-full">
       <div className="flex items-center justify-between h-14 border-b px-4">
         <h2 className="font-semibold">Text</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7" onClick={() => editor.setActiveSidebarLeft(null)}>

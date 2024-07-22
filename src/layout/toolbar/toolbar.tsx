@@ -33,11 +33,11 @@ function _EditorToolbar() {
   const Toolbar = toolbarComponentMap[type!];
 
   if (!Toolbar) {
-    return <div className="h-14 bg-card/50 border-b px-4 shrink-0 overflow-x-scroll" />;
+    return <div className="h-14 bg-card/50 border-b border-b-border/50 px-4 shrink-0 overflow-x-scroll" />;
   }
 
   return (
-    <div className="h-14 bg-card/50 border-b px-4 shrink-0 overflow-x-scroll">
+    <div className="h-14 bg-card/50 border-b border-b-border/50 px-4 shrink-0 overflow-x-scroll">
       <Toolbar />
     </div>
   );
