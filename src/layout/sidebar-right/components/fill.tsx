@@ -14,6 +14,7 @@ import { darkHexCodes, lightHexCodes, pastelHexCodes } from "@/constants/editor"
 import { useEditorContext } from "@/context/editor";
 import { defaultFill, defaultGradient } from "@/fabric/constants";
 import { cn } from "@/lib/utils";
+import useMeasure from "react-use-measure";
 
 const picker = { default: { picker: { boxShadow: "none", padding: 0, width: "100%", background: "transparent", borderRadius: 0 } } };
 
@@ -22,6 +23,7 @@ function _FillSidebar() {
   const selected = editor.canvas.selection.active!;
 
   const [index, setIndex] = useState(0);
+  const [ref, measure] = useMeasure();
 
   const mode = useMemo(() => {
     if (!selected.fill || typeof selected.fill === "string") return "solid";
@@ -154,8 +156,8 @@ function _FillSidebar() {
         </div>
         <div className="px-4 flex flex-col divide-y">
           {mode === "gradient" ? (
-            <div className="pb-4">
-              <GradientSlider width={264} colors={colors} selected={index} onSelect={setIndex} onChange={onChangeOffset} />
+            <div className="pb-4" ref={ref}>
+              <GradientSlider width={measure.width || 264} colors={colors} selected={index} onSelect={setIndex} onChange={onChangeOffset} />
             </div>
           ) : null}
           <div className="pb-4">

@@ -17,7 +17,7 @@ function _AnimationSidebar() {
   const editor = useEditorContext();
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full @container">
       <div className="flex items-center h-14 border-b px-4 gap-2.5">
         <h2 className="font-semibold">Animations</h2>
         <Button size="icon" variant="outline" className="bg-card h-7 w-7 ml-auto" onClick={() => editor.setActiveSidebarRight(null)}>
@@ -99,7 +99,7 @@ function _EntryAnimations() {
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-2 gap-5 pt-6">
+      <div className="grid grid-cols-2 @sm:grid-cols-3 @md:grid-cols-4 gap-5 pt-6">
         {entry.map((animation) => (
           <AnimationItem key={animation.label} animation={animation} className={selected.anim?.in.name === animation.value ? "ring-2 ring-primary/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
         ))}
@@ -152,7 +152,7 @@ function _ExitAnimations() {
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-2 gap-5 pt-6">
+      <div className="grid grid-cols-2 @sm:grid-cols-3 @md:grid-cols-4 gap-5 pt-6">
         {exit.map((animation) => (
           <AnimationItem key={animation.label} animation={animation} className={selected.anim?.out.name === animation.value ? "ring-2 ring-primary/50" : "ring-0"} onClick={() => handleSelectAnimation(animation)} />
         ))}

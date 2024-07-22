@@ -27,15 +27,15 @@ export class CanvasWorkspace {
     this._canvas = canvas;
     this._workspace = workspace;
 
-    this._touchZoomScale = 0.5;
-    this._canTouchScale = true;
-
     this.width = 1080;
     this.height = 1080;
     this.fill = "#FFFFFF";
 
-    this.zoom = 0.5;
+    this.zoom = window.innerWidth > 640 ? 0.5 : 0.3;
     this.viewportTransform = [];
+
+    this._touchZoomScale = this.zoom;
+    this._canTouchScale = true;
 
     this._init();
     makeAutoObservable(this);

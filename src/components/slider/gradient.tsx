@@ -45,9 +45,8 @@ export function GradientSlider({ width: container, selected, colors, onChange, o
           const left = index === 0 ? 0 : array[index - 1].x + handleWidth;
           const right = index === array.length - 1 ? width : array[index + 1].x - handleWidth;
           return (
-            <Draggable axis="x" key={stop.color + index} position={{ x: stop.x, y: 0 }} bounds={{ left, right }} onDrag={handleDrag(index)}>
+            <Draggable axis="x" key={stop.color + index} position={{ x: stop.x, y: 0 }} bounds={{ left, right }} onDrag={handleDrag(index)} onMouseDown={() => onSelect(index)}>
               <button
-                onClick={() => onSelect(index)}
                 className={cn("h-8 cursor-grab active:cursor-grabbing absolute rounded-md bg-card border border-foreground/25 grid place-items-center", selected === index ? "ring-2 ring-primary" : "ring-0")}
                 style={{ width: handleWidth }}
               >
