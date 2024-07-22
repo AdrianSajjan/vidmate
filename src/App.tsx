@@ -39,7 +39,7 @@ function _Editor() {
     case "pending":
     case "uninitialized":
       return (
-        <section className="h-screen grid place-items-center">
+        <section className="h-[100dvh] grid place-items-center">
           <div className="flex flex-col gap-2">
             <Spinner size="md" />
             <span className="text-sm font-medium">Initializing editor</span>
@@ -49,7 +49,7 @@ function _Editor() {
 
     case "complete":
       return (
-        <section className="h-screen overflow-hidden flex flex-col select-none">
+        <section className="h-[100dvh] overflow-hidden flex flex-col select-none">
           <EditorMenubar />
           <main className="flex-1 flex w-full">
             <EditorSidebarLeft />
@@ -73,7 +73,7 @@ function _Editor() {
 
     case "error":
       return (
-        <section className="h-screen grid place-items-center">
+        <section className="h-[100dvh] grid place-items-center">
           <span className="text-sm font-medium text-destructive">Your browser doesn't support the editor</span>
         </section>
       );

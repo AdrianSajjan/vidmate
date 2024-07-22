@@ -34,12 +34,11 @@ function _EditorPlayback() {
               </Button>
             )}
           </PopoverTrigger>
-          <PopoverContent className="pt-2 pb-3 px-3" align="start" side="top">
+          <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="pt-2 pb-3 px-3" align="start" side="top">
             <Label className="text-xs font-medium">Duration (s)</Label>
             <div className="flex items-center justify-between gap-4">
               <Slider disabled={editor.canvas.timeline.playing} min={5} max={60} value={[editor.canvas.timeline.duration / 1000]} onValueChange={([duration]) => editor.canvas.timeline.set("duration", duration)} />
               <Input
-                autoFocus
                 type="number"
                 className="h-8 w-16 text-xs"
                 disabled={editor.canvas.timeline.playing}

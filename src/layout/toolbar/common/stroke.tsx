@@ -44,12 +44,11 @@ function _ToolbarStrokeOption() {
               <ChevronDownIcon size={15} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="pt-2 pb-3 px-3" align="start">
+          <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="pt-2 pb-3 px-3" align="start">
             <Label className="text-xs font-medium">Stroke Width</Label>
             <div className="flex items-center justify-between gap-4">
               <Slider min={1} max={100} value={[selected.strokeWidth!]} onValueChange={([strokeWidth]) => editor.canvas.onChangeActiveObjectProperty("strokeWidth", strokeWidth)} />
               <Input
-                autoFocus
                 type="number"
                 className="h-8 w-16 text-xs"
                 value={selected.strokeWidth}

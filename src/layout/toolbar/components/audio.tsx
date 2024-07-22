@@ -32,13 +32,12 @@ function _AudioToolbar() {
               <ChevronDownIcon size={15} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="pt-3 pb-3 px-3 w-80" align="start">
+          <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="pt-3 pb-3 px-3 w-80" align="start">
             <Label className="text-xs font-medium">Volume (%)</Label>
             <div className="flex items-center justify-between">
               <Slider min={0} max={100} value={[selected.volume * 100]} disabled={selected.muted} onValueChange={([volume]) => editor.canvas.audio.update(selected.id, { volume: volume / 100 })} />
               <Input
                 min={1}
-                autoFocus
                 max={100}
                 type="number"
                 disabled={selected.muted}
@@ -62,13 +61,12 @@ function _AudioToolbar() {
               <span>Timeline</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="pt-3 pb-3 px-3" align="start">
+          <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="pt-3 pb-3 px-3" align="start">
             <Label className="text-xs font-medium">Duration (s)</Label>
             <div className="flex items-center justify-between gap-4">
               <Slider min={1} max={selected.duration} value={[selected.timeline]} onValueChange={([timeline]) => editor.canvas.audio.update(selected.id, { timeline })} />
               <Input
                 min={1}
-                autoFocus
                 step={0.5}
                 max={selected.duration}
                 type="number"
@@ -83,7 +81,6 @@ function _AudioToolbar() {
               <Input
                 min={0}
                 step={0.5}
-                autoFocus
                 max={editor.canvas.timeline.duration / 1000 - selected.timeline}
                 type="number"
                 className="h-8 w-20 text-xs"

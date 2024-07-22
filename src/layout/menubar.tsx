@@ -134,12 +134,11 @@ function _EditorMenubar() {
               <ZoomInIcon size={15} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end">
+          <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} align="end">
             <Label className="text-xs font-medium">Zoom (%)</Label>
             <div className="flex items-center justify-between gap-4">
               <Slider step={5} min={25} max={200} value={[Math.round(editor.canvas.workspace.zoom * 100)]} onValueChange={([zoom]) => editor.canvas.workspace.changeZoom(zoom / 100)} />
               <Input
-                autoFocus
                 type="number"
                 className="h-8 w-16 text-xs"
                 value={Math.round(editor.canvas.workspace.zoom * 100)}

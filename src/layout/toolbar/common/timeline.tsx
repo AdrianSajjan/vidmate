@@ -33,7 +33,7 @@ function _ToolbarTimelineOption() {
             <ChevronDownIcon size={15} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="pt-3 pb-3 px-3" align="end">
+        <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="pt-3 pb-3 px-3" align="end">
           <Label className="text-xs font-medium">Duration (s)</Label>
           <div className="flex items-center justify-between gap-4">
             <Slider
@@ -43,7 +43,6 @@ function _ToolbarTimelineOption() {
               onValueChange={([duration]) => editor.canvas.onChangeActiveObjectTimelineProperty("duration", duration * 1000)}
             />
             <Input
-              autoFocus
               step={0.5}
               type="number"
               className="h-8 w-20 text-xs"
@@ -55,7 +54,6 @@ function _ToolbarTimelineOption() {
           <div className="flex items-center justify-between gap-4">
             <Slider min={0} max={editor.canvas.timeline.duration / 1000} value={[selected.meta!.offset / 1000]} onValueChange={([offset]) => editor.canvas.onChangeActiveObjectTimelineProperty("offset", offset * 1000)} />
             <Input
-              autoFocus
               step={0.5}
               type="number"
               className="h-8 w-20 text-xs"

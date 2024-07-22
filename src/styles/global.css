@@ -101,7 +101,7 @@
   }
 
   .sidebar-container {
-    height: calc(100vh - 112px);
+    height: calc(100dvh - 112px);
     overflow-y: auto;
   }
 
@@ -109,7 +109,7 @@
 
   @media screen and (max-width:640px) {
     .sidebar-container {
-      height: calc(100vh - 164px);
+      height: calc(100dvh - 164px);
       overflow-y: auto;
     }
   }

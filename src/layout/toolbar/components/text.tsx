@@ -143,12 +143,11 @@ function _TextToolbar() {
               <WholeWordIcon size={15} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="pt-2 pb-3 px-3" align="center">
+          <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="pt-2 pb-3 px-3" align="center">
             <Label className="text-xs font-medium">Letter Spacing</Label>
             <div className="flex items-center justify-between gap-4">
               <Slider min={0} max={100} value={[selected.charSpacing!]} onValueChange={([charSpacing]) => editor.canvas.onChangeActiveTextboxProperty("charSpacing", charSpacing)} />
               <Input
-                autoFocus
                 type="number"
                 className="h-8 w-16 text-xs"
                 value={selected.charSpacing}
@@ -163,12 +162,11 @@ function _TextToolbar() {
               <ArrowDownZAIcon size={15} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="pt-2 pb-3 px-3" align="center">
+          <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="pt-2 pb-3 px-3" align="center">
             <Label className="text-xs font-medium">Line Height</Label>
             <div className="flex items-center justify-between gap-4">
               <Slider min={0.5} max={2.5} step={0.02} value={[selected.lineHeight!]} onValueChange={([lineHeight]) => editor.canvas.onChangeActiveTextboxProperty("lineHeight", lineHeight)} />
               <Input
-                autoFocus
                 step={0.02}
                 type="number"
                 className="h-8 w-20 text-xs"
