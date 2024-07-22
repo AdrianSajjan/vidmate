@@ -161,11 +161,11 @@ function _ExitAnimations() {
   );
 }
 
-interface AniamtionItemProps extends HTMLAttributes<HTMLButtonElement> {
+interface AnimationItemProps extends HTMLAttributes<HTMLButtonElement> {
   animation: EditorAnimation;
 }
 
-function _AnimationItem({ animation, className, ...props }: AniamtionItemProps) {
+function _AnimationItem({ animation, className, ...props }: AnimationItemProps) {
   return (
     <div className="space-y-0.5">
       <button className={cn("w-full aspect-square rounded-xl overflow-hidden border", className)} {...props}>

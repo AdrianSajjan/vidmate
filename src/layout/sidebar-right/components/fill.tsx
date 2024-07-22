@@ -133,17 +133,17 @@ function _FillSidebar() {
             <TabsList className="w-full grid grid-cols-2">
               <TabsTrigger value="solid" className="text-xs h-full gap-1">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <circle cx="8" cy="8" r="4" fill="currentColor" fill-opacity="0.9" />
-                  <circle opacity="0.75" cx="8" cy="8" r="5.5" stroke="currentColor" stroke-opacity="0.9" />
+                  <circle cx="8" cy="8" r="4" fill="currentColor" fillOpacity="0.9" />
+                  <circle opacity="0.75" cx="8" cy="8" r="5.5" stroke="currentColor" strokeOpacity="0.9" />
                 </svg>
                 <span>Solid</span>
               </TabsTrigger>
               <TabsTrigger value="gradient" className="text-xs h-full gap-1">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <circle cx="8" cy="8" r="4" fill="url(#paint0_linear)" fill-opacity="0.9" />
-                  <circle opacity="0.75" cx="8" cy="8" r="5.5" stroke="currentColor" stroke-opacity="0.9" />
+                  <circle cx="8" cy="8" r="4" fill="url(#fill-gradient)" fillOpacity="0.9" />
+                  <circle opacity="0.75" cx="8" cy="8" r="5.5" stroke="currentColor" strokeOpacity="0.9" />
                   <defs>
-                    <linearGradient id="paint0_linear" x1="8" y1="4" x2="8" y2="12" gradientUnits="userSpaceOnUse">
+                    <linearGradient id="fill-gradient" x1="8" y1="4" x2="8" y2="12" gradientUnits="userSpaceOnUse">
                       <stop stop-color="currentColor" />
                       <stop offset="1" stop-color="currentColor" stop-opacity="0" />
                     </linearGradient>

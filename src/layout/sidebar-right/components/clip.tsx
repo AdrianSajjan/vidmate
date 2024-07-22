@@ -44,7 +44,7 @@ function _ClipMaskSidebar() {
           <XIcon size={15} />
         </Button>
       </div>
-      <div className="p-4 flex flex-col gap-4">
+      <div className="p-4 flex flex-col gap-4 sidebar-container">
         {clipMask ? (
           <div className="flex flex-col gap-3 pb-2">
             <div className="bg-transparent-pattern p-6">
