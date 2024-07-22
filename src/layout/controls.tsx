@@ -34,8 +34,8 @@ function _EditorElementControlsBase() {
     const left = offsetX + selected.getBoundingRect(true).left! * workspace.zoom + ((selected.width! * selected.scaleX!) / 2) * workspace.zoom;
 
     return {
-      top: clamp(top, MENU_OFFSET_Y / 4, editor.canvas.instance.height! - MENU_OFFSET_Y / 4),
-      left: left,
+      top: clamp(top, MENU_OFFSET_Y / 4, editor.canvas.instance.height! - MENU_OFFSET_Y),
+      left: clamp(left, MENU_OFFSET_Y * 2.5, editor.canvas.instance.width! - MENU_OFFSET_Y * 2.5),
     };
   }, [selected, workspace.viewportTransform, workspace.height, workspace.width, workspace.zoom]);
 

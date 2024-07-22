@@ -5,15 +5,15 @@ import "@/fabric/video";
 import { fabric } from "fabric";
 
 import EdgeControl from "@/assets/editor/controls/edge-control.svg";
-import MiddleControlHoz from "@/assets/editor/controls/middle-control-hoz.svg";
-import MiddleControl from "@/assets/editor/controls/middle-control.svg";
+import MiddleControlHorizontal from "@/assets/editor/controls/middle-control-horizontal.svg";
+import MiddleControlVertical from "@/assets/editor/controls/middle-control-vertical.svg";
 import RotationControl from "@/assets/editor/controls/rotate-icon.svg";
 
-const middleControl = document.createElement("img");
-middleControl.src = MiddleControl;
+const middleControlVertical = document.createElement("img");
+middleControlVertical.src = MiddleControlVertical;
 
-const middleControlHoz = document.createElement("img");
-middleControlHoz.src = MiddleControlHoz;
+const middleControlHorizontal = document.createElement("img");
+middleControlHorizontal.src = MiddleControlHorizontal;
 
 const edgeControl = document.createElement("img");
 edgeControl.src = EdgeControl;
@@ -27,7 +27,7 @@ function renderIcon(ctx: CanvasRenderingContext2D, left: number, top: number, _:
   ctx.save();
   ctx.translate(left, top);
   ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle!));
-  ctx.drawImage(middleControl, -wsize / 2, -hsize / 2, wsize, hsize);
+  ctx.drawImage(middleControlVertical, -wsize / 2, -hsize / 2, wsize, hsize);
   ctx.restore();
 }
 
@@ -37,7 +37,7 @@ function renderIconHoz(ctx: CanvasRenderingContext2D, left: number, top: number,
   ctx.save();
   ctx.translate(left, top);
   ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle!));
-  ctx.drawImage(middleControlHoz, -wsize / 2, -hsize / 2, wsize, hsize);
+  ctx.drawImage(middleControlHorizontal, -wsize / 2, -hsize / 2, wsize, hsize);
   ctx.restore();
 }
 

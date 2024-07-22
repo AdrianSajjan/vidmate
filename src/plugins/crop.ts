@@ -34,8 +34,8 @@ export class CanvasCropper {
     });
   }
 
-  private _mouseDoubleClickEvent(event: fabric.IEvent<MouseEvent>) {
-    if (!(FabricUtils.isImageElement(event.target) || FabricUtils.isVideoElement(event.target)) || this.active === event.target || event.target.meta!.placeholder) return;
+  private _mouseDoubleClickEvent<T extends Event>(event: fabric.IEvent<T>) {
+    if (!(FabricUtils.isImageElement(event.target) || FabricUtils.isVideoElement(event.target)) || this.active === event.target) return;
     event.target.clipPath ? this.cropObjectWithClipPath(event.target) : this.cropObjectWithoutClipPath(event.target);
   }
 

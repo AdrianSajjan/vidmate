@@ -136,8 +136,8 @@ export class Canvas {
   }
 
   *initialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
-    const props = { width: workspace.offsetWidth, height: workspace.offsetHeight, backgroundColor: "#F0F0F0", selectionColor: "#2e73fc1c", selectionBorderColor: "#629bffcf", selectionLineWidth: 1.5 };
-    this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, preserveObjectStacking: true, controlsAboveOverlay: true, ...props });
+    const props = { width: workspace.offsetWidth, height: workspace.offsetHeight, backgroundColor: "#F0F0F0" };
+    this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, centeredScaling: true, preserveObjectStacking: true, controlsAboveOverlay: true, ...props });
     this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default", excludeFromExport: true, excludeFromTimeline: true });
 
     this.history = createInstance(CanvasHistory, this);
