@@ -18,6 +18,7 @@ export function checkForAudioInVideo(source: string) {
     // @ts-ignore
     video.addEventListener("seeked", () => resolve(Boolean(video.mozHasAudio) || Boolean(video.webkitAudioDecodedByteCount) || Boolean(video.audioTracks?.length)), { once: true });
     video.src = source;
+    video.load();
   });
 }
 
@@ -26,18 +27,16 @@ export async function extractThumbnailFromVideoURL(url: string) {
     const video = document.createElement("video");
 
     video.crossOrigin = "anonymous";
+    video.playsInline = true;
     video.currentTime = 0.5;
 
     video.addEventListener("loadeddata", () => {
       video.height = video.videoHeight;
       video.width = video.videoWidth;
-
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d")!;
-
       canvas.height = video.videoHeight;
       canvas.width = video.videoWidth;
-
       context.drawImage(video, 0, 0);
       canvas.toBlob((blob) => {
         if (!blob) return reject();
@@ -51,6 +50,7 @@ export async function extractThumbnailFromVideoURL(url: string) {
     });
 
     video.src = url;
+    video.load();
   });
 }
 

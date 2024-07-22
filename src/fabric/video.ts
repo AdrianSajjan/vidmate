@@ -84,6 +84,7 @@ const Video = fabric.util.createClass(fabric.Image, {
 Video.fromURL = function (url: string, callback: (video: fabric.Video | null) => void, options?: fabric.IVideoOptions) {
   const element = document.createElement("video");
   element.currentTime = 0;
+  element.playsInline = true;
   element.crossOrigin = options?.crossOrigin ?? null;
   element.addEventListener(
     "loadeddata",
@@ -96,7 +97,9 @@ Video.fromURL = function (url: string, callback: (video: fabric.Video | null) =>
     { once: true },
   );
   element.addEventListener("error", () => callback(null), { once: true });
+
   element.src = url;
+  element.load();
 };
 
 Video.fromElement = function (element: HTMLVideoElement, callback: (video: fabric.Video | null) => void, options?: fabric.IVideoOptions) {

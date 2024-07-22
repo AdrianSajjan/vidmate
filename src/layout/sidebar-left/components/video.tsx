@@ -30,11 +30,8 @@ function _VideoSidebar() {
 
   const handleUpload = (files: FileList | null) => {
     if (!files || !files.length) return;
-    toast.promise(upload.mutateAsync(files[0]), {
-      loading: `Your video asset is being uploaded...`,
-      success: `Video has been successfully uploaded`,
-      error: `Ran into an error while uploading the video`,
-    });
+    const promise = upload.mutateAsync(files[0]);
+    toast.promise(promise, { loading: `Your video asset is being uploaded...`, success: `Video has been successfully uploaded`, error: `Ran into an error while uploading the video` });
   };
 
   const handleClick =
@@ -42,15 +39,10 @@ function _VideoSidebar() {
     async (event) => {
       const thumbnail = event.currentTarget.querySelector("img");
       if (!thumbnail || !isImageLoaded(thumbnail)) {
-        toast.promise(flowResult(editor.canvas.onAddVideoFromSource(source)), {
-          loading: "The video asset is being loaded...",
-          success: () => "The video asset has been added to artboard",
-          error: () => "Ran into an error adding the video asset",
-        });
+        const promise = flowResult(editor.canvas.onAddVideoFromSource(source));
+        toast.promise(promise, { loading: "The video asset is being loaded...", success: "The video asset has been added to artboard", error: "Ran into an error adding the video asset" });
       } else {
-        toast.promise(flowResult(editor.canvas.onAddVideoFromThumbail(source, thumbnail)), {
-          error: () => "Ran into an error adding the video asset",
-        });
+        toast.promise(flowResult(editor.canvas.onAddVideoFromThumbail(source, thumbnail)), { error: "Ran into an error adding the video asset" });
       }
     };
 
