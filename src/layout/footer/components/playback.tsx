@@ -19,14 +19,20 @@ function _EditorPlayback() {
   const isTablet = useIsTablet();
 
   return (
-    <div className="h-16 px-4 flex items-center gap-8 justify-between border-b shrink-0 overflow-x-scroll">
+    <div className="h-14 sm:h-16 px-4 flex items-center gap-8 justify-between border-b shrink-0 overflow-x-scroll">
       <div className="flex gap-px">
         <Popover>
           <PopoverTrigger asChild>
-            <Button size="sm" variant="secondary" className="gap-1.5 sm:rounded-r-none" disabled={editor.canvas.timeline.playing}>
-              <TimerIcon size={15} />
-              <span className="hidden sm:inline">Duration</span>
-            </Button>
+            {isTablet ? (
+              <Button size="sm" variant="secondary" className="gap-1.5 rounded-r-none" disabled={editor.canvas.timeline.playing}>
+                <TimerIcon size={15} />
+                <span>Duration</span>
+              </Button>
+            ) : (
+              <Button size="icon" variant="secondary" disabled={editor.canvas.timeline.playing}>
+                <TimerIcon size={15} />
+              </Button>
+            )}
           </PopoverTrigger>
           <PopoverContent className="pt-2 pb-3 px-3" align="start" side="top">
             <Label className="text-xs font-medium">Duration (s)</Label>
@@ -60,7 +66,7 @@ function _EditorPlayback() {
           </DropdownMenu>
         ) : null}
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-3.5">
         <div className="text-xs tabular-nums">
           <span>{formatMediaDuration(editor.canvas.timeline.seek, isTablet)}</span>
           <span className="mx-1">/</span>
@@ -68,7 +74,7 @@ function _EditorPlayback() {
         </div>
         <Button
           size="icon"
-          className="rounded-full bg-card dark:bg-secondary shadow-sm border h-11 w-11 ml-5 mr-3"
+          className="rounded-full bg-card dark:bg-secondary shadow-sm border h-10 w-10 sm:h-11 sm:w-11"
           variant="outline"
           onClick={() => (editor.canvas.timeline.playing ? editor.canvas.timeline.pause() : editor.canvas.timeline.play())}
         >
@@ -85,7 +91,7 @@ function _EditorPlayback() {
             </span>
           </Button>
         ) : (
-          <Button size="icon" variant="secondary" className="gap-1.5" onClick={() => editor.onToggleTimeline()}>
+          <Button size="icon" variant="secondary" onClick={() => editor.onToggleTimeline()}>
             <span className={cn(editor.timelineOpen ? "rotate-180" : "rotate-0")}>
               <ChevronUpIcon size={15} />
             </span>

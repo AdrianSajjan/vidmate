@@ -11,6 +11,9 @@ import { FontSidebar } from "./components/fonts";
 import { StrokeSidebar } from "./components/stroke";
 import { AISidebar } from "./components/ai";
 import { rightSidebarWidth } from "@/constants/layout";
+import { useIsTablet } from "@/hooks/use-media-query";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { DialogDescription } from "@/components/ui/dialog";
 
 interface SidebarMapValue {
   Component: () => JSX.Element;
@@ -50,8 +53,9 @@ const sidebarComponentMap: Record<string, SidebarMapValue> = {
 
 function _EditorSidebarRight() {
   const editor = useEditorContext();
-  const selected = editor.canvas.selection?.active;
+  const isTablet = useIsTablet();
 
+  const selected = editor.canvas.selection?.active;
   const sidebar = editor.sidebarRight ? sidebarComponentMap[editor.sidebarRight] : null;
   const close = sidebar ? sidebar.close(selected) : false;
 
@@ -62,6 +66,18 @@ function _EditorSidebarRight() {
 
   if (close) {
     return null;
+  }
+
+  if (!isTablet) {
+    return (
+      <Drawer open={!!sidebar} onClose={() => editor.setActiveSidebarRight(null)}>
+        <DrawerContent>
+          <DrawerTitle className="sr-only"></DrawerTitle>
+          <DialogDescription className="sr-only"></DialogDescription>
+          {sidebar ? <sidebar.Component /> : null}
+        </DrawerContent>
+      </Drawer>
+    );
   }
 
   return sidebar ? (

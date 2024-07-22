@@ -20,8 +20,12 @@ import { CanvasClipMask } from "@/plugins/mask";
 import { CanvasTrimmer } from "@/plugins/trim";
 import { CanvasReplace } from "@/plugins/replace";
 import { CanvasTemplate } from "@/plugins/template";
+import { nanoid } from "nanoid";
 
 export class Canvas {
+  id: string;
+  name: string;
+
   artboard!: fabric.Rect;
   instance!: fabric.Canvas;
 
@@ -44,9 +48,13 @@ export class Canvas {
   elements: fabric.Object[];
 
   constructor() {
+    this.name = "";
+    this.id = nanoid();
+
     this.elements = [];
     this.controls = true;
     this.template = createInstance(CanvasTemplate, this);
+
     makeAutoObservable(this);
   }
 
