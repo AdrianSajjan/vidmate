@@ -128,14 +128,12 @@ export class Recorder {
     this.instance.setDimensions({ height: this.workspace.height, width: this.workspace.width });
     this.instance.clear();
 
-    const artboard: fabric.Object = yield createPromise<fabric.Object>((resolve) => this.artboard.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
-    this.instance.add(artboard);
+    const json = this.canvas.toDatalessJSON(propertiesToInclude);
+    yield createPromise<void>((resolve) => this.instance.loadFromJSON(json, resolve));
 
-    for (const object of this.canvas._objects) {
-      if (object.excludeFromTimeline) continue;
-      const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
-      this.instance.add(clone);
-    }
+    const artboard: fabric.Object = yield createPromise<fabric.Object>((resolve) => this.artboard.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
+    this.instance.insertAt(artboard, 0, false);
+    this.instance.clipPath = artboard;
 
     FabricUtils.applyTransformationsAfterLoad(this.instance);
     this.instance.renderAll();

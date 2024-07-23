@@ -156,8 +156,8 @@ export class Editor {
       this.onChangeExportStatus(ExportProgress.Completed);
       return blob;
     } catch (error) {
-      this.recorder.stop();
       this.onChangeExportStatus(ExportProgress.Error);
+      this.recorder.stop();
       throw error;
     }
   }
