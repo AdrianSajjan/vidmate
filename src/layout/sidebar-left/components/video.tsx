@@ -25,7 +25,7 @@ function _VideoSidebar() {
       const thumbnail = await extractThumbnailFromVideoURL(source);
       return { source, thumbnail };
     },
-    onSuccess: ({ source, thumbnail }) => mock.upload("video", source, thumbnail),
+    onSuccess: (response) => mock.upload("video", response),
   });
 
   const handleUpload = (files: FileList | null) => {

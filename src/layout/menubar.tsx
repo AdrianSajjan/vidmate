@@ -21,6 +21,7 @@ import { fetchExtensionByCodec } from "@/constants/recorder";
 import { EditorTemplate } from "@/types/editor";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { maxZoom, minZoom } from "@/constants/editor";
+import { mock } from "@/constants/mock";
 
 function _EditorMenubar() {
   const editor = useEditorContext();
@@ -30,11 +31,12 @@ function _EditorMenubar() {
 
   const upload = useMutation({
     mutationFn: async () => {
-      const name = "Template 1";
       const pages = await flowResult(editor.exportTemplate());
-      const template = { name, pages } as EditorTemplate;
+      const template = { name: editor.name, id: editor.id, pages } as EditorTemplate;
       createBase64Download(template, "text/json", `template-${Date.now()}.json`);
+      return template;
     },
+    onSuccess: (data) => mock.upload("template", data),
   });
 
   const handleExportVideo = async () => {

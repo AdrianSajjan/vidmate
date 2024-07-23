@@ -48,13 +48,11 @@ export class Canvas {
   elements: fabric.Object[];
 
   constructor() {
-    this.name = "";
     this.id = nanoid();
-
+    this.name = "Untitled Page";
     this.elements = [];
     this.controls = true;
     this.template = createInstance(CanvasTemplate, this);
-
     makeAutoObservable(this);
   }
 
@@ -503,5 +501,6 @@ export class Canvas {
 
   destroy() {
     this.instance?.dispose();
+    this.workspace?.destroy();
   }
 }

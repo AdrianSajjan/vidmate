@@ -23,7 +23,7 @@ function _ImageSidebar() {
       const source = await uploadAssetToS3(file);
       return { source, thumbnail: source };
     },
-    onSuccess: ({ source, thumbnail }) => mock.upload("image", source, thumbnail),
+    onSuccess: (response) => mock.upload("image", response),
   });
 
   const handleUpload = (files: FileList | null) => {

@@ -60,7 +60,7 @@ function _Editor() {
               <EditorToolbar />
               <div className="flex-1 relative" id="workspace">
                 {editor.pages.map((page, index) => (
-                  <EditorCanvas page={index} key={page.id} />
+                  <EditorCanvas page={index} key={page.id + index} />
                 ))}
                 <EditorRecorder />
                 <EditorFAB />

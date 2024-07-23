@@ -1,13 +1,17 @@
 export type EditorTemplate = {
+  id: string;
   name: string;
   pages: EditorTemplatePage[];
 };
 
 export interface EditorTemplatePage {
+  id: string;
+  name: string;
   data: string;
   fill: string;
-  height: number;
   width: number;
+  height: number;
+  thumbnail: string;
 }
 
 export interface EditorMedia {

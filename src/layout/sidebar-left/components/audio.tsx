@@ -25,7 +25,7 @@ function _AudioSidebar() {
       const waveform = await extractAudioWaveformFromAudioFile(file);
       return { source, name: file.name, ...waveform };
     },
-    onSuccess: ({ source, name, duration, thumbnail }) => mock.upload("audio", source, thumbnail, duration, name),
+    onSuccess: (response) => mock.upload("audio", response),
   });
 
   const handleUpload = (files: FileList | null) => {

@@ -12,6 +12,7 @@ interface WorkspaceDimensions {
 
 export class CanvasWorkspace {
   private _canvas: Canvas;
+  private _observer!: ResizeObserver;
   private _workspace: HTMLDivElement;
 
   private _touchZoomScale: number;
@@ -63,7 +64,7 @@ export class CanvasWorkspace {
   }
 
   private _initObserver() {
-    const resizeObserver = createInstance(
+    this._observer = createInstance(
       ResizeObserver,
       throttle(() => {
         this.canvas.setDimensions({ height: this._workspace.offsetHeight, width: this._workspace.offsetWidth });
@@ -71,7 +72,7 @@ export class CanvasWorkspace {
         this.canvas.requestRenderAll();
       }, 50),
     );
-    resizeObserver.observe(this._workspace);
+    this._observer.observe(this._workspace);
   }
 
   private _initEvents() {
@@ -174,5 +175,9 @@ export class CanvasWorkspace {
   changeFill(fill: string) {
     this.fill = fill;
     this.artboard.set({ fill });
+  }
+
+  destroy() {
+    this._observer.disconnect();
   }
 }

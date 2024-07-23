@@ -19,9 +19,10 @@ import { uploadAssetToS3 } from "@/api/upload";
 import { extractAudioWaveformFromAudioFile, extractThumbnailFromVideoURL } from "@/lib/media";
 
 interface UploadResponse {
+  source: string;
   thumbnail: string;
   duration?: number;
-  source: string;
+  name?: string;
 }
 
 function _UploadSidebar() {
@@ -42,21 +43,20 @@ function _UploadSidebar() {
         }
         case "audio": {
           const waveform = await extractAudioWaveformFromAudioFile(file);
-          return { source, ...waveform };
+          return { source, name: file.name, ...waveform };
         }
       }
     },
     onSuccess: (response, params) => {
-      const { source, thumbnail } = response;
       switch (params.type) {
         case "image":
-          mock.upload("image", source, thumbnail);
+          mock.upload("image", response);
           break;
         case "video":
-          mock.upload("video", source, thumbnail);
+          mock.upload("video", response);
           break;
         case "audio":
-          mock.upload("audio", source, thumbnail, response.duration!, params.file.name);
+          mock.upload("audio", response as Required<UploadResponse>);
           break;
       }
     },
