@@ -84,7 +84,7 @@ function _EditorSidebarLeft() {
   if (!isTablet)
     return (
       <Fragment>
-        <aside className="h-16 absolute bottom-0 left-0 bg-card dark:bg-gray-900/40 border-t border-t-border/25 flex items-center z-10 gap-2.5 w-screen overflow-x-scroll px-1.5">
+        <aside className="h-16 absolute bottom-0 left-0 bg-card dark:bg-gray-900/40 border-t border-t-border/25 flex items-center z-10 gap-2.5 w-screen overflow-x-scroll scrollbar-hidden px-1.5">
           {items.map(({ icon: Icon, label, value }) => {
             return (
               <Button

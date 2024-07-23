@@ -57,7 +57,7 @@ function _ElementSidebar() {
                   See All
                 </Button>
               </div>
-              <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden">
+              <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden">
                 {basicShapes.map(({ name, path, klass, params }) => (
                   <button
                     key={name}
@@ -78,7 +78,7 @@ function _ElementSidebar() {
                   See All
                 </Button>
               </div>
-              <div className="flex gap-2.5 items-center overflow-scroll relative scrollbar-hidden">
+              <div className="flex gap-2.5 items-center overflow-x-scroll relative scrollbar-hidden">
                 {advancedShapes.map(({ name, path, viewbox = "0 0 48 48" }) => (
                   <button
                     key={name}
@@ -99,7 +99,7 @@ function _ElementSidebar() {
                   See All
                 </Button>
               </div>
-              <div className="flex gap-2.5 items-center overflow-scroll relative scrollbar-hidden">
+              <div className="flex gap-2.5 items-center overflow-x-scroll relative scrollbar-hidden">
                 {lines.map(({ name, path, points }) => (
                   <button
                     key={name}

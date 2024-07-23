@@ -19,7 +19,7 @@ function _EditorPlayback() {
   const isTablet = useIsTablet();
 
   return (
-    <div className="h-14 sm:h-16 px-4 flex items-center gap-8 justify-between border-b shrink-0 overflow-x-scroll">
+    <div className="h-14 sm:h-16 px-4 flex items-center gap-8 justify-between border-b shrink-0 overflow-x-scroll scrollbar-hidden">
       <div className="flex gap-px">
         <Popover>
           <PopoverTrigger asChild>

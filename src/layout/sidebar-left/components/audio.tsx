@@ -71,7 +71,7 @@ function _AudioSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.audios.length ? (
                 store.audios.map((audio) => <AudioItem key={audio.source} audio={audio} onClick={handleClick(audio)} />)
               ) : (
@@ -91,7 +91,7 @@ function _AudioSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               <Fragment>
                 {Array.from({ length: 3 }, (_, index) => (
                   <Skeleton key={index} className="h-16 flex-1 rounded-md" />

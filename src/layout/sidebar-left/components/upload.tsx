@@ -143,7 +143,7 @@ function _UploadSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.images.length ? (
                 store.images.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClickImage(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
@@ -174,7 +174,7 @@ function _UploadSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.videos.length ? (
                 store.videos.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClickVideo(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
@@ -205,7 +205,7 @@ function _UploadSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.audios.length ? (
                 store.audios.map((audio) => <AudioItem key={audio.source} audio={audio} onClick={handleClickAudio(audio)} />)
               ) : (
