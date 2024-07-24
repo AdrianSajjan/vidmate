@@ -24,7 +24,7 @@ function _ElementSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <section className="sidebar-container">
+      <section className="sidebar-container pb-4">
         <div className={cn("px-3 pt-4 flex flex-col gap-2.5 border-b", expanded ? "border-b pb-2.5" : "pb-6 border-b-0")}>
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />

@@ -72,19 +72,19 @@ function _EditorMenubar() {
               <DialogTitle className="sr-only"></DialogTitle>
               <DialogDescription className="sr-only"></DialogDescription>
               <div className="max-w-full pt-3 pb-1 divide-y divide-border/50">
-                <Button size="sm" className="gap-3 justify-start w-full h-10" variant="ghost" disabled={upload.isPending} onClick={handleSaveTemplate}>
+                <Button size="sm" className="gap-3 justify-start w-full h-11" variant="ghost" disabled={upload.isPending} onClick={handleSaveTemplate}>
                   <CloudUploadIcon size={15} />
                   <span className="font-medium">Save Template</span>
                   <span className="ml-auto">{editor.saving ? <Spinner className="h-4 w-4 text-primary-foreground" /> : <ChevronRightIcon className="text-gray-400" size={15} />}</span>
                 </Button>
-                <Button size="sm" className="gap-3 justify-start w-full h-10" variant="ghost" onClick={handleExportVideo}>
+                <Button size="sm" className="gap-3 justify-start w-full h-11" variant="ghost" onClick={handleExportVideo}>
                   <ImageIcon size={15} />
                   <span className="font-medium">Export Video</span>
                   <span className="ml-auto">
                     <ChevronRightIcon className="text-gray-400" size={15} />
                   </span>
                 </Button>
-                <Button size="sm" className="gap-3 justify-start w-full h-10" variant="ghost" onClick={() => editor.onTogglePreviewModal("open")}>
+                <Button size="sm" className="gap-3 justify-start w-full h-11" variant="ghost" onClick={() => editor.onTogglePreviewModal("open")}>
                   <Columns2Icon size={15} />
                   <span className="font-medium">Open Export Preview</span>
                   <span className="ml-auto">

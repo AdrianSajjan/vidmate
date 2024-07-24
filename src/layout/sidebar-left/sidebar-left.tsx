@@ -102,7 +102,7 @@ function _EditorSidebarLeft() {
           })}
         </aside>
         <Drawer open={!!Sidebar} onClose={() => editor.setActiveSidebarLeft(null)}>
-          <DrawerContent className="pb-6">
+          <DrawerContent>
             <DialogTitle className="sr-only"></DialogTitle>
             <DialogDescription className="sr-only"></DialogDescription>
             {Sidebar ? <Sidebar /> : null}

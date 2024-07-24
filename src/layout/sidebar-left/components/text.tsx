@@ -18,7 +18,7 @@ function _TextSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <section className="sidebar-container">
+      <section className="sidebar-container pb-4">
         <div className="px-3 pt-4 pb-6">
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />
