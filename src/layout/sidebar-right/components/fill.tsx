@@ -15,6 +15,7 @@ import { useEditorContext } from "@/context/editor";
 import { defaultFill, defaultGradient } from "@/fabric/constants";
 import { cn } from "@/lib/utils";
 import useMeasure from "react-use-measure";
+import { FabricUtils } from "@/fabric/utils";
 
 const picker = { default: { picker: { boxShadow: "none", padding: 0, width: "100%", background: "transparent", borderRadius: 0 } } };
 
@@ -41,6 +42,11 @@ function _FillSidebar() {
     return (selected.fill as fabric.Gradient).colorStops!;
   }, [selected]);
 
+  const coords = useMemo(() => {
+    if (!selected || !selected.fill || typeof selected.fill === "string") return { x1: 0, y1: 0, x2: 0, y2: 0 };
+    return (selected.fill as fabric.Gradient).coords!;
+  }, [selected]);
+
   const onToggleFill = () => {
     if (selected.fill) {
       editor.canvas.onChangeActiveObjectProperty("previousFill", mode === "solid" ? selected.fill : selected.previousFill);
@@ -65,7 +71,7 @@ function _FillSidebar() {
         const fill = selected.fill as fabric.Gradient;
         const stops = toJS(fill.colorStops);
         stops![index].color = `#${hex}`;
-        editor.canvas.onChangeActiveObjectFillGradient(fill.type!, stops!);
+        editor.canvas.onChangeActiveObjectFillGradient(fill.type!, stops!, fill.coords!);
         break;
       }
     }
@@ -81,7 +87,7 @@ function _FillSidebar() {
         const fill = selected.fill as fabric.Gradient;
         const stops = toJS(fill.colorStops);
         stops![index].color = color;
-        editor.canvas.onChangeActiveObjectFillGradient(fill.type!, stops!);
+        editor.canvas.onChangeActiveObjectFillGradient(fill.type!, stops!, fill.coords!);
         break;
       }
     }
@@ -91,7 +97,12 @@ function _FillSidebar() {
     const fill = selected.fill as fabric.Gradient;
     const stops = toJS(fill.colorStops!);
     stops[index].offset = offset;
-    editor.canvas.onChangeActiveObjectFillGradient(fill.type!, stops);
+    editor.canvas.onChangeActiveObjectFillGradient(fill.type!, stops, fill.coords!);
+  };
+
+  const onRotateGradient = (angle: number) => {
+    const fill = selected.fill as fabric.Gradient;
+    editor.canvas.onChangeActiveObjectFillGradient(fill.type!, fill.colorStops!, FabricUtils.convertGradient(angle));
   };
 
   const onChangeMode = (value: string) => {
@@ -107,7 +118,7 @@ function _FillSidebar() {
       case "gradient": {
         const fill = !selected.previousFill || typeof selected.previousFill === "string" ? defaultGradient : selected.previousFill;
         const previousFill = selected.fill;
-        editor.canvas.onChangeActiveObjectFillGradient(fill.type, fill.colorStops);
+        editor.canvas.onChangeActiveObjectFillGradient(fill.type, fill.colorStops, fill.coords);
         editor.canvas.onChangeActiveObjectProperty("previousFill", previousFill);
         break;
       }
@@ -156,10 +167,11 @@ function _FillSidebar() {
         </div>
         <div className="px-4 flex flex-col divide-y">
           {mode === "gradient" ? (
-            <div className="pb-4" ref={ref}>
-              <GradientSlider width={measure.width || 264} colors={colors} selected={index} onSelect={setIndex} onChange={onChangeOffset} />
+            <div ref={ref}>
+              <GradientSlider width={measure.width || 264} colors={colors} coords={coords} selected={index} onSelect={setIndex} onChange={onChangeOffset} onRotate={onRotateGradient} />
             </div>
           ) : null}
+
           <div className="pb-4">
             <SketchPicker color={color} onChange={onChangeColor} presetColors={[]} styles={picker} />
           </div>

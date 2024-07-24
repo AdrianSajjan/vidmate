@@ -164,4 +164,22 @@ export abstract class FabricUtils {
       }
     });
   }
+
+  static convertGradient(angle: number) {
+    const radians = angle * (Math.PI / 180);
+    const x1 = 0.5 + Math.cos(radians) * 0.5;
+    const y1 = 0.5 + Math.sin(radians) * 0.5;
+    const x2 = 0.5 - Math.cos(radians) * 0.5;
+    const y2 = 0.5 - Math.sin(radians) * 0.5;
+    return { x1, y1, x2, y2 };
+  }
+
+  static revertGradient({ x1, y1, x2, y2 }: any) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const angleRadians = Math.atan2(dy, dx);
+    let angleDegrees = angleRadians * (180 / Math.PI);
+    if (angleDegrees < 0) angleDegrees += 360;
+    return Math.round(angleDegrees);
+  }
 }

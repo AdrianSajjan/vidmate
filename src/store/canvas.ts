@@ -413,17 +413,17 @@ export class Canvas {
     if (selected) this.onChangeObjectProperty(selected, property, value);
   }
 
-  onChangeObjectFillGradient(object: fabric.Object, type: string, colors: fabric.IGradientOptionsColorStops) {
+  onChangeObjectFillGradient(object: fabric.Object, type: string, colors: fabric.IGradientOptionsColorStops, coords: fabric.IGradientOptionsCoords) {
     if (!object) return;
-    const gradient = createInstance(fabric.Gradient, { type: type, gradientUnits: "percentage", colorStops: colors, coords: { x1: 0, y1: 0, x2: 1, y2: 0 } });
+    const gradient = createInstance(fabric.Gradient, { type: type, gradientUnits: "percentage", colorStops: colors, coords: coords });
     object.set({ fill: gradient });
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
   }
 
-  onChangeActiveObjectFillGradient(type: string, colors: fabric.IGradientOptionsColorStops) {
+  onChangeActiveObjectFillGradient(type: string, colors: fabric.IGradientOptionsColorStops, coords: fabric.IGradientOptionsCoords) {
     const selected = this.instance.getActiveObject();
-    if (selected) this.onChangeObjectFillGradient(selected, type, colors);
+    if (selected) this.onChangeObjectFillGradient(selected, type, colors, coords);
   }
 
   onChangeObjectAnimation(object: fabric.Object, type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
