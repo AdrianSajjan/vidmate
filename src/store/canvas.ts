@@ -174,6 +174,46 @@ export class Canvas {
     this.instance.discardActiveObject().requestRenderAll();
   }
 
+  *onCloneObject(object?: fabric.Object) {
+    if (!object) return;
+
+    const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone(resolve, propertiesToInclude));
+    clone.set({ name: FabricUtils.elementID(clone.name!.split("_").at(0) || "clone"), top: clone.top! + 50, left: clone.left! + 50, clipPath: undefined }).setCoords();
+
+    if (object.clipPath) {
+      this.history.active = false;
+
+      const clipPath: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clipPath!.clone(resolve, propertiesToInclude));
+      clipPath.set({ name: FabricUtils.elementID(clipPath.name!.split("_").at(0) || "clone") });
+
+      FabricUtils.bindObjectTransformToParent(clone, [clipPath]);
+      const handler = () => FabricUtils.updateObjectTransformToParent(clone, [{ object: clipPath }]);
+
+      clone.on("moving", handler);
+      clone.on("scaling", handler);
+      clone.on("rotating", handler);
+      clone.set({ clipPath }).setCoords();
+
+      this.instance.add(clipPath, clone);
+      this.instance.setActiveObject(clone).requestRenderAll();
+      this.history.active = true;
+
+      this.instance.fire("object:modified", { target: clone });
+      this.instance.fire("clip:added", { target: clone });
+    } else {
+      this.instance.add(clone);
+      this.instance.setActiveObject(clone).requestRenderAll();
+    }
+
+    return clone;
+  }
+
+  *onCloneActiveObject() {
+    const object = this.instance.getActiveObject();
+    const clone: fabric.Object = yield this.onCloneObject(object!);
+    return clone;
+  }
+
   onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
     const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: 500, objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);

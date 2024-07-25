@@ -226,11 +226,11 @@ function _ExpandedGridView({ match, scene }: { match: string; scene: fabric.Obje
       });
 
     case "abstract":
-      return abstract.map(({ name, path, height, width }) => {
+      return abstract.map(({ name, id, path, height, width }) => {
         const viewbox = `0 0 ${width} ${height}`;
         return (
           <button
-            key={name}
+            key={id}
             onClick={() => editor.canvas.clipper.clipActiveObjectFromAbstractShape(path, name)}
             className="group shrink-0 w-full aspect-square border flex items-center justify-center overflow-hidden rounded-lg p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
           >
@@ -242,11 +242,11 @@ function _ExpandedGridView({ match, scene }: { match: string; scene: fabric.Obje
       });
 
     case "frames":
-      return frames.map(({ name, path, height, width }) => {
+      return frames.map(({ name, id, path, height, width }) => {
         const viewbox = `0 0 ${width} ${height}`;
         return (
           <button
-            key={name}
+            key={id}
             onClick={() => editor.canvas.clipper.clipActiveObjectFromAbstractShape(path, name)}
             className="group shrink-0 w-full aspect-square border flex items-center justify-center overflow-hidden rounded-lg p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
           >

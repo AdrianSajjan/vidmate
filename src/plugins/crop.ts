@@ -21,6 +21,10 @@ export class CanvasCropper {
     return this._canvas.instance!;
   }
 
+  private get history() {
+    return this._canvas.history;
+  }
+
   private _initEvents() {
     this.canvas.on("mouse:dblclick", this._mouseDoubleClickEvent.bind(this));
     this.canvas.on("timeline:start", this._timelineRecorderStartEvent.bind(this));
@@ -47,8 +51,8 @@ export class CanvasCropper {
 
   cropObjectWithoutClipPath(image: fabric.Image) {
     this.active = image;
+    this.history.active = false;
     this.canvas.fire("crop:start", { target: image });
-    const element = image._originalElement as HTMLImageElement | HTMLVideoElement;
 
     const exclude = { excludeFromExport: true, excludeFromTimeline: true, excludeFromAlignment: true };
     const props = { top: image.top, left: image.left, angle: image.angle, width: image.getScaledWidth(), height: image.getScaledHeight(), lockRotation: true };
@@ -74,6 +78,8 @@ export class CanvasCropper {
     const height = image.height!;
     const cropX = image.cropX!;
     const cropY = image.cropY!;
+
+    const element = image._originalElement as HTMLImageElement | HTMLVideoElement;
     const elementWidth = isVideoElement(element) ? element.videoWidth : element.naturalWidth;
     const elementHeight = isVideoElement(element) ? element.videoHeight : element.naturalHeight;
 
@@ -152,15 +158,21 @@ export class CanvasCropper {
       image.set({ cropX: cropX, cropY: cropY, width: width, height: height, top: image.top! + cropY * image.scaleY!, left: image.left! + cropX * image.scaleX!, selectable: true });
       image.setCoords();
 
-      runInAction(() => (this.active = null));
       this.canvas.remove(overlay, crop, ...verticals, ...horizontals);
       this.canvas.setActiveObject(image).requestRenderAll();
-      this.canvas.fire("crop:end", { target: image }).fire("object:modified", { target: image });
+      this.canvas.fire("crop:end", { target: image });
+
+      runInAction(() => {
+        this.active = null;
+        this.history.active = true;
+        this.canvas.fire("object:modified", { target: image });
+      });
     });
   }
 
   cropObjectWithClipPath(image: fabric.Image) {
     this.active = image;
+    this.history.active = false;
     this.canvas.fire("crop:start", { target: image });
 
     const clipPath = image.clipPath!;
@@ -277,9 +289,14 @@ export class CanvasCropper {
       image.on("scaling", handler);
       image.on("rotating", handler);
 
-      runInAction(() => (this.active = null));
       this.canvas.remove(overlay).requestRenderAll();
-      this.canvas.fire("crop:end", { target: image }).fire("object:modified", { target: image });
+      this.canvas.fire("crop:end", { target: image });
+
+      runInAction(() => {
+        this.active = null;
+        this.history.active = true;
+        this.canvas.fire("object:modified", { target: image });
+      });
     };
 
     image.on("moving", handlerMoving);

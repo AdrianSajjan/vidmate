@@ -13,12 +13,15 @@ export class CanvasHistory {
   private _redo: string[];
 
   status: HistoryStatus;
+  active: boolean;
 
   constructor(canvas: Canvas) {
     this.status = "idle";
-    this._canvas = canvas;
+    this.active = true;
 
+    this._canvas = canvas;
     const history = this._next();
+
     this._undo = [history];
     this._redo = [];
 
@@ -28,10 +31,6 @@ export class CanvasHistory {
 
   private get canvas() {
     return this._canvas.instance!;
-  }
-
-  private get cropper() {
-    return this._canvas.cropper!;
   }
 
   private _next() {
@@ -51,7 +50,7 @@ export class CanvasHistory {
   }
 
   private _saveHistoryEvent(event: fabric.IEvent) {
-    if (!event.target || event.target.name === this.cropper.active?.name || event.target.excludeFromTimeline || event.target.excludeFromExport || this.status === "pending") return;
+    if (!event.target || !this.active || event.target.excludeFromTimeline || event.target.excludeFromExport || this.status === "pending") return;
     const json = this._next();
     if (json !== this._undo[this.undo.length - 1]) runInAction(() => this._undo.push(json));
   }

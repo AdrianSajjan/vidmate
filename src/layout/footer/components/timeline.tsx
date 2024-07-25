@@ -105,8 +105,6 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
       if (FabricUtils.isVideoElement(clone) && !clone.meta!.placeholder) {
         clone.seek(1);
         setTimeout(() => {
-          clone.set({ filters: [] });
-          clone.applyFilters();
           setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true }));
         }, 1000);
       } else {

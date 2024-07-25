@@ -17,6 +17,7 @@ export const propertiesToInclude = [
   "textTransform",
   "excludeFromTimeline",
   "excludeFromAlignment",
+  "absolutePositioned",
 ];
 
 export const textLayoutProperties = ["textTransform"];
