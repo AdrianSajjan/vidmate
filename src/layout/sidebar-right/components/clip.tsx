@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { useEditorContext } from "@/context/editor";
 
-import { advancedShapes, basicShapes } from "@/constants/elements";
+import { abstract, basic } from "@/constants/elements";
 import { propertiesToInclude } from "@/fabric/constants";
 
 function _ClipMaskSidebar() {
@@ -63,7 +63,7 @@ function _ClipMaskSidebar() {
             </Button>
           </div>
           <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden">
-            {basicShapes.map(({ name, path, klass, params }) => (
+            {basic.map(({ name, path, klass, params }) => (
               <button
                 key={name}
                 onClick={() => editor.canvas.clipper.clipActiveObjectFromBasicShape(klass, params)}
@@ -84,17 +84,20 @@ function _ClipMaskSidebar() {
             </Button>
           </div>
           <div className="flex gap-2.5 items-center overflow-x-scroll relative scrollbar-hidden">
-            {advancedShapes.map(({ name, path, viewbox = "0 0 48 48" }) => (
-              <button
-                key={name}
-                onClick={() => editor.canvas.clipper.clipActiveObjectFromAdvancedShape(path, name)}
-                className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
-              >
-                <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
-                  <path d={path} className="h-full" />
-                </svg>
-              </button>
-            ))}
+            {abstract.map(({ name, path, height, width, id }) => {
+              const viewbox = `0 0 ${width} ${height}`;
+              return (
+                <button
+                  key={id}
+                  onClick={() => editor.canvas.onAddAbstractShape(path, name)}
+                  className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+                >
+                  <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+                    <path d={path} className="h-full" />
+                  </svg>
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="flex flex-col gap-2">
