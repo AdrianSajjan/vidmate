@@ -22,6 +22,7 @@ import { CanvasTemplate } from "@/plugins/template";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
+import { EditorFont } from "@/constants/fonts";
 export class Canvas {
   id: string;
   name: string;
@@ -511,6 +512,14 @@ export class Canvas {
     const selected = this.instance.getActiveObject() as fabric.Textbox | null;
     if (!selected || selected.type !== "textbox") return;
     this.onChangeTextboxProperty(selected, property, value, selection);
+  }
+
+  onChangeTextboxFontFamily(textbox: fabric.Textbox, font: string, family: EditorFont) {
+    if (textbox.type !== "textbox") return;
+    textbox.set("fontFamily", font);
+    textbox.meta!.font = family;
+    this.instance.fire("object:modified", { target: textbox });
+    this.instance.requestRenderAll();
   }
 
   onChangeImageProperty(image: fabric.Image, property: keyof fabric.Image, value: any) {
