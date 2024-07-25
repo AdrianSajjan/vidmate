@@ -11,6 +11,7 @@ import { useEditorContext } from "@/context/editor";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarPositionOption } from "../common/position";
 import { ToolbarTimelineOption } from "../common/timeline";
+import { ToolbarOpacityOption } from "../common/opacity";
 
 function _VideoToolbar() {
   const editor = useEditorContext();
@@ -36,6 +37,8 @@ function _VideoToolbar() {
       </div>
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarStrokeOption />
+      <Separator orientation="vertical" className="h-8 mx-4" />
+      <ToolbarOpacityOption />
       <Separator orientation="vertical" className="h-8 ml-auto mr-4" />
       <div className="flex items-center gap-4">
         <Button

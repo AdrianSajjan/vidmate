@@ -22,6 +22,8 @@ import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 
 import { fontSizes } from "@/constants/editor";
 import { useEditorContext } from "@/context/editor";
@@ -31,8 +33,7 @@ import { ToolbarFillOption } from "../common/fill";
 import { ToolbarPositionOption } from "../common/position";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
+import { ToolbarOpacityOption } from "../common/opacity";
 
 function _TextToolbar() {
   const editor = useEditorContext();
@@ -181,6 +182,8 @@ function _TextToolbar() {
       <ToolbarFillOption />
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarStrokeOption />
+      <Separator orientation="vertical" className="h-8 mx-4" />
+      <ToolbarOpacityOption />
       <Separator orientation="vertical" className="h-8 ml-auto mr-4" />
       <ToolbarTimelineOption />
       <Separator orientation="vertical" className="h-8 mx-4" />
