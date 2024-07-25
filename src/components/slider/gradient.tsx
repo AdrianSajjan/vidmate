@@ -1,11 +1,13 @@
 import Draggable, { DraggableData } from "react-draggable";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { cn } from "@/lib/utils";
 import { FabricUtils } from "@/fabric/utils";
+import { Button } from "../ui/button";
+import { RotateCwIcon } from "lucide-react";
 
 interface GradientSliderProps {
   width: number;
@@ -21,6 +23,7 @@ const handleWidth = 10;
 
 export function GradientSlider({ width: container, selected, colors, coords, onChange, onSelect, onRotate }: GradientSliderProps) {
   const width = container - handleWidth;
+  const [angle, setAngle] = useState(() => FabricUtils.revertGradient(coords));
 
   const stops = useMemo(() => {
     return colors.map(({ color, offset }) => ({
@@ -44,6 +47,11 @@ export function GradientSlider({ width: container, selected, colors, coords, onC
     onChange(index, data.x / width);
   };
 
+  const handleRotate = (angle: number) => {
+    onRotate(angle);
+    setAngle(angle);
+  };
+
   return (
     <div className="pb-4 flex flex-col gap-3">
       <div className="relative h-8">
@@ -65,14 +73,17 @@ export function GradientSlider({ width: container, selected, colors, coords, onC
           })}
         </div>
       </div>
-      <div className="flex items-center gap-6">
+      <div className="flex items-center">
         <Label htmlFor="angle" className="text-xs shrink-0 text-foreground/50">
           Gradient Angle
         </Label>
-        <div className="relative">
-          <Input id="angle" className="h-8 text-xs pr-6" type="number" step={15} value={FabricUtils.revertGradient(coords)} onChange={(event) => onRotate(+event.target.value)} />
+        <div className="relative flex-1 ml-6 mr-2">
+          <Input id="angle" className="h-8 text-xs pr-6 w-full" type="number" value={angle} onChange={(event) => handleRotate(+event.target.value)} />
           <span className="absolute text-foreground/50 right-2.5 top-1 text-sm">°</span>
         </div>
+        <Button size="icon" variant="outline" className="shrink-0" onClick={() => handleRotate(angle + 15)}>
+          <RotateCwIcon size={14} />
+        </Button>
       </div>
     </div>
   );

@@ -72,7 +72,7 @@ export class CanvasTemplate {
           this.cropper.active = null;
           this.selection.active = null;
 
-          this.timeline.pause();
+          this.timeline.destroy();
           this.workspace.changeFill("#CCCCCC");
           this.workspace.resizeArtboard({ height: this.page.height, width: this.page.width });
 

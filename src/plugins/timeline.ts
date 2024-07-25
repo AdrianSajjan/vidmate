@@ -125,7 +125,10 @@ export class CanvasTimeline {
   }
 
   destroy() {
+    this.playing = false;
+    this.canvas.fire("timeline:stop");
     if (this._timeline) {
+      this._timeline.pause();
       anime.remove(this._timeline);
       this._timeline = null;
     }

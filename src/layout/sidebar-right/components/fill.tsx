@@ -168,7 +168,7 @@ function _FillSidebar() {
         <div className="px-4 flex flex-col divide-y">
           {mode === "gradient" ? (
             <div ref={ref}>
-              <GradientSlider width={measure.width || 264} colors={colors} coords={coords} selected={index} onSelect={setIndex} onChange={onChangeOffset} onRotate={onRotateGradient} />
+              <GradientSlider key={selected.name} width={measure.width} colors={colors} coords={coords} selected={index} onSelect={setIndex} onChange={onChangeOffset} onRotate={onRotateGradient} />
             </div>
           ) : null}
 
