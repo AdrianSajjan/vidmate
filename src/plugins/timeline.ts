@@ -38,7 +38,7 @@ export class CanvasTimeline {
     this._toggleElement(event.target, this.seek);
   }
 
-  private _toggleElements(ms: number) {
+  private _toggleElements(ms = this.seek) {
     for (const object of this.canvas._objects) {
       if (object.excludeFromTimeline) continue;
       this._toggleElement(object, ms);
@@ -46,7 +46,7 @@ export class CanvasTimeline {
     this.canvas.requestRenderAll();
   }
 
-  private _toggleElement(object: fabric.Object, ms: number) {
+  private _toggleElement(object: fabric.Object, ms = this.seek) {
     const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
     object.visible = !hidden;
     if (FabricUtils.isVideoElement(object)) {
@@ -62,13 +62,13 @@ export class CanvasTimeline {
 
   private _begin(anim: anime.AnimeInstance) {
     this.seek = anim.currentTime;
-    this._toggleElements(this.seek);
+    this._toggleElements();
   }
 
   private _update(anim: anime.AnimeInstance) {
     if (anim.currentTime < this.duration) {
       this.seek = anim.currentTime;
-      this._toggleElements(this.seek);
+      this._toggleElements();
     } else {
       this.pause();
     }
@@ -96,13 +96,18 @@ export class CanvasTimeline {
       object.set({ ...(object.anim?.state || {}) });
       if (object.clipPath) object.clipPath.set({ ...(object.clipPath.anim?.state || {}) });
     }
-    this._toggleElements(this.seek);
+    this._toggleElements();
+  }
+
+  initialize(duration: number) {
+    this.seek = 0;
+    this.duration = duration;
+    this._toggleElements();
   }
 
   play() {
     this._initializeTimeline();
     this.canvas.fire("timeline:start");
-
     this.playing = true;
     this._timeline!.seek(this.seek);
     this._timeline!.play();
@@ -111,12 +116,18 @@ export class CanvasTimeline {
   pause() {
     this.playing = false;
     this.canvas.fire("timeline:stop");
-
     this._timeline!.pause();
     this._resetTimeline();
   }
 
   set(property: "duration" | "seek", seconds: number) {
     this[property] = seconds * 1000;
+  }
+
+  destroy() {
+    if (this._timeline) {
+      anime.remove(this._timeline);
+      this._timeline = null;
+    }
   }
 }

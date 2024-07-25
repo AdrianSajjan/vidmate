@@ -12,6 +12,7 @@ export interface EditorTemplatePage {
   width: number;
   height: number;
   thumbnail: string;
+  duration: number;
 }
 
 export interface EditorMedia {

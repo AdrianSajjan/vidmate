@@ -173,7 +173,7 @@ export class Editor {
     for (const page of this.pages) {
       const thumbnail: string = yield this.recorder.screenshot(page.instance);
       const data = JSON.stringify(page.instance.toDatalessJSON(propertiesToInclude));
-      templates.push({ thumbnail, data, id: page.id, name: page.name, fill: page.workspace.fill, height: page.workspace.height, width: page.workspace.width });
+      templates.push({ thumbnail, data, id: page.id, name: page.name, duration: page.timeline.duration, fill: page.workspace.fill, height: page.workspace.height, width: page.workspace.width });
     }
     return templates;
   }
