@@ -97,7 +97,7 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
   const editor = useEditorContext();
   const [backgroundURL, setBackgroundURL] = useState("");
 
-  useEffect(() => {
+  const drawElementAsBackground = useCallback(() => {
     const object = editor.canvas.instance!.getItemByName(element.name);
     if (!object) return;
     object.clone((clone: fabric.Object) => {
@@ -112,6 +112,10 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
       }
     }, propertiesToInclude);
   }, [element]);
+
+  useEffect(() => {
+    drawElementAsBackground();
+  }, [drawElementAsBackground]);
 
   const isSelected = useMemo(() => {
     if (!editor.canvas.selection.active) return false;

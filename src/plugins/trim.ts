@@ -65,6 +65,16 @@ export class CanvasTrimmer {
     this._canvas.instance.requestRenderAll();
   }
 
+  *split() {
+    const object = this.selection.active;
+    if (!object) return;
+    if (FabricUtils.isVideoElement(object)) {
+      const video = this.canvas.getItemByName(object.name) as fabric.Video;
+      const clone: fabric.Video = yield this._canvas.onCloneObject(video);
+      console.log(clone);
+    }
+  }
+
   start() {
     const object = this.selection.active;
     if (!object) return;
@@ -72,7 +82,9 @@ export class CanvasTrimmer {
       const video = this.canvas.getItemByName(object.name) as fabric.Video;
       this._trimVideoStart(video);
     }
-    if (FabricUtils.isAudioElement(object)) this._trimAudioStart(object);
+    if (FabricUtils.isAudioElement(object)) {
+      this._trimAudioStart(object);
+    }
   }
 
   exit() {
