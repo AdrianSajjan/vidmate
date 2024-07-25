@@ -1,12 +1,15 @@
-import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { Fragment, useMemo } from "react";
+import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon, LineChartIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useIsTablet } from "@/hooks/use-media-query";
-import { leftSidebarWidth } from "@/constants/layout";
-import { useEditorContext } from "@/context/editor";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+
+import { useIsTablet } from "@/hooks/use-media-query";
+import { useEditorContext } from "@/context/editor";
+
+import { leftSidebarWidth } from "@/constants/layout";
 import { cn } from "@/lib/utils";
 
 import { AudioSidebar } from "./components/audio";
@@ -17,7 +20,7 @@ import { TemplateSidebar } from "./components/template";
 import { TextSidebar } from "./components/text";
 import { UploadSidebar } from "./components/upload";
 import { VideoSidebar } from "./components/video";
-import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { ChartSidebar } from "./components/chart";
 
 const sidebarComponentMap: Record<string, () => JSX.Element> = {
   templates: TemplateSidebar,
@@ -26,6 +29,7 @@ const sidebarComponentMap: Record<string, () => JSX.Element> = {
   images: ImageSidebar,
   videos: VideoSidebar,
   audios: AudioSidebar,
+  charts: ChartSidebar,
   elements: ElementSidebar,
   formats: FormatSidebar,
 };
@@ -65,6 +69,11 @@ function _EditorSidebarLeft() {
         icon: MusicIcon,
         label: "Audios",
         value: "audios",
+      },
+      {
+        icon: LineChartIcon,
+        label: "Charts",
+        value: "charts",
       },
       {
         icon: UploadIcon,

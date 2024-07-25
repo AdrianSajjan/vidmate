@@ -23,6 +23,7 @@ import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 import { EditorFont } from "@/constants/fonts";
+import { CanvasChart } from "@/plugins/chart";
 export class Canvas {
   id: string;
   name: string;
@@ -31,17 +32,18 @@ export class Canvas {
   instance!: fabric.Canvas;
 
   audio!: CanvasAudio;
+  chart!: CanvasChart;
   timeline!: CanvasTimeline;
   workspace!: CanvasWorkspace;
-  replacer!: CanvasReplace;
 
+  replacer!: CanvasReplace;
   effects!: CanvasEffects;
   cropper!: CanvasCropper;
   clipper!: CanvasClipMask;
   trimmer!: CanvasTrimmer;
 
-  template!: CanvasTemplate;
   history!: CanvasHistory;
+  template!: CanvasTemplate;
   selection!: CanvasSelection;
   alignment!: CanvasAlignment;
 
@@ -149,6 +151,7 @@ export class Canvas {
     this.cropper = createInstance(CanvasCropper, this);
     this.trimmer = createInstance(CanvasTrimmer, this);
 
+    this.chart = createInstance(CanvasChart, this);
     this.audio = createInstance(CanvasAudio, this);
     this.timeline = createInstance(CanvasTimeline, this);
     this.workspace = createInstance(CanvasWorkspace, this, workspace);

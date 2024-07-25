@@ -25,6 +25,10 @@ export abstract class FabricUtils {
     return object?.type === "video" && !object?.meta?.placeholder;
   }
 
+  static isChartElement(object?: any): object is fabric.Chart {
+    return object?.type === "chart";
+  }
+
   static isAudioElement(object?: any): object is EditorAudioElement {
     return object?.type === "audio";
   }

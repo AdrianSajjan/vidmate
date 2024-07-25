@@ -4,6 +4,7 @@ import { fabric } from "fabric";
 export const propertiesToInclude = [
   "name",
   "meta",
+  "chart",
   "anim",
   "effects",
   "adjustments",

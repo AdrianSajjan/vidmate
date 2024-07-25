@@ -99,14 +99,13 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
 
   const drawElementAsBackground = useCallback(() => {
     const object = editor.canvas.instance!.getItemByName(element.name);
-    if (!object) return;
-    object.clone((clone: fabric.Object) => {
+    object?.clone((clone: fabric.Object) => {
       clone.set({ opacity: 1, visible: true, clipPath: undefined });
-      if (FabricUtils.isVideoElement(clone) && !clone.meta!.placeholder) {
+      if (FabricUtils.isVideoElement(clone)) {
         clone.seek(1);
-        setTimeout(() => {
-          setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true }));
-        }, 1000);
+        setTimeout(() => setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true })), 1000);
+      } else if (FabricUtils.isChartElement(clone)) {
+        setTimeout(() => setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true })), 1000);
       } else {
         setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true }));
       }

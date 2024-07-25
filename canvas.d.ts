@@ -3,6 +3,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { ChartConfiguration } from "chart.js";
+
 // This module does not really exist.
 // This is just to get `export as namespace fabric;` to work and to be re-exportable from `index.d.ts`.
 
@@ -2725,6 +2727,18 @@ export class Image {
   static CSS_CANVAS: string;
   static filters: IAllFilters;
   static ATTRIBUTE_NAMES: string[];
+}
+
+export interface Chart extends Object, IChartConfigurationOptions {}
+export class Chart extends Object {
+  constructor(options?: IChartConfiguration);
+}
+
+interface IChartConfigurationOptions extends IObjectOptions {
+  /**
+   * The default chart options
+   */
+  chart: ChartConfiguration;
 }
 
 interface ILineOptions extends IObjectOptions {
@@ -6357,6 +6371,11 @@ interface IUtilMisc {
    * @param [crossOrigin] crossOrigin value to set video element to
    */
   loadVideo(url: string, callback: (image: HTMLVideoElement | null) => void, context?: any, crossOrigin?: string): void;
+
+  chart: {
+    addPlugins(...plugins: any[]): void;
+    setDefaults(options: Partial<ChartConfiguration>): void;
+  };
 
   /**
    * Creates corresponding fabric instances from their object representations

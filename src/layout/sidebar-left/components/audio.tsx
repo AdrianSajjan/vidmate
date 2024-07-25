@@ -132,7 +132,7 @@ function AudioItem({ audio, onClick }: { audio: EditorAudio; onClick?: () => voi
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col items-center gap-2">
       <button onClick={onClick} className="group shrink-0 h-16 w-20 border overflow-hidden rounded-md shadow-sm relative">
         <img src={audio.thumbnail} crossOrigin="anonymous" className="h-8 w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
         <div className="absolute hidden group-hover:inline-flex items-center justify-between gap-2 bottom-1 left-1 right-1 text-card bg-foreground/50 pr-1.5 rounded-sm">
@@ -145,7 +145,7 @@ function AudioItem({ audio, onClick }: { audio: EditorAudio; onClick?: () => voi
           </audio>
         </div>
       </button>
-      <div className="text-xxs font-medium w-20 px-1 mx-auto whitespace-nowrap overflow-hidden text-ellipsis">{audio.name}</div>
+      <span className="text-xxs font-medium w-20 px-1 mx-auto whitespace-nowrap overflow-hidden text-ellipsis text-center">{audio.name}</span>
     </div>
   );
 }
