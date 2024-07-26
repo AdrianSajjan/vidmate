@@ -2731,7 +2731,7 @@ export class Image {
 
 export interface Chart extends Object, IChartConfigurationOptions {}
 export class Chart extends Object {
-  constructor(options?: IChartConfiguration);
+  constructor(options?: IChartConfigurationOptions);
 }
 
 interface IChartConfigurationOptions extends IObjectOptions {
