@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 import { TextToSpeechDTO } from './data-access/text-to-speech.data-access';
-import { switchMap } from 'rxjs';
+import { map } from 'rxjs';
 
 @Controller()
 export class AppController {
@@ -11,6 +11,6 @@ export class AppController {
   generateSpeechFromText(@Body() body: TextToSpeechDTO) {
     return this.appService
       .createAudioFileFromText(body.text)
-      .pipe(switchMap((value) => value));
+      .pipe(map((value) => ({ file: value })));
   }
 }

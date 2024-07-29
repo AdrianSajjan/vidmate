@@ -14,9 +14,7 @@ export class AppService {
     return new Observable<string>((subscriber) => {
       const id = uuid.v4();
       const file = `${id}.mp3`;
-      console.log(path);
-      const name = path.join(__dirname, 'uploads', 'audio', file);
-      const stream = fs.createWriteStream(name);
+      const name = path.join(__dirname, '..', 'uploads', 'audio', file);
       (async () => {
         try {
           const audio = await this.elevanlabsClient.generate({
@@ -24,12 +22,24 @@ export class AppService {
             model_id: 'eleven_turbo_v2_5',
             text,
           });
-          audio.pipe(stream);
-          stream.on('finish', () => {
-            subscriber.next(name);
-            subscriber.complete();
+          const buffer: Uint8Array[] = [];
+          const stream = new WritableStream({
+            write(chunk) {
+              buffer.push(chunk);
+            },
+            close() {
+              const data = Buffer.concat(buffer);
+              fs.writeFileSync(name, data);
+              subscriber.next(name);
+              subscriber.complete();
+            },
+            abort() {
+              subscriber.error();
+            },
           });
-          stream.on('error', () => subscriber.error());
+          fs.createWriteStream(name);
+          // @ts-expect-error To be fixed in elevenlabs SDK
+          audio.pipeTo(stream);
         } catch (error) {
           subscriber.error(error);
         }
