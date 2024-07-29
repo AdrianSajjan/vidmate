@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import { Fragment, useMemo } from "react";
-import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon, LineChartIcon } from "lucide-react";
+import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon, LineChartIcon, TerminalSquareIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
@@ -21,6 +21,7 @@ import { TextSidebar } from "./components/text";
 import { UploadSidebar } from "./components/upload";
 import { VideoSidebar } from "./components/video";
 import { ChartSidebar } from "./components/chart";
+import { PromptSidebar } from "./components/prompt";
 
 const sidebarComponentMap: Record<string, () => JSX.Element> = {
   templates: TemplateSidebar,
@@ -32,6 +33,7 @@ const sidebarComponentMap: Record<string, () => JSX.Element> = {
   charts: ChartSidebar,
   elements: ElementSidebar,
   formats: FormatSidebar,
+  prompt: PromptSidebar,
 };
 
 function _EditorSidebarLeft() {
@@ -84,6 +86,11 @@ function _EditorSidebarLeft() {
         icon: ScalingIcon,
         label: "Formats",
         value: "formats",
+      },
+      {
+        icon: TerminalSquareIcon,
+        label: "Prompt",
+        value: "prompt",
       },
     ];
   }, []);

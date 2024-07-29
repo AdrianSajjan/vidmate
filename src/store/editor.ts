@@ -11,6 +11,7 @@ import { EditorAudioElement, EditorTemplate, EditorTemplatePage } from "@/types/
 import { FabricUtils } from "@/fabric/utils";
 import { propertiesToInclude } from "@/fabric/constants";
 import { nanoid } from "nanoid";
+import { Prompt } from "./prompt";
 
 export type ExportMode = "video" | "both";
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
@@ -51,8 +52,10 @@ export class Editor {
 
   saving: boolean;
   preview: boolean;
-  recorder: Recorder;
   progress: EditorProgress;
+
+  prompter: Prompt;
+  recorder: Recorder;
 
   ffmpeg: FFmpeg;
   exporting: ExportProgress;
@@ -65,6 +68,7 @@ export class Editor {
     this.status = "uninitialized";
 
     this.pages = [createInstance(Canvas)];
+    this.prompter = createInstance(Prompt, this);
     this.recorder = createInstance(Recorder, this);
     this.controller = createInstance(AbortController);
 

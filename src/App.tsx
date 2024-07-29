@@ -11,12 +11,14 @@ import { EditorToolbar } from "@/layout/toolbar";
 import { EditorSidebarLeft } from "@/layout/sidebar-left";
 import { EditorSidebarRight } from "@/layout/sidebar-right";
 import { EditorPreviewModal } from "@/layout/modals/preview";
-import { EditorProvider, useEditorContext } from "@/context/editor";
+import { AIPromptModal } from "@/layout/modals/prompter";
 
+import { EditorProvider, useEditorContext } from "@/context/editor";
 import { Toaster } from "@/components/ui/sonner";
 import { EditorCanvas, EditorRecorder } from "@/components/editor";
 import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
 import { useIsTablet } from "./hooks/use-media-query";
 
 export function App() {
@@ -62,15 +64,16 @@ function _Editor() {
                 {editor.pages.map((page, index) => (
                   <EditorCanvas page={index} key={page.id + index} />
                 ))}
-                <EditorRecorder />
                 <EditorFAB />
-                <EditorPreviewModal />
+                <EditorRecorder />
                 <Toaster richColors position={position} offset={24} visibleToasts={6} />
               </div>
               <EditorFooter />
             </section>
             <EditorSidebarRight />
           </main>
+          <AIPromptModal />
+          <EditorPreviewModal />
         </section>
       );
 
