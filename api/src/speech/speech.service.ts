@@ -5,13 +5,13 @@ import * as fs from 'fs';
 import { from, Observable } from 'rxjs';
 import { ElevenLabsClient } from 'elevenlabs';
 import { Injectable } from '@nestjs/common';
-import { CreateSpeechFromTextDTO } from '@app/voice/dto/create-voice.dto';
+import { CreateSpeechFromTextDTO } from '@app/speech/dto/create-speech.dto';
 
 @Injectable()
-export class VoiceService {
+export class SpeechService {
   constructor(private readonly elevanlabsClient: ElevenLabsClient) {}
 
-  createAudioFileFromText(body: CreateSpeechFromTextDTO) {
+  createSpeechAudioFileFromText(body: CreateSpeechFromTextDTO) {
     return new Observable<string>((subscriber) => {
       from(
         this.elevanlabsClient.generate({

@@ -6,16 +6,16 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { envConfig } from '@app/config/env';
 import { ElevenlabsModule } from '@app/common/elevenlabs/elevenlabs.module';
-import { VoiceModule } from '@app/voice/voice.module';
-import { ContentModule } from './content/content.module';
+import { ContentModule } from '@app/content/content.module';
+import { SpeechModule } from '@app/speech/speech.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [envConfig] }),
     ServeStaticModule.forRoot({ rootPath: path.join(__dirname, '..', 'uploads') }),
     ElevenlabsModule,
-    VoiceModule,
     ContentModule,
+    SpeechModule,
   ],
 })
 export class AppModule {}
