@@ -62,7 +62,7 @@ export class CanvasAudio {
       audio.playing = true;
       audio.source = source;
 
-      audio.source.start(this.context.currentTime + audio.offset, audio.trim, audio.timeline);
+      audio.source.start(this.context.currentTime + audio.offset, Math.max(this.timeline.seek / 1000, audio.trim), audio.timeline);
       audio.source.addEventListener("ended", () => (audio.playing = false));
     }
   }

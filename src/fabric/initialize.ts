@@ -231,10 +231,11 @@ fabric.Object.prototype.set({
   transparentCorners: false,
   borderColor: "#2563EB",
   cornerColor: "#FFFFFF",
-  borderScaleFactor: 2.5,
+  borderScaleFactor: 2,
+  paintFirst: "stroke",
   cornerStyle: "circle",
   cornerStrokeColor: "#2563EB",
-  borderOpacityWhenMoving: 1,
+  borderOpacityWhenMoving: 0.75,
   strokeUniform: true,
 });
 

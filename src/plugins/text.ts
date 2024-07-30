@@ -1,9 +1,9 @@
 import { fabric } from "fabric";
+import { makeAutoObservable } from "mobx";
+
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance } from "@/lib/utils";
-import { makeAutoObservable } from "mobx";
 import { Canvas } from "@/store/canvas";
-import { clamp } from "lodash";
 
 interface TextProps {
   fontFamily: string;
@@ -53,29 +53,26 @@ export class CanvasText {
         });
 
         this.canvas.add(...elements);
-        this.canvas.requestRenderAll();
-
         const selection = createInstance(fabric.ActiveSelection, elements, { canvas: this.canvas });
         selection.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
-        selection.setCoords();
-
-        this.canvas.setActiveObject(selection);
+        this.canvas.setActiveObject(selection).discardActiveObject();
         this.canvas.requestRenderAll();
 
         break;
       }
 
-      case "individual-words": {
+      case "subtitle": {
         words.map((word) => {
           const name = FabricUtils.elementID("text");
-          const textbox = createInstance(fabric.Textbox, word, { name, fontFamily, fontWeight, fontSize, textAlign: "center", fill: "#FFFFFF" });
+          const props = { textAlign: "center", strokeWidth: 4, strokeLineCap: "round", strokeLineJoin: "round", stroke: "#000000", fill: "#FFFFFF" };
+          const textbox = createInstance(fabric.Textbox, word, { name, fontFamily, fontWeight, fontSize, ...props });
           textbox.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
           elements.push(textbox);
         });
 
         const group = elements.map((element) => element.name!);
         const timeline = 6000 / words.length;
-        const duration = clamp(50, 500 - 50 * words.length, 250);
+        const duration = 100;
 
         elements.map((element, index) => {
           FabricUtils.initializeMetaProperties(element, { group, duration: timeline, offset: timeline * index });
@@ -83,7 +80,8 @@ export class CanvasText {
         });
 
         this.canvas.add(...elements);
-        this.canvas.setActiveObject(createInstance(fabric.ActiveSelection, elements, { canvas: this.canvas }));
+        const selection = createInstance(fabric.ActiveSelection, elements, { canvas: this.canvas });
+        this.canvas.setActiveObject(selection).discardActiveObject();
         this.canvas.requestRenderAll();
 
         break;
