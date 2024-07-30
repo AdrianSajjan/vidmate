@@ -1,0 +1,7 @@
+{
+    "watch": [
+        "src"
+    ],
+    "ext": "ts",
+    "exec": "IS_DEVELOPMENT=true ts-node -r tsconfig-paths/register src/main.ts"
+}

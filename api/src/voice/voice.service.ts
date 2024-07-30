@@ -1,30 +1,31 @@
-import * as uuid from 'uuid';
 import * as path from 'path';
+import * as uuid from 'uuid';
 import * as fs from 'fs';
 
-import { Injectable } from '@nestjs/common';
 import { from, Observable } from 'rxjs';
 import { ElevenLabsClient } from 'elevenlabs';
+import { Injectable } from '@nestjs/common';
+import { SpeechFromTextDTO } from '@app/voice/data-access/speech-from-text.data-access';
 
 @Injectable()
-export class AppService {
+export class VoiceService {
   constructor(private readonly elevanlabsClient: ElevenLabsClient) {}
 
-  createAudioFileFromText(text: string) {
+  createAudioFileFromText(body: SpeechFromTextDTO) {
     return new Observable<string>((subscriber) => {
       from(
         this.elevanlabsClient.generate({
-          voice: 'Rachel',
-          model_id: 'eleven_turbo_v2_5',
-          text,
+          voice: body.voice || 'Brian',
+          model_id: body.model || 'eleven_turbo_v2_5',
+          text: body.text,
         }),
       ).subscribe({
         next(audio) {
           const file = `${uuid.v4()}.mp3`;
-          const name = path.join(__dirname, '..', 'uploads', 'audio', file);
+          const name = path.join(__dirname, '..', '..', 'uploads', 'voice', file);
 
           const buffer: Uint8Array[] = [];
-          const stream = new WritableStream({
+          const stream = new WritableStream<Uint8Array>({
             write(chunk) {
               buffer.push(chunk);
             },
@@ -39,7 +40,6 @@ export class AppService {
             },
           });
 
-          fs.createWriteStream(name);
           // @ts-expect-error To be fixed in elevenlabs SDK
           audio.pipeTo(stream);
         },
