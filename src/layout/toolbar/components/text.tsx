@@ -56,8 +56,8 @@ function _TextToolbar() {
           <Input
             className="h-8 w-28 text-xs pr-14"
             type="number"
-            value={selected.fontSize}
-            onChange={(event) => (+event.target.value <= 0 ? null : editor.canvas.onChangeActiveTextboxProperty("fontSize", +event.target.value))}
+            value={Math.round(selected.fontSize! * selected.scaleY!)}
+            onChange={(event) => (+event.target.value <= 0 ? null : editor.canvas.onChangeActiveTextboxProperty("fontSize", Math.round(+event.target.value / selected.scaleY!)))}
           />
           <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs">px</span>
           <DropdownMenu>

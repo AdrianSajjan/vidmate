@@ -6,7 +6,7 @@ export abstract class CanvasAnimations {
   private static _animationExitOffset = 50;
   private static _animationEntryOffset = 50;
 
-  private static _initializeAnimation(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"]) {
+  private static _initializeAnimation(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], _: AnimationTimeline["scene"]) {
     const left = object.left!;
     const top = object.top!;
 
@@ -187,9 +187,9 @@ export abstract class CanvasAnimations {
     timeline.add({ targets: canvas, duration: duration });
     for (const object of canvas._objects) {
       if (object.excludeFromTimeline) continue;
-      this._initializeAnimation(object, timeline, object.anim!.in, object.anim!.out);
+      this._initializeAnimation(object, timeline, object.anim!.in, object.anim!.out, object.anim!.scene);
       if (object.clipPath) {
-        this._initializeAnimation(object.clipPath, timeline, object.anim!.in, object.anim!.out);
+        this._initializeAnimation(object.clipPath, timeline, object.anim!.in, object.anim!.out, object.anim!.scene);
       }
     }
   }

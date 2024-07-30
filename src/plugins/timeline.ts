@@ -15,8 +15,8 @@ export class CanvasTimeline {
 
   constructor(canvas: Canvas) {
     this.seek = 0;
-    this.duration = 5000;
     this.playing = false;
+    this.duration = 15000;
 
     this._timeline = null;
     this._canvas = canvas;
@@ -122,6 +122,7 @@ export class CanvasTimeline {
 
   set(property: "duration" | "seek", seconds: number) {
     this[property] = seconds * 1000;
+    this._toggleElements();
   }
 
   destroy() {

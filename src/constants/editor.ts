@@ -1,5 +1,5 @@
 export const fontSizes = [12, 14, 16, 18, 24, 28, 32, 36, 40, 44, 48, 56, 64, 72, 80, 96];
-export const presetDurations = [5, 10, 15, 20, 30, 45, 60];
+export const presetDurations = [15, 30];
 
 export const minZoom = 0.1;
 export const maxZoom = 2.5;

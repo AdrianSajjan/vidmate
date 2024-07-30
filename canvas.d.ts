@@ -2799,8 +2799,8 @@ export class Line {
 }
 
 export type EntryAnimation = "none" | "fade-in" | (string & {});
-
 export type ExitAnimation = "none" | "fade-out" | (string & {});
+export type SceneAnimations = "none" | "typewriter" | "individual-words" | (string & {});
 
 export interface AnimationTimeline {
   in: {
@@ -2809,14 +2809,14 @@ export interface AnimationTimeline {
     easing?: any;
     state?: Record<string, any>;
   };
-  out: {
-    name: ExitAnimation;
-    duration: number;
+  scene: {
+    name: SceneAnimations;
+    duration?: number;
     easing?: any;
     state?: Record<string, any>;
   };
-  animate?: {
-    name: string;
+  out: {
+    name: ExitAnimation;
     duration: number;
     easing?: any;
     state?: Record<string, any>;

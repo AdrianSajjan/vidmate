@@ -51,10 +51,11 @@ export abstract class FabricUtils {
     for (const key in props) object.meta[key] = props[key];
   }
 
-  static initializeAnimationProperties(object: fabric.Object) {
+  static initializeAnimationProperties(object: fabric.Object, props?: Partial<fabric.AnimationTimeline>) {
     object.anim = {
-      in: { name: "none", duration: 0 },
-      out: { name: "none", duration: 0 },
+      in: props?.in ?? { name: "none", duration: 0 },
+      scene: props?.scene ?? { name: "none" },
+      out: props?.out ?? { name: "none", duration: 0 },
     };
   }
 

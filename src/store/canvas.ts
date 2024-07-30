@@ -1,29 +1,28 @@
 import { nanoid } from "nanoid";
-
 import { fabric } from "fabric";
 import { floor } from "lodash";
-import { EntryAnimation, ExitAnimation } from "canvas";
 import { makeAutoObservable, runInAction } from "mobx";
 
+import { CanvasAlignment } from "@/plugins/alignment";
+import { CanvasAudio } from "@/plugins/audio";
 import { CanvasCropper } from "@/plugins/crop";
+import { CanvasEffects } from "@/plugins/filters";
 import { CanvasGuidelines } from "@/plugins/guidelines";
 import { CanvasHistory } from "@/plugins/history";
-import { CanvasTimeline } from "@/plugins/timeline";
-import { CanvasWorkspace } from "@/plugins/workspace";
-import { CanvasAudio } from "@/plugins/audio";
-import { CanvasEffects } from "@/plugins/filters";
-import { CanvasAlignment } from "@/plugins/alignment";
-import { CanvasSelection } from "@/plugins/selection";
 import { CanvasClipMask } from "@/plugins/mask";
-import { CanvasTrimmer } from "@/plugins/trim";
 import { CanvasReplace } from "@/plugins/replace";
+import { CanvasSelection } from "@/plugins/selection";
 import { CanvasTemplate } from "@/plugins/template";
+import { CanvasTimeline } from "@/plugins/timeline";
+import { CanvasTrimmer } from "@/plugins/trim";
+import { CanvasWorkspace } from "@/plugins/workspace";
 
+import { EditorFont } from "@/constants/fonts";
+import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
-import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
-import { EditorFont } from "@/constants/fonts";
 import { CanvasChart } from "@/plugins/chart";
+import { CanvasText } from "@/plugins/text";
 export class Canvas {
   id: string;
   name: string;
@@ -31,6 +30,7 @@ export class Canvas {
   artboard!: fabric.Rect;
   instance!: fabric.Canvas;
 
+  text!: CanvasText;
   audio!: CanvasAudio;
   chart!: CanvasChart;
   timeline!: CanvasTimeline;
@@ -56,6 +56,7 @@ export class Canvas {
     this.elements = [];
     this.controls = true;
     this.template = createInstance(CanvasTemplate, this);
+
     makeAutoObservable(this);
   }
 
@@ -110,7 +111,6 @@ export class Canvas {
     runInAction(() => {
       if (!event.target) return;
       this._toggleControls(event.target, false);
-      FabricUtils.applyObjectScaleToDimensions(event.target, ["textbox"]);
     });
   }
 
@@ -134,6 +134,7 @@ export class Canvas {
 
     this.instance.on("clip:added", this._refreshElements.bind(this));
     this.instance.on("clip:removed", this._refreshElements.bind(this));
+    this.instance.on("object:layer", this._refreshElements.bind(this));
   }
 
   *initialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
@@ -151,6 +152,7 @@ export class Canvas {
     this.cropper = createInstance(CanvasCropper, this);
     this.trimmer = createInstance(CanvasTrimmer, this);
 
+    this.text = createInstance(CanvasText, this);
     this.chart = createInstance(CanvasChart, this);
     this.audio = createInstance(CanvasAudio, this);
     this.timeline = createInstance(CanvasTimeline, this);
@@ -470,35 +472,35 @@ export class Canvas {
     if (selected) this.onChangeObjectFillGradient(selected, type, colors, coords);
   }
 
-  onChangeObjectAnimation(object: fabric.Object, type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
+  onChangeObjectAnimation(object: fabric.Object, type: "in" | "out" | "scene", animation: fabric.EntryAnimation | fabric.ExitAnimation | fabric.SceneAnimations) {
     if (!object) return;
     object.anim![type].name = animation;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangActiveObjectAnimation(type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
+  onChangeActiveObjectAnimation(type: "in" | "out" | "scene", animation: fabric.EntryAnimation | fabric.ExitAnimation | fabric.SceneAnimations) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeObjectAnimation(selected, type, animation);
   }
 
-  onChangeObjectAnimationDuration(object: fabric.Object, type: "in" | "out", duration: number) {
+  onChangeObjectAnimationDuration(object: fabric.Object, type: "in" | "out" | "scene", duration: number) {
     if (!object) return;
     object.anim![type].duration = duration;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out", easing: any) {
+  onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out" | "scene", easing: any) {
     if (!object) return;
     object.anim![type].easing = easing;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangActiveObjectAnimationEasing(type: "in" | "out", easing: any) {
+  onChangeActiveObjectAnimationEasing(type: "in" | "out", easing: any) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeObjectAnimationEasing(selected, type, easing);
   }
 
-  onChangActiveObjectAnimationDuration(type: "in" | "out", duration: number) {
+  onChangeActiveObjectAnimationDuration(type: "in" | "out", duration: number) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeObjectAnimationDuration(selected, type, duration);
   }
