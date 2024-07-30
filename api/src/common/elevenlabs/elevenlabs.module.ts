@@ -1,8 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { ElevenLabsClient } from 'elevenlabs';
 import { ConfigService } from '@nestjs/config';
-
-import { EnvConfig } from '../../config/env';
+import { EnvConfig } from '@app/config/env';
 
 @Global()
 @Module({
