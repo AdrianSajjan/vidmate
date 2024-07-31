@@ -20,6 +20,8 @@ import { createBase64Download, createFileDownload } from "@/lib/utils";
 import { fetchExtensionByCodec } from "@/constants/recorder";
 import { EditorTemplate } from "@/types/editor";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { maxZoom, minZoom } from "@/constants/editor";
+import { mock } from "@/constants/mock";
 
 function _EditorMenubar() {
   const editor = useEditorContext();
@@ -29,11 +31,12 @@ function _EditorMenubar() {
 
   const upload = useMutation({
     mutationFn: async () => {
-      const name = "Template 1";
       const pages = await flowResult(editor.exportTemplate());
-      const template = { name, pages } as EditorTemplate;
+      const template = { name: editor.name, id: editor.id, pages } as EditorTemplate;
       createBase64Download(template, "text/json", `template-${Date.now()}.json`);
+      return template;
     },
+    onSuccess: (data) => mock.upload("template", data),
   });
 
   const handleExportVideo = async () => {
@@ -69,19 +72,19 @@ function _EditorMenubar() {
               <DialogTitle className="sr-only"></DialogTitle>
               <DialogDescription className="sr-only"></DialogDescription>
               <div className="max-w-full pt-3 pb-1 divide-y divide-border/50">
-                <Button size="sm" className="gap-3 justify-start w-full h-10" variant="ghost" disabled={upload.isPending} onClick={handleSaveTemplate}>
+                <Button size="sm" className="gap-3 justify-start w-full h-11" variant="ghost" disabled={upload.isPending} onClick={handleSaveTemplate}>
                   <CloudUploadIcon size={15} />
                   <span className="font-medium">Save Template</span>
                   <span className="ml-auto">{editor.saving ? <Spinner className="h-4 w-4 text-primary-foreground" /> : <ChevronRightIcon className="text-gray-400" size={15} />}</span>
                 </Button>
-                <Button size="sm" className="gap-3 justify-start w-full h-10" variant="ghost" onClick={handleExportVideo}>
+                <Button size="sm" className="gap-3 justify-start w-full h-11" variant="ghost" onClick={handleExportVideo}>
                   <ImageIcon size={15} />
                   <span className="font-medium">Export Video</span>
                   <span className="ml-auto">
                     <ChevronRightIcon className="text-gray-400" size={15} />
                   </span>
                 </Button>
-                <Button size="sm" className="gap-3 justify-start w-full h-10" variant="ghost" onClick={() => editor.onTogglePreviewModal("open")}>
+                <Button size="sm" className="gap-3 justify-start w-full h-11" variant="ghost" onClick={() => editor.onTogglePreviewModal("open")}>
                   <Columns2Icon size={15} />
                   <span className="font-medium">Open Export Preview</span>
                   <span className="ml-auto">
@@ -116,7 +119,7 @@ function _EditorMenubar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-24 lg:w-28">
               <DropdownMenuGroup>
-                {[25, 50, 75, 100, 125, 150, 175, 200].map((percentage) => (
+                {[10, 15, 20, 25, 50, 75, 100, 125, 150, 175, 200, 250].map((percentage) => (
                   <DropdownMenuItem key={percentage} className="text-xs" onClick={() => editor.canvas.workspace.changeZoom(percentage / 100)}>
                     {percentage}%
                   </DropdownMenuItem>
@@ -137,12 +140,12 @@ function _EditorMenubar() {
           <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} align="end">
             <Label className="text-xs font-medium">Zoom (%)</Label>
             <div className="flex items-center justify-between gap-4">
-              <Slider step={5} min={25} max={200} value={[Math.round(editor.canvas.workspace.zoom * 100)]} onValueChange={([zoom]) => editor.canvas.workspace.changeZoom(zoom / 100)} />
+              <Slider step={5} min={minZoom * 100} max={maxZoom * 100} value={[Math.round(editor.canvas.workspace.zoom * 100)]} onValueChange={([zoom]) => editor.canvas.workspace.changeZoom(zoom / 100)} />
               <Input
                 type="number"
                 className="h-8 w-16 text-xs"
                 value={Math.round(editor.canvas.workspace.zoom * 100)}
-                onChange={(event) => (+event.target.value > 200 || +event.target.value < 25 ? null : editor.canvas.workspace.changeZoom(editor.canvas.workspace.zoom + 0.05))}
+                onChange={(event) => (+event.target.value > maxZoom * 100 || +event.target.value < minZoom * 100 ? null : editor.canvas.workspace.changeZoom(+event.target.value / 100))}
               />
             </div>
           </PopoverContent>

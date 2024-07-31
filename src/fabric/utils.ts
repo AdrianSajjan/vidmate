@@ -25,6 +25,10 @@ export abstract class FabricUtils {
     return object?.type === "video" && !object?.meta?.placeholder;
   }
 
+  static isChartElement(object?: any): object is fabric.Chart {
+    return object?.type === "chart";
+  }
+
   static isAudioElement(object?: any): object is EditorAudioElement {
     return object?.type === "audio";
   }
@@ -47,10 +51,11 @@ export abstract class FabricUtils {
     for (const key in props) object.meta[key] = props[key];
   }
 
-  static initializeAnimationProperties(object: fabric.Object) {
+  static initializeAnimationProperties(object: fabric.Object, props?: Partial<fabric.AnimationTimeline>) {
     object.anim = {
-      in: { name: "none", duration: 0 },
-      out: { name: "none", duration: 0 },
+      in: props?.in ?? { name: "none", duration: 0 },
+      scene: props?.scene ?? { name: "none" },
+      out: props?.out ?? { name: "none", duration: 0 },
     };
   }
 
@@ -163,5 +168,23 @@ export abstract class FabricUtils {
         object.on("rotating", handler);
       }
     });
+  }
+
+  static convertGradient(angle: number) {
+    const radians = angle * (Math.PI / 180);
+    const x1 = 0.5 + Math.cos(radians) * 0.5;
+    const y1 = 0.5 + Math.sin(radians) * 0.5;
+    const x2 = 0.5 - Math.cos(radians) * 0.5;
+    const y2 = 0.5 - Math.sin(radians) * 0.5;
+    return { x1, y1, x2, y2 };
+  }
+
+  static revertGradient({ x1, y1, x2, y2 }: any) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const angleRadians = Math.atan2(dy, dx);
+    let angleDegrees = angleRadians * (180 / Math.PI);
+    if (angleDegrees < 0) angleDegrees += 360;
+    return Math.round(angleDegrees);
   }
 }

@@ -7,8 +7,8 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { abstract, basic, frames, lines } from "@/constants/elements";
 import { useEditorContext } from "@/context/editor";
-import { advancedShapes, basicShapes, lines } from "@/constants/elements";
 import { cn } from "@/lib/utils";
 
 function _ElementSidebar() {
@@ -24,7 +24,7 @@ function _ElementSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <section className="sidebar-container">
+      <section className="sidebar-container pb-4">
         <div className={cn("px-3 pt-4 flex flex-col gap-2.5 border-b", expanded ? "border-b pb-2.5" : "pb-6 border-b-0")}>
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />
@@ -57,8 +57,8 @@ function _ElementSidebar() {
                   See All
                 </Button>
               </div>
-              <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden">
-                {basicShapes.map(({ name, path, klass, params }) => (
+              <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden">
+                {basic.slice(0, 10).map(({ name, path, klass, params }) => (
                   <button
                     key={name}
                     onClick={() => editor.canvas.onAddBasicShape(klass, params)}
@@ -74,22 +74,49 @@ function _ElementSidebar() {
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-4">
                 <h4 className="text-xs font-semibold line-clamp-1">Abstract Shapes</h4>
-                <Button size="sm" variant="link" className="text-primary font-medium line-clamp-1" onClick={() => setExpanded("advanced")}>
+                <Button size="sm" variant="link" className="text-primary font-medium line-clamp-1" onClick={() => setExpanded("abstract")}>
                   See All
                 </Button>
               </div>
-              <div className="flex gap-2.5 items-center overflow-scroll relative scrollbar-hidden">
-                {advancedShapes.map(({ name, path, viewbox = "0 0 48 48" }) => (
-                  <button
-                    key={name}
-                    onClick={() => editor.canvas.onAddAbstractShape(path, name)}
-                    className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
-                  >
-                    <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
-                      <path d={path} className="h-full" />
-                    </svg>
-                  </button>
-                ))}
+              <div className="flex gap-2.5 items-center overflow-x-scroll relative scrollbar-hidden">
+                {abstract.slice(0, 10).map(({ name, path, height, width, id }) => {
+                  const viewbox = `0 0 ${width} ${height}`;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => editor.canvas.onAddAbstractShape(path, name)}
+                      className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+                    >
+                      <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+                        <path d={path} className="h-full" />
+                      </svg>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-4">
+                <h4 className="text-xs font-semibold line-clamp-1">Frames</h4>
+                <Button size="sm" variant="link" className="text-primary font-medium line-clamp-1" onClick={() => setExpanded("frames")}>
+                  See All
+                </Button>
+              </div>
+              <div className="flex gap-2.5 items-center overflow-x-scroll relative scrollbar-hidden">
+                {frames.slice(0, 10).map(({ name, path, height, width, id }) => {
+                  const viewbox = `0 0 ${width} ${height}`;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => editor.canvas.onAddAbstractShape(path, name)}
+                      className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+                    >
+                      <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+                        <path d={path} className="h-full" />
+                      </svg>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div className="flex flex-col gap-2">
@@ -99,7 +126,7 @@ function _ElementSidebar() {
                   See All
                 </Button>
               </div>
-              <div className="flex gap-2.5 items-center overflow-scroll relative scrollbar-hidden">
+              <div className="flex gap-2.5 items-center overflow-x-scroll relative scrollbar-hidden">
                 {lines.map(({ name, path, points }) => (
                   <button
                     key={name}
@@ -129,7 +156,7 @@ function ExpandedGridView({ match }: { match: string }) {
 
   switch (match) {
     case "basic":
-      return basicShapes.map(({ name, path, klass, params }) => (
+      return basic.map(({ name, path, klass, params }) => (
         <button
           key={name}
           onClick={() => editor.canvas.onAddBasicShape(klass, params)}
@@ -141,14 +168,27 @@ function ExpandedGridView({ match }: { match: string }) {
         </button>
       ));
 
-    case "advanced":
-      return advancedShapes.map(({ name, path, viewbox = "0 0 48 48" }) => (
+    case "abstract":
+      return abstract.map(({ name, path, height, width }) => (
         <button
           key={name}
           onClick={() => editor.canvas.onAddAbstractShape(path, name)}
           className="group shrink-0 w-full aspect-square border flex items-center justify-center overflow-hidden rounded-lg p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
         >
-          <svg viewBox={viewbox} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+          <svg viewBox={`0 0 ${width} ${height}`} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
+            <path d={path} className="h-full" />
+          </svg>
+        </button>
+      ));
+
+    case "frames":
+      return frames.map(({ name, path, height, width }) => (
+        <button
+          key={name}
+          onClick={() => editor.canvas.onAddAbstractShape(path, name)}
+          className="group shrink-0 w-full aspect-square border flex items-center justify-center overflow-hidden rounded-lg p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
+        >
+          <svg viewBox={`0 0 ${width} ${height}`} aria-label={name} fill="currentColor" className="h-full w-full transition-transform group-hover:scale-105">
             <path d={path} className="h-full" />
           </svg>
         </button>

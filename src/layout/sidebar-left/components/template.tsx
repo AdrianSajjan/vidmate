@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
-import { flowResult } from "mobx";
 import { observer } from "mobx-react";
 import { Fragment } from "react";
 
@@ -11,24 +10,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEditorContext } from "@/context/editor";
 import { createInstance, createPromise } from "@/lib/utils";
 import { EditorTemplate } from "@/types/editor";
+import { mock, useMockStore } from "@/constants/mock";
 
 function _TemplateSidebar() {
+  const store = useMockStore();
   const editor = useEditorContext();
 
   const loadJSON = useMutation({
     mutationFn: async (file: File) => {
-      createPromise<void>((resolve, reject) => {
+      return createPromise<EditorTemplate>((resolve, reject) => {
         const reader = createInstance(FileReader);
         reader.addEventListener("load", async () => {
           if (!reader.result) return reject();
-          const template: EditorTemplate = JSON.parse(reader.result as string);
-          await flowResult(editor.loadTemplate(template));
-          resolve();
+          resolve(JSON.parse(reader.result as string));
         });
         reader.readAsText(file);
       });
     },
+    onSuccess: (template) => {
+      mock.upload("template", template);
+      editor.loadTemplate(template, "reset");
+    },
   });
+
+  const handleLoadTemplate = (template: EditorTemplate) => {
+    editor.loadTemplate(template, "replace");
+  };
 
   const handleLoadJSON = async (files: FileList | null) => {
     if (!files || !files.length) return;
@@ -43,7 +50,7 @@ function _TemplateSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <section className="sidebar-container">
+      <section className="sidebar-container pb-4">
         <div className="px-3 pt-4 pb-6 flex flex-col gap-4">
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />
@@ -66,14 +73,21 @@ function _TemplateSidebar() {
             </Button>
           </div>
         </div>
-
         <div className="px-3 grid grid-cols-2 gap-4 relative">
-          <Fragment>
-            {Array.from({ length: 6 }, (_, index) => (
-              <Skeleton className="w-full aspect-square rounded-md" key={index} />
-            ))}
-            <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 line-clamp-1">Coming Soon</span>
-          </Fragment>
+          {store.templates.length ? (
+            store.templates.map((template) => (
+              <button className="w-full aspect-square rounded-md overflow-hidden group border" key={template.id} onClick={() => handleLoadTemplate(template)}>
+                <img src={template.pages[0].thumbnail} alt={template.name} className="group-hover:scale-110 transition-transform" />
+              </button>
+            ))
+          ) : (
+            <Fragment>
+              {Array.from({ length: 6 }, (_, index) => (
+                <Skeleton className="w-full aspect-square rounded-md" key={index} />
+              ))}
+              <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 line-clamp-1">Coming Soon</span>
+            </Fragment>
+          )}
         </div>
       </section>
     </div>

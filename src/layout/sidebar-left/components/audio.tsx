@@ -25,7 +25,7 @@ function _AudioSidebar() {
       const waveform = await extractAudioWaveformFromAudioFile(file);
       return { source, name: file.name, ...waveform };
     },
-    onSuccess: ({ source, name, duration, thumbnail }) => mock.upload("audio", source, thumbnail, duration, name),
+    onSuccess: (response) => mock.upload("audio", response),
   });
 
   const handleUpload = (files: FileList | null) => {
@@ -49,7 +49,7 @@ function _AudioSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <section className="sidebar-container">
+      <section className="sidebar-container pb-4">
         <div className="px-3 pt-4 pb-6">
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />
@@ -71,7 +71,7 @@ function _AudioSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.audios.length ? (
                 store.audios.map((audio) => <AudioItem key={audio.source} audio={audio} onClick={handleClick(audio)} />)
               ) : (
@@ -91,7 +91,7 @@ function _AudioSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               <Fragment>
                 {Array.from({ length: 3 }, (_, index) => (
                   <Skeleton key={index} className="h-16 flex-1 rounded-md" />
@@ -132,7 +132,7 @@ function AudioItem({ audio, onClick }: { audio: EditorAudio; onClick?: () => voi
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col items-center gap-2">
       <button onClick={onClick} className="group shrink-0 h-16 w-20 border overflow-hidden rounded-md shadow-sm relative">
         <img src={audio.thumbnail} crossOrigin="anonymous" className="h-8 w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
         <div className="absolute hidden group-hover:inline-flex items-center justify-between gap-2 bottom-1 left-1 right-1 text-card bg-foreground/50 pr-1.5 rounded-sm">
@@ -145,7 +145,7 @@ function AudioItem({ audio, onClick }: { audio: EditorAudio; onClick?: () => voi
           </audio>
         </div>
       </button>
-      <div className="text-xxs font-medium w-20 px-1 mx-auto whitespace-nowrap overflow-hidden text-ellipsis">{audio.name}</div>
+      <span className="text-xxs font-medium w-20 px-1 mx-auto whitespace-nowrap overflow-hidden text-ellipsis text-center">{audio.name}</span>
     </div>
   );
 }

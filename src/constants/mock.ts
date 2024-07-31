@@ -1,5 +1,5 @@
 import { createInstance } from "@/lib/utils";
-import { EditorAudio, EditorMedia } from "@/types/editor";
+import { EditorAudio, EditorMedia, EditorTemplate } from "@/types/editor";
 import { useSyncExternalStore } from "react";
 
 const images: EditorMedia[] = [
@@ -26,10 +26,13 @@ const videos: EditorMedia[] = [
 
 const audios: EditorAudio[] = [];
 
+const templates: EditorTemplate[] = [];
+
 export interface MockDataState {
   images: EditorMedia[];
   videos: EditorMedia[];
   audios: EditorAudio[];
+  templates: EditorTemplate[];
 }
 
 export class MockDataStore {
@@ -37,8 +40,7 @@ export class MockDataStore {
   subscribers: Set<Function>;
 
   constructor() {
-    this.state = { images, videos, audios };
-
+    this.state = { images, videos, audios, templates };
     this.subscribers = createInstance(Set<Function>);
   }
 
@@ -51,19 +53,27 @@ export class MockDataStore {
     return () => this.subscribers.delete(callback);
   }
 
-  upload(type: "image" | "video", source: string, thumbnail: string): void;
-  upload(type: "audio", source: string, thumbnail: string, duration: number, name: string): void;
-  upload(type: "image" | "video" | "audio", source: string, thumbnail: string, duration?: number, name?: string) {
+  upload(type: "audio", props: EditorAudio): void;
+  upload(type: "template", props: EditorTemplate): void;
+  upload(type: "image" | "video", props: EditorMedia): void;
+  upload(type: "image" | "video" | "audio" | "template", props: EditorAudio | EditorMedia | EditorTemplate) {
     switch (type) {
       case "image":
-        this.state.images.push({ source, thumbnail });
+        this.state.images.push(props as EditorMedia);
         break;
       case "video":
-        this.state.videos.push({ source, thumbnail });
+        this.state.videos.push(props as EditorMedia);
         break;
       case "audio":
-        this.state.audios.push({ source, thumbnail, name: name!, duration: duration! });
+        this.state.audios.push(props as EditorAudio);
         break;
+      case "template": {
+        const data = props as EditorTemplate;
+        const index = this.state.templates.findIndex((template) => template.id === data.id);
+        if (index === -1) this.state.templates.push(data);
+        else this.state.templates[index] = data;
+        break;
+      }
     }
     this.subscribers.forEach((listener) => listener());
   }

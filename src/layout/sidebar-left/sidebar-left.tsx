@@ -1,12 +1,15 @@
-import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { Fragment, useMemo } from "react";
+import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon, LineChartIcon, TerminalSquareIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useIsTablet } from "@/hooks/use-media-query";
-import { leftSidebarWidth } from "@/constants/layout";
-import { useEditorContext } from "@/context/editor";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+
+import { useIsTablet } from "@/hooks/use-media-query";
+import { useEditorContext } from "@/context/editor";
+
+import { leftSidebarWidth } from "@/constants/layout";
 import { cn } from "@/lib/utils";
 
 import { AudioSidebar } from "./components/audio";
@@ -17,7 +20,8 @@ import { TemplateSidebar } from "./components/template";
 import { TextSidebar } from "./components/text";
 import { UploadSidebar } from "./components/upload";
 import { VideoSidebar } from "./components/video";
-import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { ChartSidebar } from "./components/chart";
+import { PromptSidebar } from "./components/prompt";
 
 const sidebarComponentMap: Record<string, () => JSX.Element> = {
   templates: TemplateSidebar,
@@ -26,8 +30,10 @@ const sidebarComponentMap: Record<string, () => JSX.Element> = {
   images: ImageSidebar,
   videos: VideoSidebar,
   audios: AudioSidebar,
+  charts: ChartSidebar,
   elements: ElementSidebar,
   formats: FormatSidebar,
+  prompt: PromptSidebar,
 };
 
 function _EditorSidebarLeft() {
@@ -67,6 +73,11 @@ function _EditorSidebarLeft() {
         value: "audios",
       },
       {
+        icon: LineChartIcon,
+        label: "Charts",
+        value: "charts",
+      },
+      {
         icon: UploadIcon,
         label: "Uploads",
         value: "uploads",
@@ -76,6 +87,11 @@ function _EditorSidebarLeft() {
         label: "Formats",
         value: "formats",
       },
+      {
+        icon: TerminalSquareIcon,
+        label: "Prompt",
+        value: "prompt",
+      },
     ];
   }, []);
 
@@ -84,7 +100,7 @@ function _EditorSidebarLeft() {
   if (!isTablet)
     return (
       <Fragment>
-        <aside className="h-16 absolute bottom-0 left-0 bg-card dark:bg-gray-900/40 border-t border-t-border/25 flex items-center z-10 gap-2.5 w-screen overflow-x-scroll px-1.5">
+        <aside className="h-16 absolute bottom-0 left-0 bg-card dark:bg-gray-900/40 border-t border-t-border/25 flex items-center z-10 gap-2.5 w-screen overflow-x-scroll scrollbar-hidden px-1.5">
           {items.map(({ icon: Icon, label, value }) => {
             return (
               <Button
@@ -102,7 +118,7 @@ function _EditorSidebarLeft() {
           })}
         </aside>
         <Drawer open={!!Sidebar} onClose={() => editor.setActiveSidebarLeft(null)}>
-          <DrawerContent className="pb-6">
+          <DrawerContent>
             <DialogTitle className="sr-only"></DialogTitle>
             <DialogDescription className="sr-only"></DialogDescription>
             {Sidebar ? <Sidebar /> : null}

@@ -23,7 +23,7 @@ function _ImageSidebar() {
       const source = await uploadAssetToS3(file);
       return { source, thumbnail: source };
     },
-    onSuccess: ({ source, thumbnail }) => mock.upload("image", source, thumbnail),
+    onSuccess: (response) => mock.upload("image", response),
   });
 
   const handleUpload = (files: FileList | null) => {
@@ -54,7 +54,7 @@ function _ImageSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <section className="sidebar-container">
+      <section className="sidebar-container pb-4">
         <div className="px-3 pt-4 pb-6">
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />
@@ -76,7 +76,7 @@ function _ImageSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.images.length ? (
                 store.images.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClick(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
@@ -100,7 +100,7 @@ function _ImageSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               <Fragment>
                 {Array.from({ length: 3 }, (_, index) => (
                   <Skeleton key={index} className="h-16 flex-1 rounded-md" />

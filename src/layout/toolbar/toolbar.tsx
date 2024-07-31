@@ -36,18 +36,18 @@ function _EditorToolbar() {
 
   if (!isTablet) {
     return Toolbar ? (
-      <aside className="h-16 absolute bottom-0 left-0 bg-card dark:bg-gray-900/40 border-t border-t-border/25 flex items-center z-20 gap-2.5 w-screen overflow-x-scroll px-4">
+      <aside className="h-16 absolute bottom-0 left-0 bg-card dark:bg-gray-900/40 border-t border-t-border/25 flex items-center z-20 gap-2.5 w-screen overflow-x-scroll scrollbar-hidden px-4">
         <Toolbar />
       </aside>
     ) : null;
   }
 
   return Toolbar ? (
-    <div className="h-14 bg-card/50 border-b border-b-border/50 px-4 shrink-0 overflow-x-scroll">
+    <div className="h-14 bg-card/50 border-b border-b-border/50 px-4 shrink-0 overflow-x-scroll scrollbar-hidden">
       <Toolbar />
     </div>
   ) : (
-    <div className="h-14 bg-card/50 border-b border-b-border/50 px-4 shrink-0 overflow-x-scroll" />
+    <div className="h-14 bg-card/50 border-b border-b-border/50 px-4 shrink-0 overflow-x-scroll scrollbar-hidden" />
   );
 }
 

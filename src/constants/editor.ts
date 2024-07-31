@@ -1,5 +1,8 @@
 export const fontSizes = [12, 14, 16, 18, 24, 28, 32, 36, 40, 44, 48, 56, 64, 72, 80, 96];
-export const presetDurations = [5, 10, 15, 20, 30, 45, 60];
+export const presetDurations = [15, 30];
+
+export const minZoom = 0.1;
+export const maxZoom = 2.5;
 
 export const darkHexCodes = ["#333333", "#1a1a80", "#4b2e2e", "#2e4b2e", "#444444", "#2c3e50", "#8b0000", "#2f4f4f", "#6a5acd", "#800080"];
 export const lightHexCodes = ["#ffffff", "#cccccc", "#add8e6", "#ffffcc", "#ffb6c1", "#ff69b4", "#ffd700", "#98fb98", "#afeeee", "#d8bfd8"];

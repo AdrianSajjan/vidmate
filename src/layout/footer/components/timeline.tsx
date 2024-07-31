@@ -68,7 +68,7 @@ function _EditorTimeline() {
       <div className="bg-background shrink-0 w-2">
         <div className="h-8 w-full bg-card/40 dark:bg-gray-900/40 flex justify-center items-center"></div>
       </div>
-      <div className="flex-1 flex flex-col bg-background shrink-0 overflow-x-scroll relative" ref={containerRef}>
+      <div className="flex-1 flex flex-col bg-background shrink-0 overflow-x-scroll scrollbar-hidden relative" ref={containerRef}>
         <div className="h-8 absolute bg-card/40 dark:bg-gray-900/40" style={{ width: trackBackgroundWidth }} />
         <div className="h-8 absolute bg-card dark:bg-gray-900 cursor-pointer" style={{ width: trackWidth }} onClick={onClickSeekTime} />
         <div className="h-8 absolute inset-0 flex items-center z-20 pointer-events-none">{Array.from({ length: timelineAmount }, renderTimelineTime)}</div>
@@ -80,7 +80,7 @@ function _EditorTimeline() {
         >
           <div className={cn("absolute h-full w-1 bg-blue-400 dark:bg-primary z-20", editor.canvas.timeline.playing ? "cursor-not-allowed" : "cursor-ew-resize")} />
         </Draggable>
-        <div className="absolute top-8 py-2.5 bottom-0 overflow-y-scroll flex flex-col gap-1" style={{ width: trackBackgroundWidth }}>
+        <div className="absolute top-8 py-2.5 bottom-0 overflow-y-scroll scrollbar-hidden flex flex-col gap-1" style={{ width: trackBackgroundWidth }}>
           {[...editor.canvas.elements].reverse().map((element) => (
             <TimelineElementItem key={element.name} element={element} trackWidth={trackWidth} />
           ))}
@@ -97,23 +97,24 @@ function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object;
   const editor = useEditorContext();
   const [backgroundURL, setBackgroundURL] = useState("");
 
-  useEffect(() => {
+  const drawElementAsBackground = useCallback(() => {
     const object = editor.canvas.instance!.getItemByName(element.name);
-    if (!object) return;
-    object.clone((clone: fabric.Object) => {
+    object?.clone((clone: fabric.Object) => {
       clone.set({ opacity: 1, visible: true, clipPath: undefined });
-      if (FabricUtils.isVideoElement(clone) && !clone.meta!.placeholder) {
+      if (FabricUtils.isVideoElement(clone)) {
         clone.seek(1);
-        setTimeout(() => {
-          clone.set({ filters: [] });
-          clone.applyFilters();
-          setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true }));
-        }, 1000);
+        setTimeout(() => setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true })), 1000);
+      } else if (FabricUtils.isChartElement(clone)) {
+        setTimeout(() => setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true })), 1000);
       } else {
         setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true }));
       }
     }, propertiesToInclude);
   }, [element]);
+
+  useEffect(() => {
+    drawElementAsBackground();
+  }, [drawElementAsBackground]);
 
   const isSelected = useMemo(() => {
     if (!editor.canvas.selection.active) return false;

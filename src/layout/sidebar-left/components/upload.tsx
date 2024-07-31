@@ -19,9 +19,10 @@ import { uploadAssetToS3 } from "@/api/upload";
 import { extractAudioWaveformFromAudioFile, extractThumbnailFromVideoURL } from "@/lib/media";
 
 interface UploadResponse {
+  source: string;
   thumbnail: string;
   duration?: number;
-  source: string;
+  name?: string;
 }
 
 function _UploadSidebar() {
@@ -42,21 +43,20 @@ function _UploadSidebar() {
         }
         case "audio": {
           const waveform = await extractAudioWaveformFromAudioFile(file);
-          return { source, ...waveform };
+          return { source, name: file.name, ...waveform };
         }
       }
     },
     onSuccess: (response, params) => {
-      const { source, thumbnail } = response;
       switch (params.type) {
         case "image":
-          mock.upload("image", source, thumbnail);
+          mock.upload("image", response);
           break;
         case "video":
-          mock.upload("video", source, thumbnail);
+          mock.upload("video", response);
           break;
         case "audio":
-          mock.upload("audio", source, thumbnail, response.duration!, params.file.name);
+          mock.upload("audio", response as Required<UploadResponse>);
           break;
       }
     },
@@ -121,7 +121,7 @@ function _UploadSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <section className="sidebar-container">
+      <section className="sidebar-container pb-4">
         <div className="px-3 pt-4">
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />
@@ -143,7 +143,7 @@ function _UploadSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.images.length ? (
                 store.images.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClickImage(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
@@ -174,7 +174,7 @@ function _UploadSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.videos.length ? (
                 store.videos.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClickVideo(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
@@ -205,7 +205,7 @@ function _UploadSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.audios.length ? (
                 store.audios.map((audio) => <AudioItem key={audio.source} audio={audio} onClick={handleClickAudio(audio)} />)
               ) : (

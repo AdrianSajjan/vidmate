@@ -22,6 +22,16 @@ export function checkForAudioInVideo(source: string) {
   });
 }
 
+export function extractAudioDurationFromSource(source: string) {
+  return createPromise<number>((resolve, reject) => {
+    const audio = createInstance(Audio);
+    audio.addEventListener("loadedmetadata", () => resolve(audio.duration));
+    audio.addEventListener("error", () => reject);
+    audio.src = source;
+    audio.load();
+  });
+}
+
 export async function extractThumbnailFromVideoURL(url: string) {
   return createInstance(Promise<string>, (resolve, reject) => {
     const video = document.createElement("video");

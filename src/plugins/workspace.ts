@@ -1,8 +1,9 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { fabric } from "fabric";
-import { throttle } from "lodash";
+import { clamp, throttle } from "lodash";
 import { createInstance } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
+import { maxZoom, minZoom } from "@/constants/editor";
 
 interface WorkspaceDimensions {
   height?: number;
@@ -11,6 +12,7 @@ interface WorkspaceDimensions {
 
 export class CanvasWorkspace {
   private _canvas: Canvas;
+  private _observer!: ResizeObserver;
   private _workspace: HTMLDivElement;
 
   private _touchZoomScale: number;
@@ -62,7 +64,7 @@ export class CanvasWorkspace {
   }
 
   private _initObserver() {
-    const resizeObserver = createInstance(
+    this._observer = createInstance(
       ResizeObserver,
       throttle(() => {
         this.canvas.setDimensions({ height: this._workspace.offsetHeight, width: this._workspace.offsetWidth });
@@ -70,7 +72,7 @@ export class CanvasWorkspace {
         this.canvas.requestRenderAll();
       }, 50),
     );
-    resizeObserver.observe(this._workspace);
+    this._observer.observe(this._workspace);
   }
 
   private _initEvents() {
@@ -97,14 +99,17 @@ export class CanvasWorkspace {
 
     const touch = event as any;
     if (touch.self.state == "start") this._touchZoomScale = this.canvas.getZoom();
-    const delta = this._touchZoomScale * touch.self.scale;
+    let zoom = this._touchZoomScale * touch.self.scale;
+
+    if (zoom > maxZoom) zoom = maxZoom;
+    if (zoom < minZoom) zoom = minZoom;
 
     const center = this.canvas.getCenter();
-    this.canvas.zoomToPoint(createInstance(fabric.Point, center.left, center.top), delta);
+    this.canvas.zoomToPoint(createInstance(fabric.Point, center.left, center.top), zoom);
     this.canvas.requestRenderAll();
 
     runInAction(() => {
-      this.zoom = delta;
+      this.zoom = zoom;
       this.viewportTransform = [...this.canvas.viewportTransform!];
     });
   }
@@ -117,8 +122,8 @@ export class CanvasWorkspace {
       let zoom = this.canvas.getZoom();
       zoom *= 0.999 ** (event.e.deltaY * 5);
 
-      if (zoom > 2.5) zoom = 2.5;
-      if (zoom < 0.01) zoom = 0.01;
+      if (zoom > maxZoom) zoom = maxZoom;
+      if (zoom < minZoom) zoom = minZoom;
 
       const center = this.canvas.getCenter();
       this.canvas.zoomToPoint(createInstance(fabric.Point, center.left, center.top), zoom);
@@ -161,7 +166,7 @@ export class CanvasWorkspace {
   }
 
   changeZoom(zoom: number) {
-    this.zoom = zoom;
+    this.zoom = clamp(zoom, minZoom, maxZoom);
     const center = this.canvas.getCenter();
     this.canvas.zoomToPoint(createInstance(fabric.Point, center.left, center.top), this.zoom);
     this.viewportTransform = [...this.canvas.viewportTransform!];
@@ -170,5 +175,9 @@ export class CanvasWorkspace {
   changeFill(fill: string) {
     this.fill = fill;
     this.artboard.set({ fill });
+  }
+
+  destroy() {
+    this._observer.disconnect();
   }
 }

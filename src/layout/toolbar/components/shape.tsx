@@ -6,6 +6,7 @@ import { ToolbarFillOption } from "../common/fill";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
 import { ToolbarPositionOption } from "../common/position";
+import { ToolbarOpacityOption } from "../common/opacity";
 
 function _ShapeToolbar() {
   return (
@@ -13,6 +14,8 @@ function _ShapeToolbar() {
       <ToolbarFillOption />
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarStrokeOption />
+      <Separator orientation="vertical" className="h-8 mx-4" />
+      <ToolbarOpacityOption />
       <Separator orientation="vertical" className="h-8 ml-auto mr-4" />
       <ToolbarTimelineOption />
       <Separator orientation="vertical" className="h-8 mx-4" />

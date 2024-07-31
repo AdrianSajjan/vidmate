@@ -10,6 +10,7 @@ import { useEditorContext } from "@/context/editor";
 import { ToolbarPositionOption } from "../common/position";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
+import { ToolbarOpacityOption } from "../common/opacity";
 
 function _ImageToolbar() {
   const editor = useEditorContext();
@@ -25,6 +26,8 @@ function _ImageToolbar() {
       </div>
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarStrokeOption />
+      <Separator orientation="vertical" className="h-8 mx-4" />
+      <ToolbarOpacityOption />
       <Separator orientation="vertical" className="h-8 ml-auto mr-4" />
       <div className="flex items-center gap-4">
         <Button

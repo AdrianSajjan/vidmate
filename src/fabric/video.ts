@@ -129,13 +129,26 @@ Video.fromObject = function (object: fabric.Video, callback: (video: fabric.Vide
         );
       }
     }),
-  ]).then(([filters]) => {
+    createPromise<fabric.Object | undefined>((resolve) => {
+      if (!object.clipPath) {
+        resolve(undefined);
+      } else {
+        fabric.util.enlivenObjects(
+          [object.clipPath],
+          ([clipPath]: [fabric.Object]) => {
+            resolve(clipPath);
+          },
+          "fabric",
+        );
+      }
+    }),
+  ]).then(([filters, clipPath]) => {
     Video.fromURL(
       object.src,
       (video: fabric.Video) => {
         callback(video);
       },
-      { ...object, filters },
+      { ...object, clipPath, filters },
     );
   });
 };

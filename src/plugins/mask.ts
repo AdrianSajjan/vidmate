@@ -112,7 +112,7 @@ export class CanvasClipMask {
     this.clipObjectFromBasicShape(object, klass, params);
   }
 
-  clipObjectFromAdvancedShape(image: fabric.Image, path: string, name = "shape") {
+  clipObjectFromAbstractShape(image: fabric.Image, path: string, name = "shape") {
     const id = FabricUtils.elementID(name);
     const height = image.getScaledHeight();
     const width = image.getScaledWidth();
@@ -144,10 +144,10 @@ export class CanvasClipMask {
     this.canvas.fire("clip:added", { target: image });
   }
 
-  clipActiveObjectFromAdvancedShape(path: string, name = "shape") {
+  clipActiveObjectFromAbstractShape(path: string, name = "shape") {
     const object = this.canvas.getActiveObject() as fabric.Image | fabric.Video;
     if (!object || !(object.type === "image" || object.type === "video")) return;
-    this.clipObjectFromAdvancedShape(object, path, name);
+    this.clipObjectFromAbstractShape(object, path, name);
   }
 
   removeClipMaskFromActiveObject() {

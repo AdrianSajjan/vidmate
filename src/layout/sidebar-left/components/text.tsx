@@ -1,10 +1,8 @@
 import { SearchIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { Fragment } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useEditorContext } from "@/context/editor";
 
 function _TextSidebar() {
@@ -18,7 +16,7 @@ function _TextSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <section className="sidebar-container">
+      <section className="sidebar-container pb-4">
         <div className="px-3 pt-4 pb-6">
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />
@@ -52,12 +50,18 @@ function _TextSidebar() {
           <div className="flex flex-col gap-4">
             <h4 className="text-xs font-semibold line-clamp-1">Styled Texts</h4>
             <div className="flex flex-col gap-3 relative">
-              <Fragment>
-                {Array.from({ length: 3 }, (_, index) => (
-                  <Skeleton key={index} className="h-16 w-full rounded-md" />
-                ))}
-                <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">Coming Soon</span>
-              </Fragment>
+              <button
+                onClick={() => editor.canvas.text.animated("Introducing the ultimate performance boost, the new SprintX Sports Shoes!", { fontFamily: "Inter", fontSize: 48, fontWeight: 700 }, "typewriter")}
+                className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-base font-medium text-center transition-colors shadow-sm hover:bg-card"
+              >
+                <span className="line-clamp-1">Typewriter Text</span>
+              </button>
+              <button
+                onClick={() => editor.canvas.text.animated("Introducing the ultimate performance boost, the new SprintX Sports Shoes!", { fontFamily: "Inter", fontSize: 64, fontWeight: 700 }, "subtitle")}
+                className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-base font-medium text-center transition-colors shadow-sm hover:bg-card"
+              >
+                <span className="line-clamp-1">Subtitle Text</span>
+              </button>
             </div>
           </div>
         </div>

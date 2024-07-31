@@ -10,6 +10,8 @@ import { createInstance } from "@/lib/utils";
 import { EditorAudioElement, EditorTemplate, EditorTemplatePage } from "@/types/editor";
 import { FabricUtils } from "@/fabric/utils";
 import { propertiesToInclude } from "@/fabric/constants";
+import { nanoid } from "nanoid";
+import { Prompt } from "./prompt";
 
 export type ExportMode = "video" | "both";
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
@@ -29,6 +31,9 @@ export enum ExportProgress {
 }
 
 export class Editor {
+  id: string;
+  name: string;
+
   page: number;
   pages: Canvas[];
   status: EditorStatus;
@@ -47,8 +52,10 @@ export class Editor {
 
   saving: boolean;
   preview: boolean;
-  recorder: Recorder;
   progress: EditorProgress;
+
+  prompter: Prompt;
+  recorder: Recorder;
 
   ffmpeg: FFmpeg;
   exporting: ExportProgress;
@@ -56,9 +63,12 @@ export class Editor {
 
   constructor() {
     this.page = 0;
+    this.id = nanoid();
+    this.name = "Untitled Template";
     this.status = "uninitialized";
 
     this.pages = [createInstance(Canvas)];
+    this.prompter = createInstance(Prompt, this);
     this.recorder = createInstance(Recorder, this);
     this.controller = createInstance(AbortController);
 
@@ -156,8 +166,8 @@ export class Editor {
       this.onChangeExportStatus(ExportProgress.Completed);
       return blob;
     } catch (error) {
-      this.recorder.stop();
       this.onChangeExportStatus(ExportProgress.Error);
+      this.recorder.stop();
       throw error;
     }
   }
@@ -165,19 +175,39 @@ export class Editor {
   *exportTemplate() {
     const templates: EditorTemplatePage[] = [];
     for (const page of this.pages) {
-      const json = JSON.stringify(page.instance.toDatalessJSON(propertiesToInclude));
-      templates.push({ data: json, fill: page.workspace.fill, height: page.workspace.height, width: page.workspace.width });
+      const thumbnail: string = yield this.recorder.screenshot(page.instance);
+      const data = JSON.stringify(page.instance.toDatalessJSON(propertiesToInclude));
+      templates.push({ thumbnail, data, id: page.id, name: page.name, duration: page.timeline.duration, fill: page.workspace.fill, height: page.workspace.height, width: page.workspace.width });
     }
     return templates;
   }
 
-  *loadTemplate(template: EditorTemplate) {
-    for (let index = 0; index < template.pages.length; index++) {
-      const page = template.pages[index];
-      const initialized = !!this.pages[index];
-      if (!initialized) this.pages[index] = createInstance(Canvas);
-      this.pages[index].template.set(page);
-      if (initialized) this.pages[index].template.load();
+  loadTemplate(template: EditorTemplate, mode: "replace" | "reset") {
+    switch (mode) {
+      case "reset":
+        this.id = template.id;
+        this.name = template.name;
+        for (let index = 0; index < template.pages.length; index++) {
+          const page = template.pages[index];
+          const initialized = !!this.pages[index];
+          if (!initialized) this.pages[index] = createInstance(Canvas);
+          this.pages[index].template.set(page);
+          if (initialized) this.pages[index].template.load();
+        }
+        if (this.pages.length <= template.pages.length) return;
+        for (let index = template.pages.length; index < this.pages.length; index++) this.pages[index].destroy();
+        this.pages.splice(template.pages.length);
+        break;
+      case "replace":
+        for (let index = 0; index < template.pages.length; index++) {
+          const offset = index + this.page;
+          const page = template.pages[index];
+          const initialized = !!this.pages[offset];
+          if (!initialized) this.pages[offset] = createInstance(Canvas);
+          this.pages[offset].template.set(page);
+          if (initialized) this.pages[offset].template.load();
+        }
+        break;
     }
   }
 
@@ -213,8 +243,17 @@ export class Editor {
     this.sidebarRight = sidebar;
   }
 
-  onAddPage() {
+  addPage() {
     this.pages.push(createInstance(Canvas));
+  }
+
+  deleteActivePage() {
+    const length = this.pages.length;
+    if (length > 1) {
+      this.pages[this.page].destroy();
+      this.pages.splice(this.page, 1);
+      if (this.page >= length - 1) this.page = this.page - 1;
+    }
   }
 
   onChangeActivePage(index: number) {

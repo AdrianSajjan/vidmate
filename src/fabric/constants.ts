@@ -4,6 +4,7 @@ import { fabric } from "fabric";
 export const propertiesToInclude = [
   "name",
   "meta",
+  "chart",
   "anim",
   "effects",
   "adjustments",
@@ -17,6 +18,7 @@ export const propertiesToInclude = [
   "textTransform",
   "excludeFromTimeline",
   "excludeFromAlignment",
+  "absolutePositioned",
 ];
 
 export const textLayoutProperties = ["textTransform"];

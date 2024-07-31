@@ -1,4 +1,4 @@
-import { EntryAnimation, ExitAnimation } from "canvas";
+import { EntryAnimation, ExitAnimation, SceneAnimations } from "canvas";
 
 interface FixedAnimations {
   duration?: boolean;
@@ -6,11 +6,12 @@ interface FixedAnimations {
 }
 export interface EditorAnimation {
   label: string;
+  type?: string;
   preview: string;
   easing?: any;
   duration?: number;
   fixed?: FixedAnimations;
-  value: EntryAnimation | ExitAnimation;
+  value: EntryAnimation | ExitAnimation | SceneAnimations;
 }
 
 export interface EditorEasings {
@@ -99,6 +100,14 @@ export const exit: EditorAnimation[] = [
     label: "Sink Down",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
+  },
+];
+
+export const scene: EditorAnimation[] = [
+  {
+    value: "none",
+    label: "None",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
   },
 ];
 

@@ -3,6 +3,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { ChartConfiguration } from "chart.js";
+
 // This module does not really exist.
 // This is just to get `export as namespace fabric;` to work and to be re-exportable from `index.d.ts`.
 
@@ -2727,6 +2729,18 @@ export class Image {
   static ATTRIBUTE_NAMES: string[];
 }
 
+export interface Chart extends Object, IChartConfigurationOptions {}
+export class Chart extends Object {
+  constructor(options?: IChartConfigurationOptions);
+}
+
+interface IChartConfigurationOptions extends IObjectOptions {
+  /**
+   * The default chart options
+   */
+  chart: ChartConfiguration;
+}
+
 interface ILineOptions extends IObjectOptions {
   /**
    * x value or first line edge
@@ -2785,8 +2799,8 @@ export class Line {
 }
 
 export type EntryAnimation = "none" | "fade-in" | (string & {});
-
 export type ExitAnimation = "none" | "fade-out" | (string & {});
+export type SceneAnimations = "none" | "typewriter" | "individual-words" | (string & {});
 
 export interface AnimationTimeline {
   in: {
@@ -2795,14 +2809,14 @@ export interface AnimationTimeline {
     easing?: any;
     state?: Record<string, any>;
   };
-  out: {
-    name: ExitAnimation;
-    duration: number;
+  scene: {
+    name: SceneAnimations;
+    duration?: number;
     easing?: any;
     state?: Record<string, any>;
   };
-  animate?: {
-    name: string;
+  out: {
+    name: ExitAnimation;
     duration: number;
     easing?: any;
     state?: Record<string, any>;
@@ -6357,6 +6371,11 @@ interface IUtilMisc {
    * @param [crossOrigin] crossOrigin value to set video element to
    */
   loadVideo(url: string, callback: (image: HTMLVideoElement | null) => void, context?: any, crossOrigin?: string): void;
+
+  chart: {
+    addPlugins(...plugins: any[]): void;
+    setDefaults(options: Partial<ChartConfiguration>): void;
+  };
 
   /**
    * Creates corresponding fabric instances from their object representations

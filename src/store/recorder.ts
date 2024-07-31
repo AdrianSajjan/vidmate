@@ -123,19 +123,37 @@ export class Recorder {
     return frames;
   }
 
+  *screenshot(canvas = this.canvas) {
+    this.instance.setDimensions({ height: this.workspace.height, width: this.workspace.width });
+    this.instance.clear();
+
+    const json = canvas.toDatalessJSON(propertiesToInclude);
+    yield createPromise<void>((resolve) => this.instance.loadFromJSON(json, resolve));
+
+    const artboard: fabric.Object = yield createPromise<fabric.Object>((resolve) => this.artboard.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
+    this.instance.insertAt(artboard, 0, false);
+    this.instance.clipPath = artboard;
+
+    FabricUtils.applyTransformationsAfterLoad(this.instance);
+    this.instance.renderAll();
+
+    const base64 = this.instance.toDataURL({ format: "image/png" });
+    this.instance.clear();
+
+    return base64;
+  }
+
   *start() {
     this.canvas.fire("recorder:start");
     this.instance.setDimensions({ height: this.workspace.height, width: this.workspace.width });
     this.instance.clear();
 
-    const artboard: fabric.Object = yield createPromise<fabric.Object>((resolve) => this.artboard.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
-    this.instance.add(artboard);
+    const json = this.canvas.toDatalessJSON(propertiesToInclude);
+    yield createPromise<void>((resolve) => this.instance.loadFromJSON(json, resolve));
 
-    for (const object of this.canvas._objects) {
-      if (object.excludeFromTimeline) continue;
-      const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
-      this.instance.add(clone);
-    }
+    const artboard: fabric.Object = yield createPromise<fabric.Object>((resolve) => this.artboard.clone((clone: fabric.Object) => resolve(clone), propertiesToInclude));
+    this.instance.insertAt(artboard, 0, false);
+    this.instance.clipPath = artboard;
 
     FabricUtils.applyTransformationsAfterLoad(this.instance);
     this.instance.renderAll();

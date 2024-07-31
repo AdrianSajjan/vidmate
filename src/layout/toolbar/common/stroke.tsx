@@ -15,7 +15,7 @@ function _ToolbarStrokeOption() {
   const selected = editor.canvas.selection.active as fabric.Object;
 
   return (
-    <div className="flex items-center gap-2.5 mr-5">
+    <div className="flex items-center gap-2.5">
       <Button
         onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "stroke" ? null : "stroke")}
         variant="outline"

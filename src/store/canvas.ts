@@ -1,27 +1,28 @@
 import { nanoid } from "nanoid";
-
 import { fabric } from "fabric";
 import { floor } from "lodash";
-import { EntryAnimation, ExitAnimation } from "canvas";
 import { makeAutoObservable, runInAction } from "mobx";
 
+import { CanvasAlignment } from "@/plugins/alignment";
+import { CanvasAudio } from "@/plugins/audio";
 import { CanvasCropper } from "@/plugins/crop";
+import { CanvasEffects } from "@/plugins/filters";
 import { CanvasGuidelines } from "@/plugins/guidelines";
 import { CanvasHistory } from "@/plugins/history";
-import { CanvasTimeline } from "@/plugins/timeline";
-import { CanvasWorkspace } from "@/plugins/workspace";
-import { CanvasAudio } from "@/plugins/audio";
-import { CanvasEffects } from "@/plugins/filters";
-import { CanvasAlignment } from "@/plugins/alignment";
-import { CanvasSelection } from "@/plugins/selection";
 import { CanvasClipMask } from "@/plugins/mask";
-import { CanvasTrimmer } from "@/plugins/trim";
 import { CanvasReplace } from "@/plugins/replace";
+import { CanvasSelection } from "@/plugins/selection";
 import { CanvasTemplate } from "@/plugins/template";
+import { CanvasTimeline } from "@/plugins/timeline";
+import { CanvasTrimmer } from "@/plugins/trim";
+import { CanvasWorkspace } from "@/plugins/workspace";
 
+import { EditorFont } from "@/constants/fonts";
+import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
-import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
+import { CanvasChart } from "@/plugins/chart";
+import { CanvasText } from "@/plugins/text";
 export class Canvas {
   id: string;
   name: string;
@@ -29,18 +30,20 @@ export class Canvas {
   artboard!: fabric.Rect;
   instance!: fabric.Canvas;
 
+  text!: CanvasText;
   audio!: CanvasAudio;
+  chart!: CanvasChart;
   timeline!: CanvasTimeline;
   workspace!: CanvasWorkspace;
-  replacer!: CanvasReplace;
 
+  replacer!: CanvasReplace;
   effects!: CanvasEffects;
   cropper!: CanvasCropper;
   clipper!: CanvasClipMask;
   trimmer!: CanvasTrimmer;
 
-  template!: CanvasTemplate;
   history!: CanvasHistory;
+  template!: CanvasTemplate;
   selection!: CanvasSelection;
   alignment!: CanvasAlignment;
 
@@ -48,9 +51,8 @@ export class Canvas {
   elements: fabric.Object[];
 
   constructor() {
-    this.name = "";
     this.id = nanoid();
-
+    this.name = "Untitled Page";
     this.elements = [];
     this.controls = true;
     this.template = createInstance(CanvasTemplate, this);
@@ -109,7 +111,6 @@ export class Canvas {
     runInAction(() => {
       if (!event.target) return;
       this._toggleControls(event.target, false);
-      FabricUtils.applyObjectScaleToDimensions(event.target, ["textbox"]);
     });
   }
 
@@ -133,6 +134,7 @@ export class Canvas {
 
     this.instance.on("clip:added", this._refreshElements.bind(this));
     this.instance.on("clip:removed", this._refreshElements.bind(this));
+    this.instance.on("object:layer", this._refreshElements.bind(this));
   }
 
   *initialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
@@ -150,6 +152,8 @@ export class Canvas {
     this.cropper = createInstance(CanvasCropper, this);
     this.trimmer = createInstance(CanvasTrimmer, this);
 
+    this.text = createInstance(CanvasText, this);
+    this.chart = createInstance(CanvasChart, this);
     this.audio = createInstance(CanvasAudio, this);
     this.timeline = createInstance(CanvasTimeline, this);
     this.workspace = createInstance(CanvasWorkspace, this, workspace);
@@ -174,6 +178,46 @@ export class Canvas {
       if (selection) this.instance.remove(selection);
     }
     this.instance.discardActiveObject().requestRenderAll();
+  }
+
+  *onCloneObject(object?: fabric.Object) {
+    if (!object) return;
+
+    const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone(resolve, propertiesToInclude));
+    clone.set({ name: FabricUtils.elementID(clone.name!.split("_").at(0) || "clone"), top: clone.top! + 50, left: clone.left! + 50, clipPath: undefined }).setCoords();
+
+    if (object.clipPath) {
+      this.history.active = false;
+
+      const clipPath: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clipPath!.clone(resolve, propertiesToInclude));
+      clipPath.set({ name: FabricUtils.elementID(clipPath.name!.split("_").at(0) || "clone") });
+
+      FabricUtils.bindObjectTransformToParent(clone, [clipPath]);
+      const handler = () => FabricUtils.updateObjectTransformToParent(clone, [{ object: clipPath }]);
+
+      clone.on("moving", handler);
+      clone.on("scaling", handler);
+      clone.on("rotating", handler);
+      clone.set({ clipPath }).setCoords();
+
+      this.instance.add(clipPath, clone);
+      this.instance.setActiveObject(clone).requestRenderAll();
+      this.history.active = true;
+
+      this.instance.fire("object:modified", { target: clone });
+      this.instance.fire("clip:added", { target: clone });
+    } else {
+      this.instance.add(clone);
+      this.instance.setActiveObject(clone).requestRenderAll();
+    }
+
+    return clone;
+  }
+
+  *onCloneActiveObject() {
+    const object = this.instance.getActiveObject();
+    const clone: fabric.Object = yield this.onCloneObject(object!);
+    return clone;
   }
 
   onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
@@ -206,8 +250,9 @@ export class Canvas {
           FabricUtils.initializeMetaProperties(image);
           FabricUtils.initializeAnimationProperties(image);
 
-          this.instance!.add(image);
-          this.instance!.setActiveObject(image).requestRenderAll();
+          this.instance.add(image);
+          if (!skip) this.instance.setActiveObject(image);
+          this.instance.requestRenderAll();
 
           resolve(image);
         },
@@ -280,11 +325,12 @@ export class Canvas {
           }
 
           const element = video._originalElement as HTMLVideoElement;
-          FabricUtils.initializeMetaProperties(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration) });
-          FabricUtils.initializeAnimationProperties(video);
+          FabricUtils.initializeMetaProperties(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration), ...options?.meta });
+          FabricUtils.initializeAnimationProperties(video, { ...options?.anim });
 
-          this.instance!.add(video);
-          this.instance!.setActiveObject(video).requestRenderAll();
+          this.instance.add(video);
+          if (!skip) this.instance.setActiveObject(video);
+          this.instance.requestRenderAll();
 
           resolve(video);
         },
@@ -415,48 +461,48 @@ export class Canvas {
     if (selected) this.onChangeObjectProperty(selected, property, value);
   }
 
-  onChangeObjectFillGradient(object: fabric.Object, type: string, colors: fabric.IGradientOptionsColorStops) {
+  onChangeObjectFillGradient(object: fabric.Object, type: string, colors: fabric.IGradientOptionsColorStops, coords: fabric.IGradientOptionsCoords) {
     if (!object) return;
-    const gradient = createInstance(fabric.Gradient, { type: type, gradientUnits: "percentage", colorStops: colors, coords: { x1: 0, y1: 0, x2: 1, y2: 0 } });
+    const gradient = createInstance(fabric.Gradient, { type: type, gradientUnits: "percentage", colorStops: colors, coords: coords });
     object.set({ fill: gradient });
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
   }
 
-  onChangeActiveObjectFillGradient(type: string, colors: fabric.IGradientOptionsColorStops) {
+  onChangeActiveObjectFillGradient(type: string, colors: fabric.IGradientOptionsColorStops, coords: fabric.IGradientOptionsCoords) {
     const selected = this.instance.getActiveObject();
-    if (selected) this.onChangeObjectFillGradient(selected, type, colors);
+    if (selected) this.onChangeObjectFillGradient(selected, type, colors, coords);
   }
 
-  onChangeObjectAnimation(object: fabric.Object, type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
+  onChangeObjectAnimation(object: fabric.Object, type: "in" | "out" | "scene", animation: fabric.EntryAnimation | fabric.ExitAnimation | fabric.SceneAnimations) {
     if (!object) return;
     object.anim![type].name = animation;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangActiveObjectAnimation(type: "in" | "out", animation: EntryAnimation | ExitAnimation) {
+  onChangeActiveObjectAnimation(type: "in" | "out" | "scene", animation: fabric.EntryAnimation | fabric.ExitAnimation | fabric.SceneAnimations) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeObjectAnimation(selected, type, animation);
   }
 
-  onChangeObjectAnimationDuration(object: fabric.Object, type: "in" | "out", duration: number) {
+  onChangeObjectAnimationDuration(object: fabric.Object, type: "in" | "out" | "scene", duration: number) {
     if (!object) return;
     object.anim![type].duration = duration;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out", easing: any) {
+  onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out" | "scene", easing: any) {
     if (!object) return;
     object.anim![type].easing = easing;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangActiveObjectAnimationEasing(type: "in" | "out", easing: any) {
+  onChangeActiveObjectAnimationEasing(type: "in" | "out", easing: any) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeObjectAnimationEasing(selected, type, easing);
   }
 
-  onChangActiveObjectAnimationDuration(type: "in" | "out", duration: number) {
+  onChangeActiveObjectAnimationDuration(type: "in" | "out", duration: number) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeObjectAnimationDuration(selected, type, duration);
   }
@@ -473,6 +519,14 @@ export class Canvas {
     const selected = this.instance.getActiveObject() as fabric.Textbox | null;
     if (!selected || selected.type !== "textbox") return;
     this.onChangeTextboxProperty(selected, property, value, selection);
+  }
+
+  onChangeTextboxFontFamily(textbox: fabric.Textbox, font: string, family: EditorFont) {
+    if (textbox.type !== "textbox") return;
+    textbox.set("fontFamily", font);
+    textbox.meta!.font = family;
+    this.instance.fire("object:modified", { target: textbox });
+    this.instance.requestRenderAll();
   }
 
   onChangeImageProperty(image: fabric.Image, property: keyof fabric.Image, value: any) {
@@ -503,5 +557,6 @@ export class Canvas {
 
   destroy() {
     this.instance?.dispose();
+    this.workspace?.destroy();
   }
 }

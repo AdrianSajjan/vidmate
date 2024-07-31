@@ -15,16 +15,13 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
-  server: {
-    hmr: {},
-  },
 });
 
 function selectiveHotModuleReload(): PluginOption {
   return {
     name: "selective-hmr",
     handleHotUpdate({ server, file }) {
-      if (file.includes("/src/stores/") || file.includes("/src/fabric/") || file.includes("/src/plugins/") || file.includes("/src/models/")) {
+      if (file.includes("/src/store/") || file.includes("/src/fabric/") || file.includes("/src/plugins/") || file.includes("/src/models/")) {
         server.ws.send({
           type: "full-reload",
         });

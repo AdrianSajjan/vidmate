@@ -7,12 +7,16 @@ export function useInitializeCanvas(index: number) {
 
   const ref = useCallback(
     (element: HTMLCanvasElement) => {
+      const canvas = editor.pages[index];
       const workspace = document.getElementById("workspace") as HTMLDivElement;
+
+      if (!canvas || !workspace) return;
+
       if (!element) {
-        editor.pages[index].destroy();
+        canvas.destroy();
         setInitialized(false);
       } else {
-        editor.pages[index].initialize(element, workspace);
+        canvas.initialize(element, workspace);
         setInitialized(true);
       }
     },

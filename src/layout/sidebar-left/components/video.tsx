@@ -25,7 +25,7 @@ function _VideoSidebar() {
       const thumbnail = await extractThumbnailFromVideoURL(source);
       return { source, thumbnail };
     },
-    onSuccess: ({ source, thumbnail }) => mock.upload("video", source, thumbnail),
+    onSuccess: (response) => mock.upload("video", response),
   });
 
   const handleUpload = (files: FileList | null) => {
@@ -57,7 +57,7 @@ function _VideoSidebar() {
           <XIcon size={16} />
         </Button>
       </div>
-      <section className="sidebar-container">
+      <section className="sidebar-container pb-4">
         <div className="px-3 pt-4 pb-6">
           <div className="relative">
             <Input placeholder="Search..." className="text-xs pl-8" />
@@ -79,7 +79,7 @@ function _VideoSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.videos.length ? (
                 store.videos.map(({ source, thumbnail }) => (
                   <button key={source} onClick={handleClick(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
@@ -103,7 +103,7 @@ function _VideoSidebar() {
                 See All
               </Button>
             </div>
-            <div className="flex gap-2.5 items-center overflow-scroll scrollbar-hidden relative">
+            <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               <Fragment>
                 {Array.from({ length: 3 }, (_, index) => (
                   <Skeleton key={index} className="h-16 flex-1 rounded-md" />
