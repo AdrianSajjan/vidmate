@@ -7,11 +7,11 @@ export abstract class CanvasAnimations {
   private static _animationEntryOffset = 50;
 
   private static _initializeAnimation(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], _: AnimationTimeline["scene"]) {
-    const left = object.left!;
-    const top = object.top!;
+    const left = object.group ? object.group.left! + object.left! + object.group.width! / 2 : object.left!;
+    const top = object.group ? object.group.top! + object.top! + object.group.height! / 2 : object.top!;
 
-    const scaleX = object.scaleX!;
-    const scaleY = object.scaleY!;
+    const scaleX = object.group ? object.group.scaleX! * object.scaleX! : object.scaleX!;
+    const scaleY = object.group ? object.group.scaleY! * object.scaleY! : object.scaleY!;
 
     const opacity = object.opacity!;
     const height = object.height!;

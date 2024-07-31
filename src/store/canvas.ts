@@ -250,8 +250,9 @@ export class Canvas {
           FabricUtils.initializeMetaProperties(image);
           FabricUtils.initializeAnimationProperties(image);
 
-          this.instance!.add(image);
-          this.instance!.setActiveObject(image).requestRenderAll();
+          this.instance.add(image);
+          if (!skip) this.instance.setActiveObject(image);
+          this.instance.requestRenderAll();
 
           resolve(image);
         },
@@ -324,11 +325,12 @@ export class Canvas {
           }
 
           const element = video._originalElement as HTMLVideoElement;
-          FabricUtils.initializeMetaProperties(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration) });
-          FabricUtils.initializeAnimationProperties(video);
+          FabricUtils.initializeMetaProperties(video, { duration: Math.min(floor(element.duration, 1) * 1000, this.timeline.duration), ...options?.meta });
+          FabricUtils.initializeAnimationProperties(video, { ...options?.anim });
 
-          this.instance!.add(video);
-          this.instance!.setActiveObject(video).requestRenderAll();
+          this.instance.add(video);
+          if (!skip) this.instance.setActiveObject(video);
+          this.instance.requestRenderAll();
 
           resolve(video);
         },

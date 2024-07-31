@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useEditorContext } from "@/context/editor";
 import { createAdsFromPrompt as createAdsFromPromptApi } from "@/api/prompt";
+import { flowResult } from "mobx";
 
 function _PromptSidebar() {
   const editor = useEditorContext();
@@ -21,6 +22,7 @@ function _PromptSidebar() {
   const createAdsFromPrompt = useMutation({
     mutationFn: async ({ prompt, format }: { prompt: string; format: string }) => {
       const result = await createAdsFromPromptApi(prompt, format);
+      await flowResult(editor.prompter.createSceneFromPromptSession(result));
     },
   });
 
@@ -61,7 +63,7 @@ function _PromptSidebar() {
               <Textarea className="text-xs min-h-20 h-24 max-h-40" readOnly value={prompt} onChange={(event) => setPrompt(event.target.value)} />
             </div>
           </div>
-          <Button size="sm" className="w-full mt-6" onClick={handleCreateVideo}>
+          <Button size="sm" className="w-full mt-6" onClick={handleCreateVideo} disabled={createAdsFromPrompt.isPending}>
             Generate Video
           </Button>
         </section>

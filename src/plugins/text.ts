@@ -9,6 +9,8 @@ interface TextProps {
   fontFamily: string;
   fontSize: number;
   fontWeight: number;
+  duration?: number;
+  offset?: number;
 }
 
 export class CanvasText {
@@ -27,7 +29,7 @@ export class CanvasText {
     return this._canvas.artboard!;
   }
 
-  animated(text: string, { fontFamily, fontSize, fontWeight }: TextProps, animation: string) {
+  animated(text: string, { fontFamily, fontSize, fontWeight, offset = 0, duration = 6000 }: TextProps, animation: string, skip?: boolean) {
     const elements: fabric.Textbox[] = [];
     const words = text.split(" ");
 
@@ -44,21 +46,24 @@ export class CanvasText {
         });
 
         const group = elements.map((element) => element.name!);
-        const duration = 6000;
-        const offset = 500;
+        const timeline = duration / words.length;
+        const animation = 100;
 
         elements.map((element, index) => {
-          FabricUtils.initializeMetaProperties(element, { group, duration: duration - 500 * index, offset: offset * index });
-          FabricUtils.initializeAnimationProperties(element, { in: { name: "fade-in", duration: 250 }, out: { name: "fade-out", duration: 250 } });
+          FabricUtils.initializeMetaProperties(element, { group, duration: duration - timeline * index, offset: offset + timeline * index });
+          FabricUtils.initializeAnimationProperties(element, { in: { name: "fade-in", duration: animation }, out: { name: "fade-out", duration: animation } });
         });
 
         this.canvas.add(...elements);
         const selection = createInstance(fabric.ActiveSelection, elements, { canvas: this.canvas });
-        selection.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
-        this.canvas.setActiveObject(selection).discardActiveObject();
-        this.canvas.requestRenderAll();
 
-        break;
+        if (!skip) {
+          selection.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
+          this.canvas.setActiveObject(selection);
+        }
+
+        this.canvas.requestRenderAll();
+        return selection;
       }
 
       case "subtitle": {
@@ -71,23 +76,25 @@ export class CanvasText {
         });
 
         const group = elements.map((element) => element.name!);
-        const timeline = 6000 / words.length;
-        const duration = 100;
+        const timeline = duration / words.length;
+        const animation = 100;
 
         elements.map((element, index) => {
-          FabricUtils.initializeMetaProperties(element, { group, duration: timeline, offset: timeline * index });
-          FabricUtils.initializeAnimationProperties(element, { in: { name: "fade-in", duration: duration }, out: { name: "fade-out", duration: duration } });
+          FabricUtils.initializeMetaProperties(element, { group, duration: timeline, offset: offset + timeline * index });
+          FabricUtils.initializeAnimationProperties(element, { in: { name: "fade-in", duration: animation }, out: { name: "fade-out", duration: animation } });
         });
 
         this.canvas.add(...elements);
         const selection = createInstance(fabric.ActiveSelection, elements, { canvas: this.canvas });
-        this.canvas.setActiveObject(selection).discardActiveObject();
-        this.canvas.requestRenderAll();
 
-        break;
+        if (!skip) {
+          selection.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
+          this.canvas.setActiveObject(selection);
+        }
+
+        this.canvas.requestRenderAll();
+        return selection;
       }
     }
-
-    return elements;
   }
 }
