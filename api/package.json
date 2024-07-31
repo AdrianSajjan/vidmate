@@ -27,6 +27,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "elevenlabs": "^0.36.4",
+    "lodash": "^4.17.21",
     "module-alias": "^2.2.3",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
