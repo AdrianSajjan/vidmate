@@ -7,6 +7,7 @@ import { SpeechService } from '@app/speech/speech.service';
 import { TokenizerService } from '@app/tokenizer/tokenizer.service';
 import { VideoService } from '@app/video/video.service';
 import { Scene, Speech, Video } from '@app/common/types/ads';
+import { CreateAdsFromPromptDTO } from '@app/ads/dto/create-ads.dto';
 
 const DURATION = 6000;
 
@@ -20,8 +21,8 @@ export class AdsController {
   ) {}
 
   @Post('/prompt')
-  generateAdsFromPrompt(@Body('prompt') prompt: string) {
-    return this.tokenizerService.generateTagsFromPrompt(prompt).pipe(
+  generateAdsFromPrompt(@Body() body: CreateAdsFromPromptDTO) {
+    return this.tokenizerService.generateTagsFromPrompt(body.prompt).pipe(
       switchMap((tags) =>
         forkJoin([
           this.videoService.fetchVideosFromTags(tags),
@@ -36,7 +37,7 @@ export class AdsController {
         const scene = _.map((partial) => ({ ...partial, duration: DURATION }) as Scene, _.zipWith((video: Video, speech: Speech) => ({ video, speech }))(videos, speech));
         const duration = _.reduce((result, element) => result + element.duration, 0, scene);
         scene.push({ audio: videos.at(0).meta.audios.at(0), duration: duration });
-        return _.assign({ tags, prompt })({ scene: scene, duration: duration });
+        return _.assign({ tags, prompt: body.prompt })({ scene: scene, duration: duration, format: body.format });
       }),
     );
   }

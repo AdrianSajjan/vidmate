@@ -1,10 +1,8 @@
 import { api } from "@/config/api";
-import { extractAudioDurationFromSource } from "@/lib/media";
-import { PromptVoice } from "@/types/prompt";
+import { PromptSession } from "@/types/prompt";
+import { nanoid } from "nanoid";
 
-type VoiceContentPromptResponse = Omit<PromptVoice, "duration">;
-
-export async function createVoiceContentFromPrompt(prompt: string) {
-  const response = await api.post<VoiceContentPromptResponse[]>("/speech/prompt", { prompt });
-  return Promise.all(response.data.map((voice) => extractAudioDurationFromSource(voice.source).then((duration) => ({ ...voice, duration }) as PromptVoice)));
+export async function createAdsFromPrompt(prompt: string, format: string) {
+  const response = await api.post<PromptSession>("/ads/prompt", { prompt, format });
+  return Object.assign({ id: nanoid() }, response.data) as PromptSession;
 }

@@ -1,11 +1,11 @@
 import { fabric } from "fabric";
-import { debounce, merge } from "lodash";
+import { merge } from "lodash";
 import { createInstance } from "@/lib/utils";
 import Chart, { AnimationEvent, ChartConfiguration, Plugin } from "chart.js/auto";
 
 const chartPlugins: Plugin[] = [];
 
-const chartOptions: Partial<ChartConfiguration> = {
+const chartConfiguration: Partial<ChartConfiguration> = {
   plugins: chartPlugins,
   options: {
     responsive: false,
@@ -23,8 +23,9 @@ const chartEvents = {
 
 export class FabricChart extends fabric.Object {
   private __chart!: Chart;
+  private __renderer!: HTMLCanvasElement;
 
-  public static type = "chart";
+  public type = "chart";
   public chart = {} as ChartConfiguration;
 
   private __setChartConfiguration(options: Partial<ChartConfiguration>): FabricChart {
@@ -45,23 +46,23 @@ export class FabricChart extends fabric.Object {
 
   private __setChartSize() {
     const canvas = this.__chart.canvas!;
-    canvas.width = this.getScaledWidth() * (window?.devicePixelRatio || 1);
-    canvas.height = this.getScaledHeight() * (window?.devicePixelRatio || 1);
-    this.__chart.resize();
+    canvas.width = this.getScaledWidth();
+    canvas.height = this.getScaledHeight();
+    this.__chart.resize(canvas.width, canvas.height);
   }
 
   private __defaultChartConfiguration() {
-    return merge({}, chartOptions, {
+    return merge({}, chartConfiguration, {
       options: {
         onResize: (size: any) => {
-          chartOptions.options?.onResize?.call(this.__chart, this.__chart, size);
+          chartConfiguration.options?.onResize?.call(this.__chart, this.__chart, size);
           this.chart.options?.onResize?.call(this.__chart, this.__chart, size);
           this.dirty = true;
           this.canvas?.requestRenderAll();
         },
         animation: {
           onProgress: (event: AnimationEvent) => {
-            if (chartOptions.options?.animation) chartOptions.options?.animation?.onProgress?.call(this.__chart, { ...event, chart: this.__chart });
+            if (chartConfiguration.options?.animation) chartConfiguration.options?.animation?.onProgress?.call(this.__chart, { ...event, chart: this.__chart });
             if (this.chart.options?.animation) this.chart.options?.animation?.onProgress?.call(this.__chart, { ...event, chart: this.__chart });
             this.dirty = true;
             this.canvas?.requestRenderAll();
@@ -97,6 +98,7 @@ export class FabricChart extends fabric.Object {
     const canvas = document.createElement("canvas");
     canvas.width = this.getScaledWidth();
     canvas.height = this.getScaledHeight();
+    canvas.style.backgroundColor = "#FFFFFF";
     Object.defineProperty(canvas, "clientWidth", { get: () => canvas.width / window.devicePixelRatio });
     Object.defineProperty(canvas, "clientHeight", { get: () => canvas.height / window.devicePixelRatio });
     Object.defineProperty(canvas, "getBoundingClientRect", { value: this.__getChartBoundingClientRect.bind(this) });
@@ -124,11 +126,26 @@ export class FabricChart extends fabric.Object {
     return this.__chart;
   }
 
+  private __createChartRenderer() {
+    this.__renderer = document.createElement("canvas");
+  }
+
+  private __renderChart() {
+    this.__renderer.width = this.width! * window.devicePixelRatio;
+    this.__renderer.height = this.height! * window.devicePixelRatio;
+    const context = this.__renderer.getContext("2d")!;
+    context.clearRect(0, 0, this.__renderer.width, this.__renderer.height);
+    context.fillStyle = "#FFFFFF";
+    context.fillRect(0, 0, this.__renderer.width, this.__renderer.height);
+    context.drawImage(this.__chart.canvas, 0, 0, this.__renderer.width, this.__renderer.height);
+  }
+
   public initialize(options?: fabric.IChartConfigurationOptions) {
     super.initialize(options);
     this.__createChart();
     this.__bindChartEvents();
-    this.on("scaling", debounce(this.__setChartSize.bind(this), 50));
+    this.__createChartRenderer();
+    this.on("modified", this.__setChartSize.bind(this));
     return this;
   }
 
@@ -138,7 +155,9 @@ export class FabricChart extends fabric.Object {
   }
 
   public _render(ctx: CanvasRenderingContext2D) {
-    if (this.__chart) ctx.drawImage(this.__chart.canvas!, -this.width! / 2, -this.height! / 2, this.width!, this.height!);
+    if (!this.__chart) return;
+    this.__renderChart();
+    ctx.drawImage(this.__renderer, -this.width! / 2, -this.height! / 2, this.width!, this.height!);
   }
 
   public static fromObject(options: fabric.IChartConfigurationOptions, callback: Function) {
@@ -146,17 +165,17 @@ export class FabricChart extends fabric.Object {
   }
 }
 
-const ChartObject = fabric.util.createClass(FabricChart, { type: FabricChart.type });
+const ChartObject = fabric.util.createClass(FabricChart, { type: "chart" });
 ChartObject.fromObject = FabricChart.fromObject;
-
 fabric.Chart = ChartObject;
+
 fabric.util.object.extend(fabric.util, {
   chart: {
     addPlugins(...plugins: any[]) {
       chartPlugins.push(...plugins);
     },
     setDefaults(options: Partial<ChartConfiguration>) {
-      merge(chartOptions, options);
+      merge(chartConfiguration, options);
     },
   },
 });

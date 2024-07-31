@@ -28,3 +28,4 @@ lerna-debug.log*
 *storybook.log
 
 public/models
+api/uploads

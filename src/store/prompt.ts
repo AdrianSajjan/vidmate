@@ -19,4 +19,8 @@ export class Prompt {
     if (isUndefined(state)) this.modal = !this.modal;
     else this.modal = state;
   }
+
+  createSceneFromPromptSession(session: PromptSession) {
+    this.sessions.set(session.id, session);
+  }
 }
