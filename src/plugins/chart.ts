@@ -30,7 +30,7 @@ export class CanvasChart {
       type: type,
       data: {
         labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
-        datasets: [{ label: label, data: [Math.random(), Math.random()], backgroundColor: ["red", "blue"] }],
+        datasets: [{ label: label, data: [Math.random(), Math.random(), Math.random(), Math.random(), Math.random(), Math.random()], backgroundColor: ["red", "blue", "yellow", "green", "purple", "orange"] }],
       },
       options: {
         scales: {
@@ -64,6 +64,8 @@ export class CanvasChart {
   changeChartType(chart: fabric.Chart, type: keyof ChartTypeRegistry) {
     if (!FabricUtils.isChartElement(chart)) return;
     chart.set("chart", { ...chart.chart, type: type });
+    
+    this.canvas.fire("object:modified", { target: chart });
     this.canvas.requestRenderAll();
   }
 
@@ -100,6 +102,7 @@ export class CanvasChart {
 
     chart._set("chart", { options: { scales } });
 
+    this.canvas.fire("object:modified", { target: chart });
     this.canvas.requestRenderAll();
   }
 
@@ -126,5 +129,27 @@ export class CanvasChart {
 
   changeActiveChartBorderRadius(radius: number) {
     this.changeChartBorderRadius(this.canvas._activeObject as fabric.Chart, radius);
+  }
+
+  chnageChartPointRadius(chart: fabric.Chart, radius: number) {
+    if (!FabricUtils.isChartElement(chart)) return;
+    if (chart.chart.type !== "line") return;
+    chart._set("chart", {
+      options: {
+        ...chart.chart.options,
+        elements: {
+          point: {
+            radius: radius,
+          },
+        },
+      },
+    });
+
+    this.canvas.fire("object:modified", { target: chart });
+    this.canvas.requestRenderAll();
+  }
+
+  changeActiveChartPointRadius(radius: number) {
+    this.chnageChartPointRadius(this.canvas._activeObject as fabric.Chart, radius);
   }
 }
