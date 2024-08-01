@@ -31,15 +31,16 @@ export class FabricChart extends fabric.Object {
   private __setChartConfiguration(options: Partial<ChartConfiguration>): FabricChart {
     const instance = this.__chart;
     this.chart = merge({}, this.chart, options);
+    
     if (instance) {
-      if (options.type && options.type !== (instance.config as ChartConfiguration).type) {
+      // if (options.type && options.type !== (instance.config as ChartConfiguration).type) {
         instance.destroy();
         this.__createChart();
-        return this;
-      }
-      instance.data = this.chart.data || instance.data;
-      instance.options = this.chart.options || instance.options;
-      this.__chart.update();
+        // return this;
+      // }
+      // instance.data = this.chart.data || instance.data;
+      // instance.options = this.chart.options || instance.options;
+      // this.__chart.update();
     }
     return this;
   }
