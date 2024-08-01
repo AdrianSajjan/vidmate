@@ -120,7 +120,7 @@ export class CanvasChart {
       },
     });
 
-    this._canvas.instance.fire("object:modified", { target: chart });
+    this.canvas.fire("object:modified", { target: chart });
     this.canvas.requestRenderAll();
   }
 
