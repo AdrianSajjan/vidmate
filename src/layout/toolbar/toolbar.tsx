@@ -11,6 +11,7 @@ import { VideoToolbar } from "./components/video";
 import { AudioToolbar } from "./components/audio";
 import { CropToolbar } from "./components/crop";
 import { TrimToolbar } from "./components/trim";
+import { ChartToolbar } from "./components/chart";
 
 const toolbarComponentMap: Record<string, () => JSX.Element> = {
   textbox: TextToolbar,
@@ -25,6 +26,7 @@ const toolbarComponentMap: Record<string, () => JSX.Element> = {
   audio: AudioToolbar,
   crop: CropToolbar,
   trim: TrimToolbar,
+  chart: ChartToolbar,
 };
 
 function _EditorToolbar() {

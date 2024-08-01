@@ -32,6 +32,20 @@ export class CanvasChart {
         labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
         datasets: [{ label: label, data: [Math.random(), Math.random()], backgroundColor: ["red", "blue"] }],
       },
+      options: {
+        scales: {
+          x: { grid: { display: true } },
+          y: { grid: { display: true } },
+        },
+        elements: {
+          bar: {
+            borderRadius: 0,
+          },
+          point: {
+            radius: 3,
+          },
+        },
+      },
     };
 
     const chart = createInstance(fabric.Chart, { name: FabricUtils.elementID("bar-chart"), width: 500, height: 500, chart: options });
@@ -45,5 +59,72 @@ export class CanvasChart {
     this.canvas.requestRenderAll();
 
     return chart;
+  }
+
+  changeChartType(chart: fabric.Chart, type: keyof ChartTypeRegistry) {
+    if (!FabricUtils.isChartElement(chart)) return;
+    chart.set("chart", { ...chart.chart, type: type });
+    this.canvas.requestRenderAll();
+  }
+
+  changeActiveChartType(type: keyof ChartTypeRegistry) {
+    this.changeChartType(this.canvas._activeObject as fabric.Chart, type);
+  }
+
+  toggleChartGridlines(chart: fabric.Chart, grid: string = "both") {
+    if (!FabricUtils.isChartElement(chart)) return;
+
+    let scales;
+
+    if (grid === "y") {
+      scales = {
+        x: { grid: { display: true } },
+        y: { grid: { display: false } },
+      };
+    } else if (grid === "x") {
+      scales = {
+        x: { grid: { display: false } },
+        y: { grid: { display: true } },
+      };
+    } else if (grid === "both") {
+      scales = {
+        x: { grid: { display: true } },
+        y: { grid: { display: true } },
+      };
+    } else if (grid === "none") {
+      scales = {
+        x: { grid: { display: false } },
+        y: { grid: { display: false } },
+      };
+    }
+
+    chart._set("chart", { options: { scales } });
+
+    this.canvas.requestRenderAll();
+  }
+
+  toggleActiveChartGridlines(grid: string) {
+    this.toggleChartGridlines(this.canvas._activeObject as fabric.Chart, grid);
+  }
+
+  changeChartBorderRadius(chart: fabric.Chart, radius: number) {
+    if (!FabricUtils.isChartElement(chart)) return;
+    chart._set("chart", {
+      options: {
+        ...chart.chart.options,
+        elements: {
+          bar: {
+            borderRadius: radius,
+          },
+        },
+      },
+    });
+
+    this._canvas.instance.fire("object:modified", { target: chart });
+    this.canvas.requestRenderAll();
+  }
+
+  changeActiveChartBorderRadius(radius: number) {
+    this.changeChartBorderRadius(this.canvas._activeObject as fabric.Chart, radius);
   }
 }
