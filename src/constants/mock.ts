@@ -1,5 +1,6 @@
 import { createInstance } from "@/lib/utils";
 import { EditorAudio, EditorMedia, EditorTemplate } from "@/types/editor";
+import { PromptSession } from "@/types/prompt";
 import { useSyncExternalStore } from "react";
 
 const images: EditorMedia[] = [
@@ -24,6 +25,91 @@ const videos: EditorMedia[] = [
   },
 ];
 
+const prompts: PromptSession[] = [
+  {
+    id: "1",
+    tags: ["running", "shoes"],
+    prompt: "Running Shoes",
+    scene: [
+      {
+        video: {
+          name: "engineered-with-state-of-the-art-technology-for-unmatched-comfort-and-durability",
+          url: "http://localhost:3000/videos/178420.mp4",
+          meta: {
+            tags: ["running", "shoes", "trail", "hill"],
+            audios: [
+              {
+                name: "rock-beat-rythm",
+                url: "http://localhost:3000/audios/178420.mp3",
+              },
+            ],
+          },
+        },
+        speech: {
+          gender: "male",
+          url: "http://localhost:3000/speech/0977f62b-bd25-4ade-994e-42b3b59149dd.mp3",
+          subtitle: "Introducing the ultimate performance boost - the new SprintX Sports Shoes!",
+          voice: "Brian",
+        },
+        duration: 5,
+      },
+      {
+        video: {
+          name: "experience-the-perfect-grip-with-our-advanced-traction-soles-on-any-terrain",
+          url: "http://localhost:3000/videos/178421.mp4",
+          meta: {
+            tags: ["running", "shoes", "trail", "hill"],
+            audios: [
+              {
+                name: "rock-beat-rythm",
+                url: "http://localhost:3000/audios/178420.mp3",
+              },
+            ],
+          },
+        },
+        speech: {
+          gender: "male",
+          url: "http://localhost:3000/speech/a5d25311-ba14-4268-b746-5c1d345cad77.mp3",
+          subtitle: "Engineered with state-of-the-art technology for unmatched comfort and durability.",
+          voice: "Brian",
+        },
+        duration: 5,
+      },
+      {
+        video: {
+          name: "grab-yours-today-and-feel-the-difference-in-every-step-you-take",
+          url: "http://localhost:3000/videos/178422.mp4",
+          meta: {
+            tags: ["running", "shoes", "trail", "hill"],
+            audios: [
+              {
+                name: "rock-beat-rythm",
+                url: "http://localhost:3000/audios/178420.mp3",
+              },
+            ],
+          },
+        },
+        speech: {
+          gender: "male",
+          url: "http://localhost:3000/speech/ea6111e3-9b3a-42ac-8b0e-79729d9940f4.mp3",
+          subtitle: "Experience the perfect grip with our advanced traction soles on any terrain.",
+          voice: "Brian",
+        },
+        duration: 5,
+      },
+      {
+        audio: {
+          name: "rock-beat-rythm",
+          url: "http://localhost:3000/audios/178420.mp3",
+        },
+        duration: 15,
+      },
+    ],
+    duration: 15,
+    format: "banner",
+  },
+];
+
 const audios: EditorAudio[] = [];
 
 const templates: EditorTemplate[] = [];
@@ -32,6 +118,7 @@ export interface MockDataState {
   images: EditorMedia[];
   videos: EditorMedia[];
   audios: EditorAudio[];
+  prompts: PromptSession[];
   templates: EditorTemplate[];
 }
 
@@ -40,8 +127,8 @@ export class MockDataStore {
   subscribers: Set<Function>;
 
   constructor() {
-    this.state = { images, videos, audios, templates };
     this.subscribers = createInstance(Set<Function>);
+    this.state = { images, videos, audios, templates, prompts };
   }
 
   store() {

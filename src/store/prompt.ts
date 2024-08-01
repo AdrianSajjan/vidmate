@@ -1,3 +1,4 @@
+import { mock } from "@/constants/mock";
 import { FabricUtils } from "@/fabric/utils";
 import { createMap } from "@/lib/utils";
 import { Editor } from "@/store/editor";
@@ -15,7 +16,7 @@ export class Prompt {
   constructor(editor: Editor) {
     this._editor = editor;
     this.modal = false;
-    this.sessions = createMap<string, PromptSession>();
+    this.sessions = createMap<string, PromptSession>(mock.state.prompts.map((session) => [session.id, session]));
     makeAutoObservable(this);
   }
 
@@ -30,6 +31,10 @@ export class Prompt {
     }
   }
 
+  get hasSessions() {
+    return Array.from(this.sessions.values()).length > 0;
+  }
+
   toggleModal(state?: boolean) {
     if (isUndefined(state)) this.modal = !this.modal;
     else this.modal = state;
@@ -38,10 +43,14 @@ export class Prompt {
   *createSceneFromPromptSession(session: PromptSession) {
     try {
       let offset = 0;
+
       const dimensions = this._dimensionsFromFormat(session.format);
       this.sessions.set(session.id, session);
 
       this.canvas.instance.clear();
+      this.canvas.instance.insertAt(this.canvas.artboard, 0, false);
+      this.canvas.instance.clipPath = this.canvas.artboard;
+      this.canvas.workspace.changeFill("#FFFFFF");
       this.canvas.workspace.resizeArtboard(dimensions);
 
       this.canvas.timeline.set("seek", 0);
