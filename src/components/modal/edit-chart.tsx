@@ -1,16 +1,15 @@
-import { useEditorContext } from "@/context/editor";
-import { createInstance } from "@/lib/utils";
-import { Chart, ChartConfiguration } from "chart.js";
-import { observer } from "mobx-react";
 import { useEffect, useRef, useState } from "react";
-import { Label } from "../ui/label";
+import { observer } from "mobx-react";
+import { toJS } from "mobx";
+import { Chart } from "chart.js";
+import { useEditorContext } from "@/context/editor";
+import { getChartGridlinesStatus } from "@/lib/charts";
+import { createInstance } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { getBorderRadius, getChartGridlinesStatus } from "@/lib/charts";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
-import { toJS } from "mobx";
 
 function _EditChartModal({ onClose }: { onClose: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
