@@ -44,6 +44,9 @@ export class CanvasChart {
           point: {
             radius: 3,
           },
+          arc: {
+            circular: true,
+          },
         },
       },
     };
@@ -61,10 +64,22 @@ export class CanvasChart {
     return chart;
   }
 
+  updateChart(chart: fabric.Chart, options: ChartConfiguration["options"]) {
+    if (!FabricUtils.isChartElement(chart)) return;
+
+    chart._set("chart", { options });
+    this.canvas.fire("object:modified", { target: chart });
+    this.canvas.requestRenderAll();
+  }
+
+  updateActiveChart(options: ChartConfiguration["options"]) {
+    this.updateChart(this.canvas._activeObject as fabric.Chart, options);
+  }
+
   changeChartType(chart: fabric.Chart, type: keyof ChartTypeRegistry) {
     if (!FabricUtils.isChartElement(chart)) return;
-    chart.set("chart", { ...chart.chart, type: type });
-    
+    chart._set("chart", { ...chart.chart, type: type });
+
     this.canvas.fire("object:modified", { target: chart });
     this.canvas.requestRenderAll();
   }
