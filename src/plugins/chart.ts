@@ -64,7 +64,7 @@ export class CanvasChart {
     return chart;
   }
 
-  updateChart(chart: fabric.Chart, options: ChartConfiguration["options"]) {
+  updateChartOptions(chart: fabric.Chart, options: ChartConfiguration["options"]) {
     if (!FabricUtils.isChartElement(chart)) return;
 
     chart._set("chart", { options });
@@ -72,8 +72,24 @@ export class CanvasChart {
     this.canvas.requestRenderAll();
   }
 
-  updateActiveChart(options: ChartConfiguration["options"]) {
-    this.updateChart(this.canvas._activeObject as fabric.Chart, options);
+  updateActiveChartOptions(options: ChartConfiguration["options"]) {
+    this.updateChartOptions(this.canvas._activeObject as fabric.Chart, options);
+  }
+
+  updateChartLabels(chart: fabric.Chart, data: ChartConfiguration["data"]) {
+    if (!FabricUtils.isChartElement(chart)) return;
+
+    console.log(data);
+
+    chart._set("chart", {
+      data: data,
+    });
+    this.canvas.fire("object:modified", { target: chart });
+    this.canvas.requestRenderAll();
+  }
+
+  updateActiveChartLabels(data: ChartConfiguration["data"]) {
+    this.updateChartLabels(this.canvas._activeObject as fabric.Chart, data);
   }
 
   changeChartType(chart: fabric.Chart, type: keyof ChartTypeRegistry) {

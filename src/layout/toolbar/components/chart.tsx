@@ -16,7 +16,8 @@ const changeChartTypeOptions = [
 
 function _ChartToolbar() {
   const editor = useEditorContext();
-  const [isOpen, setOpen] = useState(false)
+  const [isOpen, setOpen] = useState(false);
+  const [isLabelsOpen, setLabelsOpen] = useState(false);
 
   return (
     <div className="px-1 flex items-center gap-2 h-full w-full overflow-x-scroll scrollbar-hidden">
@@ -41,7 +42,19 @@ function _ChartToolbar() {
         <DialogContent className="w-full max-w-6xl">
           <DialogTitle className="sr-only">Edit Chart</DialogTitle>
           <DialogDescription className="sr-only">Edit the selected chart configuration</DialogDescription>
-          <EditChartModal onClose={()=>setOpen(false)} />
+          <EditChartModal onClose={() => setOpen(false)} type="options" />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isLabelsOpen} onOpenChange={setLabelsOpen}>
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            Chart Labels
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="w-full max-w-6xl">
+          <DialogTitle className="sr-only">Edit Chart Labels</DialogTitle>
+          <DialogDescription className="sr-only">Edit the selected chart labels</DialogDescription>
+          <EditChartModal onClose={() => setLabelsOpen(false)} type="data" />
         </DialogContent>
       </Dialog>
     </div>
