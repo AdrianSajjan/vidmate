@@ -62,11 +62,12 @@ function _EntryAnimations() {
 
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangeActiveObjectAnimation("in", animation.value);
-    if (animation.value === "none") return;
-    const duration = animation?.fixed?.duration ? animation.duration : selected.anim?.out.duration;
-    const easing = animation?.fixed?.easing ? animation.easing : selected.anim?.out.easing;
-    editor.canvas.onChangeActiveObjectAnimationDuration("in", duration || 500);
-    editor.canvas.onChangeActiveObjectAnimationEasing("in", easing || "linear");
+    if (animation.value !== "none") {
+      const duration = animation.fixed?.duration ? animation.duration : selected.anim?.out.duration;
+      const easing = animation.fixed?.easing ? animation.easing : selected.anim?.out.easing;
+      editor.canvas.onChangeActiveObjectAnimationDuration("in", duration || 500);
+      editor.canvas.onChangeActiveObjectAnimationEasing("in", easing || "linear");
+    }
   };
 
   const handleChangeEasing = (easing: string) => {
@@ -122,11 +123,12 @@ function _ExitAnimations() {
 
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangeActiveObjectAnimation("out", animation.value);
-    if (animation.value === "none") return;
-    const duration = animation?.fixed?.duration ? animation.duration : selected.anim?.out.duration;
-    const easing = animation?.fixed?.easing ? animation.easing : selected.anim?.out.easing;
-    editor.canvas.onChangeActiveObjectAnimationDuration("out", duration || 500);
-    editor.canvas.onChangeActiveObjectAnimationEasing("out", easing || "linear");
+    if (animation.value !== "none") {
+      const duration = animation.fixed?.duration ? animation.duration : selected.anim?.out.duration;
+      const easing = animation.fixed?.easing ? animation.easing : selected.anim?.out.easing;
+      editor.canvas.onChangeActiveObjectAnimationDuration("out", duration || 500);
+      editor.canvas.onChangeActiveObjectAnimationEasing("out", easing || "linear");
+    }
   };
 
   const handleChangeEasing = (easing: string) => {
@@ -175,17 +177,60 @@ function _SceneAnimations() {
   const editor = useEditorContext();
   const selected = editor.canvas.selection.active!;
 
+  const animation = scene.find((animation) => animation.value === selected.anim?.scene.name);
+  const disabled = !selected.anim?.scene.name || selected.anim?.scene.name === "none";
+
+  const easing = selected.anim?.scene.easing || "linear";
+  const duration = (selected.anim?.scene.duration || 0) / 1000;
+
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangeActiveObjectAnimation("scene", animation.value);
+    if (animation.value !== "none") {
+      const duration = animation.fixed?.duration ? animation.duration : selected.anim?.scene.duration;
+      const easing = animation.fixed?.easing ? animation.easing : selected.anim?.scene.easing;
+      editor.canvas.onChangeActiveObjectAnimationDuration("scene", duration || 500);
+      editor.canvas.onChangeActiveObjectAnimationEasing("scene", easing || "linear");
+    }
+  };
+
+  const handleChangeEasing = (easing: string) => {
+    editor.canvas.onChangeActiveObjectAnimationEasing("scene", easing);
+  };
+
+  const handleChangeDuration: ChangeEventHandler<HTMLInputElement> = (event) => {
+    const value = +event.target.value * 1000;
+    if (isNaN(value) || value < 0) return;
+    editor.canvas.onChangeActiveObjectAnimationDuration("scene", value);
   };
 
   return (
-    <div className="grid grid-cols-2 @sm:grid-cols-3 @md:grid-cols-4 gap-5 pt-6">
-      {scene
-        .filter((animation) => !animation.type || animation.type === selected.type)
-        .map((animation) => (
-          <AnimationItem key={animation.label} animation={animation} selected={selected.anim?.scene.name === animation.value} onClick={() => handleSelectAnimation(animation)} />
-        ))}
+    <div className="flex flex-col px-1">
+      <div className="flex items-center justify-between gap-6">
+        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
+        <Input value={duration} onChange={handleChangeDuration} disabled={disabled || animation?.disabled?.duration} type="number" step={0.1} className="text-xs h-8 w-40" />
+      </div>
+      <div className="flex items-center justify-between gap-6 mt-3">
+        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
+        <Select value={easing} onValueChange={handleChangeEasing} disabled={disabled || animation?.disabled?.easing}>
+          <SelectTrigger className="h-8 text-xs w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {easings.map((easing) => (
+              <SelectItem key={easing.value} className="text-xs" value={easing.value}>
+                {easing.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid grid-cols-2 @sm:grid-cols-3 @md:grid-cols-4 gap-5 pt-6">
+        {scene
+          .filter((animation) => !animation.type || animation.type === selected.type)
+          .map((animation) => (
+            <AnimationItem key={animation.label} animation={animation} selected={selected.anim?.scene.name === animation.value} onClick={() => handleSelectAnimation(animation)} />
+          ))}
+      </div>
     </div>
   );
 }

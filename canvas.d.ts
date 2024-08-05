@@ -2798,9 +2798,9 @@ export class Line {
   calcLinePoints(): { x1: number; x2: number; y1: number; y2: number };
 }
 
-export type EntryAnimation = "none" | "fade-in" | (string & {});
-export type ExitAnimation = "none" | "fade-out" | (string & {});
-export type SceneAnimations = "none" | "typewriter" | "individual-words" | (string & {});
+export type EntryAnimation = "none" | (string & {});
+export type ExitAnimation = "none" | (string & {});
+export type SceneAnimations = "none" | (string & {});
 
 export interface AnimationTimeline {
   in: {
@@ -5996,6 +5996,10 @@ interface IUtilAnimationOptions {
    * Callback; invoked when value change is completed
    */
   onComplete?: Function | undefined;
+  /**
+   * Additional function with logic. If returns true, animation aborts.
+   */
+  abort?: Function | undefined;
   /**
    * Easing function
    */

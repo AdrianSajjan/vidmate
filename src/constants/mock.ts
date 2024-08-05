@@ -3,112 +3,11 @@ import { EditorAudio, EditorMedia, EditorTemplate } from "@/types/editor";
 import { PromptSession } from "@/types/prompt";
 import { useSyncExternalStore } from "react";
 
-const images: EditorMedia[] = [
-  {
-    source: "https://images.unsplash.com/photo-1558383331-f520f2888351?q=100&w=1080&auto=format",
-    thumbnail: "https://images.unsplash.com/photo-1558383331-f520f2888351?q=75&w=256&auto=format",
-  },
-  {
-    source: "https://plus.unsplash.com/premium_photo-1710119487743-48959c984d45?q=100&w=1080&auto=format",
-    thumbnail: "https://plus.unsplash.com/premium_photo-1710119487743-48959c984d45?q=75&w=256&auto=format",
-  },
-  {
-    source: "https://images.unsplash.com/photo-1709704878349-6489691c0bd6?q=100&w=1080&auto=format",
-    thumbnail: "https://images.unsplash.com/photo-1709704878349-6489691c0bd6?q=75&w=256&auto=format",
-  },
-];
+const images: EditorMedia[] = [];
 
-const videos: EditorMedia[] = [
-  {
-    source: "https://cdn.img.ly/assets/demo/v2/ly.img.video/videos/pexels-drone-footage-of-a-surfer-barrelling-a-wave-12715991.mp4",
-    thumbnail: "https://cdn.img.ly/assets/demo/v2/ly.img.video/thumbnails/pexels-drone-footage-of-a-surfer-barrelling-a-wave-12715991.jpg",
-  },
-];
+const videos: EditorMedia[] = [];
 
-const prompts: PromptSession[] = [
-  {
-    id: "1",
-    tags: ["running", "shoes"],
-    prompt: "Running Shoes",
-    scene: [
-      {
-        video: {
-          name: "engineered-with-state-of-the-art-technology-for-unmatched-comfort-and-durability",
-          url: "http://localhost:3000/videos/178420.mp4",
-          meta: {
-            tags: ["running", "shoes", "trail", "hill"],
-            audios: [
-              {
-                name: "rock-beat-rythm",
-                url: "http://localhost:3000/audios/178420.mp3",
-              },
-            ],
-          },
-        },
-        speech: {
-          gender: "male",
-          url: "http://localhost:3000/speech/0977f62b-bd25-4ade-994e-42b3b59149dd.mp3",
-          subtitle: "Introducing the ultimate performance boost - the new SprintX Sports Shoes!",
-          voice: "Brian",
-        },
-        duration: 5,
-      },
-      {
-        video: {
-          name: "experience-the-perfect-grip-with-our-advanced-traction-soles-on-any-terrain",
-          url: "http://localhost:3000/videos/178421.mp4",
-          meta: {
-            tags: ["running", "shoes", "trail", "hill"],
-            audios: [
-              {
-                name: "rock-beat-rythm",
-                url: "http://localhost:3000/audios/178420.mp3",
-              },
-            ],
-          },
-        },
-        speech: {
-          gender: "male",
-          url: "http://localhost:3000/speech/a5d25311-ba14-4268-b746-5c1d345cad77.mp3",
-          subtitle: "Engineered with state-of-the-art technology for unmatched comfort and durability.",
-          voice: "Brian",
-        },
-        duration: 5,
-      },
-      {
-        video: {
-          name: "grab-yours-today-and-feel-the-difference-in-every-step-you-take",
-          url: "http://localhost:3000/videos/178422.mp4",
-          meta: {
-            tags: ["running", "shoes", "trail", "hill"],
-            audios: [
-              {
-                name: "rock-beat-rythm",
-                url: "http://localhost:3000/audios/178420.mp3",
-              },
-            ],
-          },
-        },
-        speech: {
-          gender: "male",
-          url: "http://localhost:3000/speech/ea6111e3-9b3a-42ac-8b0e-79729d9940f4.mp3",
-          subtitle: "Experience the perfect grip with our advanced traction soles on any terrain.",
-          voice: "Brian",
-        },
-        duration: 5,
-      },
-      {
-        audio: {
-          name: "rock-beat-rythm",
-          url: "http://localhost:3000/audios/178420.mp3",
-        },
-        duration: 15,
-      },
-    ],
-    duration: 15,
-    format: "banner",
-  },
-];
+const prompts: PromptSession[] = [];
 
 const audios: EditorAudio[] = [];
 

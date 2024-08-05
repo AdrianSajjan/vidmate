@@ -1,9 +1,7 @@
 import anime from "animejs";
 import { makeAutoObservable } from "mobx";
-
 import { FabricUtils } from "@/fabric/utils";
 import { Canvas } from "@/store/canvas";
-import { CanvasAnimations } from "@/plugins/animations";
 
 export class CanvasTimeline {
   private _canvas: Canvas;
@@ -27,6 +25,10 @@ export class CanvasTimeline {
 
   private get canvas() {
     return this._canvas.instance!;
+  }
+
+  private get animations() {
+    return this._canvas.animations!;
   }
 
   private _initEvents() {
@@ -83,7 +85,7 @@ export class CanvasTimeline {
 
   private _initializeTimeline() {
     this._timeline = anime.timeline({ duration: this.duration, autoplay: false, begin: this._begin.bind(this), update: this._update.bind(this), complete: this._complete.bind(this) });
-    CanvasAnimations.initializeAnimations(this.canvas, this._timeline!, this.duration);
+    this.animations.initialize(this.canvas, this._timeline!, this.duration);
   }
 
   private _resetTimeline() {

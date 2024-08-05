@@ -28,8 +28,8 @@ function _ImageSidebar() {
 
   const handleUpload = (files: FileList | null) => {
     if (!files || !files.length) return;
-    const promise = upload.mutateAsync(files[0]);
-    toast.promise(promise, { loading: `The image is being uploaded`, success: `The image has been successfully uploaded`, error: `Ran into an error while uploading the image` });
+    const promise = Promise.all(Array.from(files).map((file) => upload.mutateAsync(file)));
+    toast.promise(promise, { loading: `The images are being uploaded`, success: `The images have been successfully uploaded`, error: `Ran into an error while uploading the images` });
   };
 
   const handleClick = (source: string) => (event: MouseEvent<HTMLButtonElement>) => {
@@ -69,7 +69,7 @@ function _ImageSidebar() {
                 <label>
                   <PlusIcon size={14} />
                   <span>Add File</span>
-                  <input hidden type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files)} />
+                  <input hidden multiple type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files)} />
                 </label>
               </Button>
               <Button size="sm" variant="link" className="text-primary h-6 font-medium line-clamp-1 px-1.5">

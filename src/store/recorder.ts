@@ -1,15 +1,14 @@
 import anime from "animejs";
 import { fabric } from "fabric";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { makeAutoObservable } from "mobx";
 
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise, createUint8Array } from "@/lib/utils";
 import { Editor } from "@/store/editor";
 import { propertiesToInclude } from "@/fabric/constants";
-import { CanvasAnimations } from "@/plugins/animations";
 import { dataURLToUInt8Array } from "@/lib/media";
 import { fetchExtensionByCodec } from "@/constants/recorder";
-import { makeAutoObservable } from "mobx";
 
 export class Recorder {
   private _editor: Editor;
@@ -36,6 +35,10 @@ export class Recorder {
 
   private get artboard() {
     return this._editor.canvas.artboard!;
+  }
+
+  private get animations() {
+    return this._editor.canvas.animations;
   }
 
   private *_toggleElements(ms: number) {
@@ -159,7 +162,7 @@ export class Recorder {
     this.instance.renderAll();
 
     this.timeline = anime.timeline({ duration: this.preview.duration, loop: false, autoplay: false, update: this.instance.requestRenderAll.bind(this.instance) });
-    CanvasAnimations.initializeAnimations(this.instance, this.timeline, this.preview.duration);
+    this.animations.initialize(this.instance, this.timeline, this.preview.duration);
   }
 
   stop() {

@@ -1,10 +1,10 @@
-export function modifyAnimationEasing(easing?: string, duration?: number) {
+export function modifyAnimationEasing(easing?: string, _duration?: number) {
   switch (easing) {
-    case "easeOutElastic":
-      return "easeOutElastic";
-    case "spring":
-      const { damping, mass, stiffness } = calculateSpringParameters(duration);
-      return `spring(${mass},${stiffness},${damping},0)`;
+    // case "easeOutElastic":
+    //   return "easeOutElastic";
+    // case "spring":
+    //   const { damping, mass, stiffness } = calculateSpringParameters(duration);
+    //   return `spring(${mass},${stiffness},${damping},0)`;
     default:
       return easing || "linear";
   }

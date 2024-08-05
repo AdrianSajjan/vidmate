@@ -16,13 +16,14 @@ import { CanvasTemplate } from "@/plugins/template";
 import { CanvasTimeline } from "@/plugins/timeline";
 import { CanvasTrimmer } from "@/plugins/trim";
 import { CanvasWorkspace } from "@/plugins/workspace";
+import { CanvasChart } from "@/plugins/chart";
+import { CanvasText } from "@/plugins/text";
+import { CanvasAnimations } from "@/plugins/animations";
 
 import { EditorFont } from "@/constants/fonts";
 import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
-import { CanvasChart } from "@/plugins/chart";
-import { CanvasText } from "@/plugins/text";
 export class Canvas {
   id: string;
   name: string;
@@ -34,6 +35,7 @@ export class Canvas {
   audio!: CanvasAudio;
   chart!: CanvasChart;
   timeline!: CanvasTimeline;
+  animations!: CanvasAnimations;
   workspace!: CanvasWorkspace;
 
   replacer!: CanvasReplace;
@@ -156,6 +158,7 @@ export class Canvas {
     this.chart = createInstance(CanvasChart, this);
     this.audio = createInstance(CanvasAudio, this);
     this.timeline = createInstance(CanvasTimeline, this);
+    this.animations = createInstance(CanvasAnimations, this);
     this.workspace = createInstance(CanvasWorkspace, this, workspace);
 
     this._initEvents();
@@ -183,8 +186,12 @@ export class Canvas {
   *onCloneObject(object?: fabric.Object) {
     if (!object) return;
 
+    const name = FabricUtils.elementID(object.name!.split("_").at(0) || "clone");
+    const meta = structuredClone(object.meta);
+    const anim = structuredClone(object.anim);
+
     const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone(resolve, propertiesToInclude));
-    clone.set({ name: FabricUtils.elementID(clone.name!.split("_").at(0) || "clone"), top: clone.top! + 50, left: clone.left! + 50, clipPath: undefined }).setCoords();
+    clone.set({ name: name, top: clone.top!, left: clone.left!, meta: meta, anim: anim, clipPath: undefined }).setCoords();
 
     if (object.clipPath) {
       this.history.active = false;
@@ -499,12 +506,12 @@ export class Canvas {
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangeActiveObjectAnimationEasing(type: "in" | "out", easing: any) {
+  onChangeActiveObjectAnimationEasing(type: "in" | "out" | "scene", easing: any) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeObjectAnimationEasing(selected, type, easing);
   }
 
-  onChangeActiveObjectAnimationDuration(type: "in" | "out", duration: number) {
+  onChangeActiveObjectAnimationDuration(type: "in" | "out" | "scene", duration: number) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeObjectAnimationDuration(selected, type, duration);
   }

@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import { PauseIcon, PlayIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { Fragment, MouseEventHandler, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { upperFirst } from "lodash";
 import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
@@ -64,11 +63,8 @@ function _UploadSidebar() {
 
   const handleUpload = (files: FileList | null, type: "image" | "video" | "audio") => {
     if (!files || !files.length) return;
-    toast.promise(upload.mutateAsync({ type: type, file: files[0] }), {
-      loading: `Your ${type} asset is being uploaded...`,
-      success: `${upperFirst(type)} has been successfully uploaded`,
-      error: `Ran into an error while uploading the ${type}`,
-    });
+    const promise = Promise.all(Array.from(files).map((file) => upload.mutateAsync({ file, type })));
+    toast.promise(promise, { loading: `The assets are being uploaded`, success: `The assets have been successfully uploaded`, error: `Ran into an error while uploading the assets` });
   };
 
   const handleClickImage =
@@ -76,15 +72,11 @@ function _UploadSidebar() {
     (event) => {
       const thumbnail = event.currentTarget.querySelector("img");
       if (!thumbnail || !isImageLoaded(thumbnail)) {
-        toast.promise(flowResult(editor.canvas.onAddImageFromSource(source)), {
-          loading: "The image asset is being loaded...",
-          success: () => "The image asset has been added to artboard",
-          error: () => "Ran into an error adding the image asset",
-        });
+        const promise = flowResult(editor.canvas.onAddImageFromSource(source));
+        toast.promise(promise, { loading: "The image asset is being loaded...", success: "The image asset has been added to artboard", error: "Ran into an error adding the image asset" });
       } else {
-        toast.promise(flowResult(editor.canvas.onAddImageFromThumbail(source, thumbnail)), {
-          error: () => "Ran into an error adding the image asset",
-        });
+        const promise = flowResult(editor.canvas.onAddImageFromThumbail(source, thumbnail));
+        toast.promise(promise, { error: "Ran into an error adding the image asset" });
       }
     };
 
@@ -93,24 +85,17 @@ function _UploadSidebar() {
     async (event) => {
       const thumbnail = event.currentTarget.querySelector("img");
       if (!thumbnail || !isImageLoaded(thumbnail)) {
-        toast.promise(flowResult(editor.canvas.onAddVideoFromSource(source)), {
-          loading: "The video asset is being loaded...",
-          success: () => "The video asset has been added to artboard",
-          error: () => "Ran into an error adding the video asset",
-        });
+        const promise = flowResult(editor.canvas.onAddVideoFromSource(source));
+        toast.promise(promise, { loading: "The video asset is being loaded...", success: "The video asset has been added to artboard", error: "Ran into an error adding the video asset" });
       } else {
-        toast.promise(flowResult(editor.canvas.onAddVideoFromThumbail(source, thumbnail)), {
-          error: () => "Ran into an error adding the video asset",
-        });
+        const promise = flowResult(editor.canvas.onAddVideoFromThumbail(source, thumbnail));
+        toast.promise(promise, { error: "Ran into an error adding the video asset" });
       }
     };
 
   const handleClickAudio = (audio: EditorAudio) => async () => {
-    toast.promise(flowResult(editor.canvas.audio.add(audio.source, audio.name)), {
-      loading: "The audio asset is being loaded...",
-      success: () => "The audio asset has been added to timeline",
-      error: () => "Ran into an error adding the audio asset",
-    });
+    const promise = flowResult(editor.canvas.audio.add(audio.source, audio.name));
+    toast.promise(promise, { loading: "The audio asset is being loaded...", success: "The audio asset has been added to timeline", error: "Ran into an error adding the audio asset" });
   };
 
   return (
@@ -136,7 +121,7 @@ function _UploadSidebar() {
                 <label>
                   <PlusIcon size={14} />
                   <span>Add File</span>
-                  <input hidden type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files, "image")} />
+                  <input hidden multiple type="file" accept="image/*" onChange={(event) => handleUpload(event.target.files, "image")} />
                 </label>
               </Button>
               <Button size="sm" variant="link" className="text-primary h-6 font-medium line-clamp-1 px-1.5">
@@ -167,7 +152,7 @@ function _UploadSidebar() {
                 <label>
                   <PlusIcon size={14} />
                   <span>Add File</span>
-                  <input hidden type="file" accept="video/*" onChange={(event) => handleUpload(event.target.files, "video")} />
+                  <input hidden multiple type="file" accept="video/*" onChange={(event) => handleUpload(event.target.files, "video")} />
                 </label>
               </Button>
               <Button size="sm" variant="link" className="text-primary h-6 font-medium line-clamp-1 px-1.5">
@@ -198,7 +183,7 @@ function _UploadSidebar() {
                 <label>
                   <PlusIcon size={14} />
                   <span>Add File</span>
-                  <input hidden type="file" accept="audio/*" onChange={(event) => handleUpload(event.target.files, "audio")} />
+                  <input hidden multiple type="file" accept="audio/*" onChange={(event) => handleUpload(event.target.files, "audio")} />
                 </label>
               </Button>
               <Button size="sm" variant="link" className="text-primary h-6 font-medium line-clamp-1 px-1.5">

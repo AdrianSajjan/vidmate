@@ -149,11 +149,12 @@ export abstract class FabricUtils {
     }
   }
 
-  static objectSpinningAnimation(object: fabric.Object, duration = 750, loop = true) {
+  static objectSpinningAnimation(object: fabric.Object, duration = 750, loop = true, abort?: Function) {
     fabric.util.animate({
       startValue: object.angle!,
       endValue: object.angle! + 360,
       duration: duration,
+      abort: abort,
       easing: this.linearEasing,
       onChange: (value) => {
         const centerPoint = object.getCenterPoint();
