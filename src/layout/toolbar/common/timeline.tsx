@@ -43,7 +43,7 @@ function _ToolbarTimelineOption() {
               onValueChange={([duration]) => editor.canvas.onChangeActiveObjectTimelineProperty("duration", duration * 1000)}
             />
             <Input
-              step={0.5}
+              step={0.25}
               type="number"
               className="h-8 w-20 text-xs"
               value={selected.meta!.duration / 1000}
@@ -54,7 +54,7 @@ function _ToolbarTimelineOption() {
           <div className="flex items-center justify-between gap-4">
             <Slider min={0} max={editor.canvas.timeline.duration / 1000} value={[selected.meta!.offset / 1000]} onValueChange={([offset]) => editor.canvas.onChangeActiveObjectTimelineProperty("offset", offset * 1000)} />
             <Input
-              step={0.5}
+              step={0.25}
               type="number"
               className="h-8 w-20 text-xs"
               value={selected.meta!.offset / 1000}

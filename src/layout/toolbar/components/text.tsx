@@ -56,8 +56,8 @@ function _TextToolbar() {
           <Input
             className="h-8 w-28 text-xs pr-14"
             type="number"
-            value={Math.round(selected.fontSize! * selected.scaleY!)}
-            onChange={(event) => (+event.target.value <= 0 ? null : editor.canvas.onChangeActiveTextboxProperty("fontSize", Math.round(+event.target.value / selected.scaleY!)))}
+            value={Math.floor(selected.fontSize! * selected.scaleY!)}
+            onChange={(event) => (+event.target.value <= 0 ? null : editor.canvas.onChangeActiveTextboxProperty("fontSize", Math.floor(+event.target.value / selected.scaleY!)))}
           />
           <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs">px</span>
           <DropdownMenu>
@@ -68,7 +68,7 @@ function _TextToolbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="min-w-24 max-h-64 overflow-y-auto" align="end" alignOffset={-6} sideOffset={12}>
               {fontSizes.map((size) => (
-                <DropdownMenuItem key={size} className="text-xs pl-2.5" onClick={() => editor.canvas.onChangeActiveTextboxProperty("fontSize", size)}>
+                <DropdownMenuItem key={size} className="text-xs pl-2.5" onClick={() => editor.canvas.onChangeActiveTextboxProperty("fontSize", Math.floor(size / selected.scaleY!))}>
                   {size} px
                 </DropdownMenuItem>
               ))}

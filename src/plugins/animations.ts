@@ -7,7 +7,7 @@ export abstract class CanvasAnimations {
   private static _animationExitOffset = 50;
   private static _animationEntryOffset = 50;
 
-  private static _initializeAnimation(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], _: AnimationTimeline["scene"]) {
+  private static _initializeAnimation(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"]) {
     const left = object.left!;
     const top = object.top!;
 
@@ -15,11 +15,14 @@ export abstract class CanvasAnimations {
     const scaleY = object.scaleY!;
 
     const opacity = object.opacity!;
+    const fill = object.fill!;
+    const stroke = object.stroke!;
+
     const height = object.height!;
     const width = object.width!;
 
     if (!object.anim) FabricUtils.initializeAnimationProperties(object);
-    object.anim!.state = { opacity, left, top, scaleX, scaleY, fill: object.fill, selectable: object.selectable, evented: object.evented };
+    object.anim!.state = { opacity, left, top, scaleX, scaleY, fill, stroke, selectable: object.selectable, evented: object.evented };
     object.set({ selectable: false, evented: false });
 
     switch (entry.name) {
@@ -40,7 +43,7 @@ export abstract class CanvasAnimations {
           {
             targets: object,
             opacity: [0, opacity],
-            left: [left - Math.min((width * scaleX) / 2, 100), left],
+            left: [left - Math.min((width * scaleX) / 2, Number.MAX_VALUE), left],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
@@ -53,7 +56,31 @@ export abstract class CanvasAnimations {
           {
             targets: object,
             opacity: [0, opacity],
-            left: [left + Math.min((width * scaleX) / 2, 100), left],
+            left: [left + Math.min((width * scaleX) / 2, Number.MAX_VALUE), left],
+            duration: entry.duration,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
+          },
+          object.meta!.offset + this._animationEntryOffset,
+        );
+        break;
+      }
+      case "pan-in-left": {
+        timeline.add(
+          {
+            targets: object,
+            left: [left - Math.min((width * scaleX) / 2, Number.MAX_VALUE), left],
+            duration: entry.duration,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
+          },
+          object.meta!.offset + this._animationEntryOffset,
+        );
+        break;
+      }
+      case "pan-in-right": {
+        timeline.add(
+          {
+            targets: object,
+            left: [left + Math.min((width * scaleX) / 2, Number.MAX_VALUE), left],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
@@ -120,7 +147,7 @@ export abstract class CanvasAnimations {
           {
             targets: object,
             opacity: 0,
-            left: [left, left - Math.min((width * scaleX) / 2, 100)],
+            left: [left, left - Math.min((width * scaleX) / 2, Number.MAX_VALUE)],
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
@@ -133,7 +160,7 @@ export abstract class CanvasAnimations {
           {
             targets: object,
             opacity: 0,
-            left: [left, left + Math.min((width * scaleX) / 2, 100)],
+            left: [left, left + Math.min((width * scaleX) / 2, Number.MAX_VALUE)],
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
@@ -178,6 +205,13 @@ export abstract class CanvasAnimations {
           },
           object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
         );
+        break;
+      }
+    }
+
+    switch (scene.name) {
+      case "rotate": {
+        FabricUtils;
         break;
       }
     }

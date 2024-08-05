@@ -1,7 +1,5 @@
 export function modifyAnimationEasing(easing?: string, duration?: number) {
   switch (easing) {
-    case "spring":
-      return "spring";
     case "easeOutElastic":
       return "easeOutElastic";
     case "spring":

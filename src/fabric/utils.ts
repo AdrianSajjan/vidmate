@@ -45,6 +45,11 @@ export abstract class FabricUtils {
     return b + (t / d) * c;
   }
 
+  static measureTextDimensions(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
+    const object = createInstance(fabric.Text, text, { fontFamily, fontWeight, fontSize });
+    return { width: object.width! + 1, height: object.height! };
+  }
+
   static initializeMetaProperties(object: fabric.Object, props?: Record<string, any>) {
     object.meta = { duration: 5000, offset: 0, ...(object.meta || {}) };
     if (!props) return;
@@ -145,11 +150,21 @@ export abstract class FabricUtils {
   }
 
   static objectSpinningAnimation(object: fabric.Object, duration = 750, loop = true) {
-    object.animate("angle", object.angle! + 360, {
+    fabric.util.animate({
+      startValue: object.angle!,
+      endValue: object.angle! + 360,
       duration: duration,
-      onChange: () => object.canvas?.requestRenderAll(),
-      onComplete: () => (loop ? this.objectSpinningAnimation(object) : null),
       easing: this.linearEasing,
+      onChange: (value) => {
+        const centerPoint = object.getCenterPoint();
+        const constraint = object.translateToOriginPoint(centerPoint, "center", "center");
+        object.angle = value;
+        object.setPositionByOrigin(constraint, "center", "center");
+        if (object.canvas) object.canvas.requestRenderAll();
+      },
+      onComplete: () => {
+        if (loop) this.objectSpinningAnimation(object);
+      },
     });
   }
 

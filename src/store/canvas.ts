@@ -221,7 +221,8 @@ export class Canvas {
   }
 
   onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
-    const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: 500, objectCaching: false, textAlign: "center" };
+    const dimensions = FabricUtils.measureTextDimensions(text, fontFamily, fontSize, fontWeight);
+    const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: Math.min(dimensions.width, this.workspace.width), objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
 
     textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
@@ -262,20 +263,21 @@ export class Canvas {
   }
 
   *onAddImageFromThumbail(source: string, thumbnail: HTMLImageElement) {
-    const id = FabricUtils.elementID("image");
-    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromAlignment: true };
-
-    const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
-    const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
-    const spinner = createInstance(fabric.Path, activityIndicator, { fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
+    const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, evented: false, selectable: false, excludeFromAlignment: true });
+    const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", evented: false, selectable: false, excludeFromAlignment: true });
+    const spinner = createInstance(fabric.Path, activityIndicator, { fill: "", stroke: "#fafafa", strokeWidth: 4, evented: false, selectable: false, excludeFromAlignment: true });
 
     image.scaleToWidth(500);
-    overlay.set({ height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY });
     spinner.scaleToWidth(48);
-    FabricUtils.objectSpinningAnimation(spinner);
+    overlay.set({ height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY });
 
+    const id = FabricUtils.elementID("image");
     const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true });
+
+    spinner.setPositionByOrigin(overlay.getCenterPoint(), "center", "center");
     placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
+
+    FabricUtils.objectSpinningAnimation(spinner);
     FabricUtils.initializeMetaProperties(placeholder, { thumbnail: true });
     FabricUtils.initializeAnimationProperties(placeholder);
 
@@ -340,19 +342,19 @@ export class Canvas {
   }
 
   *onAddVideoFromThumbail(source: string, thumbnail: HTMLImageElement) {
-    const id = FabricUtils.elementID("video");
-    const props = { evented: false, selectable: false, originX: "center", originY: "center", excludeFromAlignment: true };
-
-    const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", ...props });
-    const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, ...props });
-    const spinner = createInstance(fabric.Path, activityIndicator, { fill: "", stroke: "#fafafa", strokeWidth: 4, ...props });
+    const overlay = createInstance(fabric.Rect, { fill: "#000000", opacity: 0.25, evented: false, selectable: false, excludeFromAlignment: true });
+    const image = createInstance(fabric.Image, thumbnail, { type: "video", crossOrigin: "anonymous", evented: false, selectable: false, excludeFromAlignment: true });
+    const spinner = createInstance(fabric.Path, activityIndicator, { fill: "", stroke: "#fafafa", strokeWidth: 4, evented: false, selectable: false, excludeFromAlignment: true });
 
     image.scaleToWidth(500);
-    overlay.set({ height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY });
     spinner.scaleToWidth(48);
+
+    overlay.set({ height: image.height, width: image.width, scaleX: image.scaleX, scaleY: image.scaleY });
     FabricUtils.objectSpinningAnimation(spinner);
 
+    const id = FabricUtils.elementID("video");
     const placeholder = createInstance(fabric.Group, [image, overlay, spinner], { name: id, excludeFromExport: true });
+
     placeholder.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
     FabricUtils.initializeMetaProperties(placeholder, { thumbnail: true });
     FabricUtils.initializeAnimationProperties(placeholder);
