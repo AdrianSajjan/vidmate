@@ -59,9 +59,12 @@ export const entry: EditorAnimation[] = [
     value: "pop-in",
     label: "Pop",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
-    duration: 250,
-    easing: "spring(1, 80, 10, 0)",
-    fixed: { duration: true, easing: true },
+    duration: 300,
+    easing: "spring",
+    fixed: {
+      easing: true,
+      duration: true,
+    },
   },
 ];
 
@@ -101,6 +104,17 @@ export const exit: EditorAnimation[] = [
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
+  {
+    value: "pop-out",
+    label: "Pop",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    duration: 200,
+    easing: "easeOutSine",
+    fixed: {
+      easing: true,
+      duration: true,
+    },
+  },
 ];
 
 export const scene: EditorAnimation[] = [
@@ -133,7 +147,23 @@ export const easings: EditorEasings[] = [
     value: "easeOutInSine",
   },
   {
+    label: "Ease In Elastic",
+    value: "easeInElastic",
+  },
+  {
+    label: "Ease Out Elastic",
+    value: "easeOutElastic",
+  },
+  {
+    label: "Ease In Out Elastic",
+    value: "easeInOutElastic",
+  },
+  {
+    label: "Ease Out In Elastic",
+    value: "easeOutInElastic",
+  },
+  {
     label: "Spring",
-    value: "spring(1, 80, 10, 0)",
+    value: "spring",
   },
 ];

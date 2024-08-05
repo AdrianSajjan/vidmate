@@ -1,6 +1,7 @@
 import anime from "animejs";
 import { AnimationTimeline } from "canvas";
 import { FabricUtils } from "@/fabric/utils";
+import { modifyAnimationEasing } from "@/lib/animations";
 
 export abstract class CanvasAnimations {
   private static _animationExitOffset = 50;
@@ -28,8 +29,7 @@ export abstract class CanvasAnimations {
             targets: object,
             opacity: [0, opacity],
             duration: entry.duration,
-            easing: entry.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
           object.meta!.offset + this._animationEntryOffset,
         );
@@ -42,8 +42,7 @@ export abstract class CanvasAnimations {
             opacity: [0, opacity],
             left: [left - Math.min((width * scaleX) / 2, 100), left],
             duration: entry.duration,
-            easing: entry.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
           object.meta!.offset + this._animationEntryOffset,
         );
@@ -56,8 +55,7 @@ export abstract class CanvasAnimations {
             opacity: [0, opacity],
             left: [left + Math.min((width * scaleX) / 2, 100), left],
             duration: entry.duration,
-            easing: entry.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
           object.meta!.offset + this._animationEntryOffset,
         );
@@ -70,8 +68,7 @@ export abstract class CanvasAnimations {
             opacity: [0, opacity],
             top: [top + Math.min((height * scaleY) / 2, 50), top],
             duration: entry.duration,
-            easing: entry.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
           object.meta!.offset + this._animationEntryOffset,
         );
@@ -84,8 +81,7 @@ export abstract class CanvasAnimations {
             opacity: [0, opacity],
             top: [top - Math.min((height * scaleY) / 2, 50), top],
             duration: entry.duration,
-            easing: entry.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
           object.meta!.offset + this._animationEntryOffset,
         );
@@ -95,14 +91,10 @@ export abstract class CanvasAnimations {
         timeline.add(
           {
             targets: object,
-            opacity: [0, opacity],
-            top: [top + (height * scaleY) / 4, top],
-            left: [left + (width * scaleX) / 4, left],
-            scaleX: [scaleX - 0.5, scaleX],
-            scaleY: [scaleY - 0.5, scaleY],
+            scaleY: [0, scaleY],
+            top: [top + (width * scaleY) / 2, top],
             duration: entry.duration,
-            easing: entry.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
           object.meta!.offset + this._animationEntryOffset,
         );
@@ -117,8 +109,7 @@ export abstract class CanvasAnimations {
             targets: object,
             opacity: 0,
             duration: exit.duration,
-            easing: exit.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
           object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
         );
@@ -131,8 +122,7 @@ export abstract class CanvasAnimations {
             opacity: 0,
             left: [left, left - Math.min((width * scaleX) / 2, 100)],
             duration: exit.duration,
-            easing: exit.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
           object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
         );
@@ -145,8 +135,7 @@ export abstract class CanvasAnimations {
             opacity: 0,
             left: [left, left + Math.min((width * scaleX) / 2, 100)],
             duration: exit.duration,
-            easing: exit.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
           object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
         );
@@ -159,8 +148,7 @@ export abstract class CanvasAnimations {
             opacity: 0,
             top: [top, top - Math.min((height * scaleY) / 2, 50)],
             duration: exit.duration,
-            easing: exit.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
           object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
         );
@@ -173,8 +161,20 @@ export abstract class CanvasAnimations {
             opacity: 0,
             top: [top, top + Math.min((height * scaleY) / 2, 50)],
             duration: exit.duration,
-            easing: exit.easing || "linear",
-            round: false,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
+          },
+          object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
+        );
+        break;
+      }
+      case "pop-out": {
+        timeline.add(
+          {
+            targets: object,
+            scaleY: [scaleY, 0],
+            top: [top, top + (width * scaleY) / 2],
+            duration: exit.duration,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
           object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
         );

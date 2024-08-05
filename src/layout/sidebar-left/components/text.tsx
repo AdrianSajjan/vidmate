@@ -47,7 +47,7 @@ function _TextSidebar() {
               </button>
             </div>
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="flex-col gap-4 hidden">
             <h4 className="text-xs font-semibold line-clamp-1">Styled Texts</h4>
             <div className="flex flex-col gap-3 relative">
               <button
