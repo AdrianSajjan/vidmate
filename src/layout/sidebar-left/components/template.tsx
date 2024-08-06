@@ -18,7 +18,7 @@ function _TemplateSidebar() {
 
   const loadJSON = useMutation({
     mutationFn: async (file: File) => {
-      return createPromise<EditorTemplate>((resolve, reject) => {
+      return createPromise<EditorTemplate | EditorTemplate[]>((resolve, reject) => {
         const reader = createInstance(FileReader);
         reader.addEventListener("load", async () => {
           if (!reader.result) return reject();
@@ -28,8 +28,12 @@ function _TemplateSidebar() {
       });
     },
     onSuccess: (template) => {
-      mock.upload("template", template);
-      editor.loadTemplate(template, "reset");
+      if (Array.isArray(template)) {
+        template.map((template) => mock.upload("template", template));
+      } else {
+        mock.upload("template", template);
+        editor.loadTemplate(template, "reset");
+      }
     },
   });
 
