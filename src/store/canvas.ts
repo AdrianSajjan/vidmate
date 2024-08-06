@@ -227,13 +227,13 @@ export class Canvas {
     return clone;
   }
 
-  onAddText(text: string, fontFamily: string, fontSize: number, fontWeight: number) {
-    const dimensions = FabricUtils.measureTextDimensions(text, fontFamily, fontSize, fontWeight);
-    const options = { name: FabricUtils.elementID("text"), fontFamily, fontWeight, fontSize, width: Math.min(dimensions.width, this.workspace.width), objectCaching: false, textAlign: "center" };
+  onAddText(text: string, font: EditorFont, fontSize: number, fontWeight: number) {
+    const dimensions = FabricUtils.measureTextDimensions(text, font.family, fontSize, fontWeight);
+    const options = { name: FabricUtils.elementID("text"), fontFamily: font.family, fontWeight, fontSize, width: Math.min(dimensions.width, this.workspace.width), objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
 
     textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
-    FabricUtils.initializeMetaProperties(textbox);
+    FabricUtils.initializeMetaProperties(textbox, { font });
     FabricUtils.initializeAnimationProperties(textbox);
 
     this.instance.add(textbox);
@@ -536,6 +536,12 @@ export class Canvas {
     textbox.meta!.font = family;
     this.instance.fire("object:modified", { target: textbox });
     this.instance.requestRenderAll();
+  }
+
+  onChangeActiveTextboxFontFamily(font: string, family: EditorFont) {
+    const selected = this.instance.getActiveObject() as fabric.Textbox | null;
+    if (!selected || selected.type !== "textbox") return;
+    this.onChangeTextboxFontFamily(selected, font, family);
   }
 
   onChangeImageProperty(image: fabric.Image, property: keyof fabric.Image, value: any) {

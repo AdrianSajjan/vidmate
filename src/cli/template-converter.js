@@ -54,9 +54,9 @@ const dataMapping = {
   resolvedType: "ap",
 };
 
-function rect(props) {
+function createPath(path, props) {
   return {
-    type: "rect",
+    type: "path",
     version: "5.3.0",
     originX: "left",
     originY: "top",
@@ -88,9 +88,7 @@ function rect(props) {
     skewX: 0,
     skewY: 0,
     erasable: true,
-    rx: 0,
-    ry: 0,
-    name: elementID("rect"),
+    name: elementID("shape"),
     meta: {
       duration: 10000,
       offset: 0,
@@ -112,11 +110,12 @@ function rect(props) {
     evented: true,
     hasControls: true,
     absolutePositioned: false,
+    path: path,
     ...props,
   };
 }
 
-function image(src, props) {
+function createImage(src, props) {
   return {
     type: "image",
     version: "5.3.0",
@@ -185,6 +184,85 @@ function image(src, props) {
   };
 }
 
+function createTextbox(text, props) {
+  return {
+    type: "textbox",
+    version: "5.3.0",
+    originX: "left",
+    originY: "top",
+    left: 0,
+    top: 0,
+    width: 500,
+    fill: "#ffffff",
+    stroke: null,
+    strokeWidth: 1,
+    strokeDashArray: null,
+    strokeLineCap: "butt",
+    strokeDashOffset: 0,
+    strokeLineJoin: "miter",
+    strokeUniform: true,
+    strokeMiterLimit: 4,
+    scaleX: 1,
+    scaleY: 1,
+    angle: 0,
+    flipX: false,
+    flipY: false,
+    opacity: 1,
+    shadow: null,
+    visible: true,
+    backgroundColor: "",
+    fillRule: "nonzero",
+    paintFirst: "stroke",
+    globalCompositeOperation: "source-over",
+    skewX: 0,
+    skewY: 0,
+    erasable: true,
+    fontFamily: "Lato",
+    fontWeight: 700,
+    fontSize: 64,
+    text: text,
+    underline: false,
+    overline: false,
+    linethrough: false,
+    textAlign: "left",
+    fontStyle: "normal",
+    lineHeight: 1.16,
+    textBackgroundColor: "",
+    charSpacing: 5,
+    styles: [],
+    direction: "ltr",
+    path: null,
+    pathStartOffset: 0,
+    pathSide: "left",
+    pathAlign: "baseline",
+    minWidth: 20,
+    splitByGrapheme: false,
+    name: elementID("text"),
+    meta: {
+      duration: 10000,
+      offset: 0,
+    },
+    anim: {
+      in: {
+        name: "none",
+        duration: 0,
+      },
+      scene: {
+        name: "none",
+      },
+      out: {
+        name: "none",
+        duration: 0,
+      },
+    },
+    selectable: true,
+    evented: true,
+    hasControls: true,
+    absolutePositioned: false,
+    ...props,
+  };
+}
+
 function elementID(prefix) {
   return prefix.toLowerCase() + "_" + __nanoid(4);
 }
@@ -211,14 +289,29 @@ function unpack(packed) {
   return packed;
 }
 
-function convertLayer() {}
+function convertLayer() {
+  switch (layer.type.resolvedName) {
+    case "ImageLayer":
+      const image = createImage(layer.props.image.url, {
+        top: layer.props.position.y,
+        left: layer.props.position.x,
+        height: layer.props.boxSize.height,
+        width: layer.props.boxSize.width,
+      });
+      return image;
+    case "TextLayer":
+      const textbox = createTextbox();
+      return textbox;
+  }
+}
 
 function convertLayers(template) {
-  const objects = [];
   const root = template.layers.ROOT.props;
-  const data = { version: "5.3.0", objects: objects, background: "#F0F0F0" };
+  const data = { version: "5.3.0", objects: [], background: "#F0F0F0" };
   const result = { height: root.boxSize.height || 1080, width: root.boxSize.width || 1080, fill: root.color || "#FFFFFF", data: data };
   for (const [key, layer] of Object.entries(template.layers)) {
+    if (key === "ROOT") continue;
+    data.objects.push(convertLayer(layer));
   }
   return result;
 }

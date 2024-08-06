@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEditorContext } from "@/context/editor";
+import { inter } from "@/constants/fonts";
 
 function _TextSidebar() {
   const editor = useEditorContext();
@@ -28,19 +29,19 @@ function _TextSidebar() {
             <h4 className="text-xs font-semibold line-clamp-1">Basic Texts</h4>
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => editor.canvas.onAddText("Your title goes here", "Inter", 64, 700)}
+                onClick={() => editor.canvas.onAddText("Your title goes here", inter, 64, 700)}
                 className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-2xl font-semibold text-center transition-colors shadow-sm hover:bg-card"
               >
                 <span className="line-clamp-1">Add a Title</span>
               </button>
               <button
-                onClick={() => editor.canvas.onAddText("Your heading goes here", "Inter", 42, 700)}
+                onClick={() => editor.canvas.onAddText("Your heading goes here", inter, 42, 700)}
                 className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-lg font-semibold text-center transition-colors shadow-sm hover:bg-card"
               >
                 <span className="line-clamp-1">Add a Heading</span>
               </button>
               <button
-                onClick={() => editor.canvas.onAddText("Your paragraph goes here", "Inter", 24, 400)}
+                onClick={() => editor.canvas.onAddText("Your paragraph goes here", inter, 24, 400)}
                 className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-sm font-normal text-center transition-colors shadow-sm hover:bg-card"
               >
                 <span className="line-clamp-1">Add a Paragraph</span>

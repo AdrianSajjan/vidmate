@@ -20,7 +20,7 @@ function _FontSidebar() {
   };
 
   const handleChangeFontFamily = (font: EditorFont) => {
-    editor.canvas.onChangeActiveTextboxProperty("fontFamily", font.family);
+    editor.canvas.onChangeActiveTextboxFontFamily(font.family, font);
   };
 
   return (

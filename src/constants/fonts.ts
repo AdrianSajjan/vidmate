@@ -10,6 +10,14 @@ export interface EditorFontStyle {
   url?: string;
 }
 
+export const inter: EditorFont = {
+  family: "Inter",
+  styles: [
+    { name: "Inter Regular", weight: "400", style: "normal" },
+    { name: "Inter Bold 700", weight: "700", style: "normal" },
+  ],
+};
+
 export const fonts: EditorFont[] = [
   {
     family: "Inter",

@@ -4,9 +4,10 @@ import { makeAutoObservable } from "mobx";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
+import { EditorFont } from "@/constants/fonts";
 
 interface TextProps {
-  fontFamily: string;
+  font: EditorFont;
   fontSize: number;
   fontWeight: number;
   duration?: number;
@@ -29,7 +30,7 @@ export class CanvasText {
     return this._canvas.artboard!;
   }
 
-  animated(text: string, { fontFamily, fontSize, fontWeight, offset = 0, duration = 6000 }: TextProps, animation: string, skip?: boolean) {
+  animated(text: string, { font, fontSize, fontWeight, offset = 0, duration = 6000 }: TextProps, animation: string, skip?: boolean) {
     const elements: fabric.Textbox[] = [];
     const words = text.split(" ");
 
@@ -39,8 +40,8 @@ export class CanvasText {
 
         words.map((word) => {
           const name = FabricUtils.elementID("text");
-          const textbox = createInstance(fabric.Textbox, word, { name, fontFamily, fontWeight, fontSize, left, fill: "#FFFFFF" });
-          const width = createInstance(fabric.Text, word + " ", { fontFamily, fontWeight, fontSize }).width!;
+          const textbox = createInstance(fabric.Textbox, word, { name, fontFamily: font.family, fontWeight, fontSize, left, fill: "#FFFFFF" });
+          const width = createInstance(fabric.Text, word + " ", { fontFamily: font.family, fontWeight, fontSize }).width!;
           left = left + width;
           elements.push(textbox);
         });
@@ -50,7 +51,7 @@ export class CanvasText {
         const animation = 100;
 
         elements.map((element, index) => {
-          FabricUtils.initializeMetaProperties(element, { group, duration: duration - timeline * index, offset: offset + timeline * index });
+          FabricUtils.initializeMetaProperties(element, { group, duration: duration - timeline * index, offset: offset + timeline * index, font });
           FabricUtils.initializeAnimationProperties(element, { in: { name: "fade-in", duration: animation }, out: { name: "fade-out", duration: animation } });
         });
 
@@ -70,7 +71,7 @@ export class CanvasText {
         words.map((word) => {
           const name = FabricUtils.elementID("text");
           const props = { textAlign: "center", strokeWidth: 4, strokeLineCap: "round", strokeLineJoin: "round", stroke: "#000000", fill: "#FFFFFF" };
-          const textbox = createInstance(fabric.Textbox, word, { name, fontFamily, fontWeight, fontSize, ...props });
+          const textbox = createInstance(fabric.Textbox, word, { name, fontFamily: font.family, fontWeight, fontSize, ...props });
           textbox.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
           elements.push(textbox);
         });
@@ -80,7 +81,7 @@ export class CanvasText {
         const animation = 100;
 
         elements.map((element, index) => {
-          FabricUtils.initializeMetaProperties(element, { group, duration: timeline, offset: offset + timeline * index });
+          FabricUtils.initializeMetaProperties(element, { group, duration: timeline, offset: offset + timeline * index, font });
           FabricUtils.initializeAnimationProperties(element, { in: { name: "fade-in", duration: animation }, out: { name: "fade-out", duration: animation } });
         });
 
