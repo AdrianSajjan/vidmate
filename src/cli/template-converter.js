@@ -1,7 +1,8 @@
 import path from "path";
 import fs from "fs/promises";
+
 import { fileURLToPath } from "url";
-import { nanoid } from "nanoid";
+import { nanoid, customAlphabet } from "nanoid";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,81 +54,6 @@ const dataMapping = {
   resolvedType: "ap",
 };
 
-function elementID(prefix) {
-  return prefix.toLowerCase() + "_" + __nanoid(4);
-}
-
-function unpack(packed) {
-  if (!packed) return packed;
-
-  if (Array.isArray(packed)) {
-    const unpackedArray = [];
-    for (let i = 0; i < packed.length; i++) {
-      unpackedArray.push(unpack(packed[i]));
-    }
-
-    return unpackedArray;
-  }
-
-  if (typeof packed === "object") {
-    const unpackedObj = {};
-    for (const key in packed) {
-      if (packed.hasOwnProperty(key)) {
-        const originalKey = Object.keys(dataMapping).find((k) => dataMapping[k] === key) || key;
-        unpackedObj[originalKey] = unpack(packed[key]);
-      }
-    }
-    return unpackedObj;
-  }
-
-  return packed;
-}
-
-function mapPages(template) {
-  const unpacked = unpack(JSON.parse(template.data));
-  if (Array.isArray(unpacked)) {
-    return unpacked.map((data, index) => {
-      return {
-        id: nanoid(),
-        name: "Untitled Page",
-        data: data,
-        thumbnail: template.thumbnails[index].url,
-      };
-    });
-  } else {
-    return [
-      {
-        id: nanoid(),
-        name: "Untitled Page",
-        data: unpacked,
-        thumbnail: template.thumbnails[0].url,
-      },
-    ];
-  }
-}
-
-function mapTemplates(template) {
-  return {
-    id: nanoid(),
-    name: template.desc,
-    pages: mapPages(template),
-  };
-}
-
-async function templateConverter() {
-  try {
-    const buffer = await fs.readFile(path.resolve(__dirname, process.argv[2]));
-    const json = JSON.parse(buffer);
-    const result = json.map(mapTemplates);
-    fs.writeFile(path.resolve(__dirname, "converted-" + process.argv[2]), JSON.stringify(result, undefined, 2), "utf-8");
-  } catch (error) {
-    console.log("---ERROR----");
-    console.log(error);
-  }
-}
-
-templateConverter();
-
 function rect(props) {
   return {
     type: "rect",
@@ -164,7 +90,7 @@ function rect(props) {
     erasable: true,
     rx: 0,
     ry: 0,
-    name: __nanoid("rect"),
+    name: elementID("rect"),
     meta: {
       duration: 10000,
       offset: 0,
@@ -226,7 +152,7 @@ function image(src, props) {
     erasable: true,
     cropX: 0,
     cropY: 0,
-    name: "image_xycz",
+    name: elementID("image"),
     meta: {
       duration: 10000,
       offset: 0,
@@ -259,12 +185,79 @@ function image(src, props) {
   };
 }
 
+function elementID(prefix) {
+  return prefix.toLowerCase() + "_" + __nanoid(4);
+}
+
+function unpack(packed) {
+  if (!packed) return packed;
+  if (Array.isArray(packed)) {
+    const unpackedArray = [];
+    for (let i = 0; i < packed.length; i++) {
+      unpackedArray.push(unpack(packed[i]));
+    }
+    return unpackedArray;
+  }
+  if (typeof packed === "object") {
+    const unpackedObj = {};
+    for (const key in packed) {
+      if (packed.hasOwnProperty(key)) {
+        const originalKey = Object.keys(dataMapping).find((k) => dataMapping[k] === key) || key;
+        unpackedObj[originalKey] = unpack(packed[key]);
+      }
+    }
+    return unpackedObj;
+  }
+  return packed;
+}
+
+function convertLayer() {}
+
+function convertLayers(template) {
+  const objects = [];
+  const root = template.layers.ROOT.props;
+  const data = { version: "5.3.0", objects: objects, background: "#F0F0F0" };
+  const result = { height: root.boxSize.height || 1080, width: root.boxSize.width || 1080, fill: root.color || "#FFFFFF", data: data };
+  for (const [key, layer] of Object.entries(template.layers)) {
+  }
+  return result;
+}
+
+function mapPages(template) {
+  const unpacked = unpack(JSON.parse(template.data));
+  if (Array.isArray(unpacked)) {
+    return unpacked.map((data, index) => {
+      return { id: nanoid(), name: "Untitled Page", thumbnail: template.thumbnails[index].url, duration: 5, ...convertLayers(data) };
+    });
+  } else {
+    return Array({ id: nanoid(), name: "Untitled Page", thumbnail: template.thumbnails[0].url, duration: 5, ...convertLayers(unpacked) });
+  }
+}
+
+function mapTemplates(template) {
+  return { id: nanoid(), name: template.desc, pages: mapPages(template) };
+}
+
+async function templateConverter() {
+  try {
+    const buffer = await fs.readFile(path.resolve(__dirname, process.argv[2]));
+    const json = JSON.parse(buffer);
+    const result = json.map(mapTemplates);
+    fs.writeFile(path.resolve(__dirname, "converted-" + process.argv[2]), JSON.stringify(result, undefined, 2), "utf-8");
+  } catch (error) {
+    console.log("---ERROR----");
+    console.log(error);
+  }
+}
+
+templateConverter();
+
 // Template Page
-// id: string;
-// name: string;
+// id: string; -
+// name: string; -
 // data: string; -> template data
 // fill: string;
 // width: number;
 // height: number;
-// thumbnail: string;
-// duration: number;
+// thumbnail: string; -
+// duration: number; -
