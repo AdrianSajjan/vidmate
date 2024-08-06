@@ -1,8 +1,10 @@
+import { EditorFont } from "@/constants/fonts";
 import { createInstance } from "@/lib/utils";
 import { EditorAudioElement } from "@/types/editor";
 import { fabric } from "fabric";
 import { omit } from "lodash";
 import { customAlphabet } from "nanoid";
+import WebFont from "webfontloader";
 
 export interface TransformChildren {
   object: fabric.Object;
@@ -170,7 +172,7 @@ export abstract class FabricUtils {
   }
 
   static applyTransformationsAfterLoad(canvas: fabric.Canvas | fabric.StaticCanvas) {
-    canvas.forEachObject((object) => {
+    for (const object of canvas._objects) {
       if (object.clipPath) {
         const existing = canvas.getItemByName(object.clipPath.name);
         if (existing) canvas.remove(existing);
@@ -183,7 +185,25 @@ export abstract class FabricUtils {
         object.on("scaling", handler);
         object.on("rotating", handler);
       }
-    });
+      if (FabricUtils.isTextboxElement(object)) {
+        if (object.meta!.font) {
+          const font = object.meta!.font as EditorFont;
+          const styles = font.styles.map((style) => `${style.weight}`).join(",");
+          const family = `${font.family}:${styles}`;
+          WebFont.load({
+            google: {
+              families: [family],
+            },
+            fontactive: (family) => {
+              if (family === font.family) {
+                object.set("fontFamily", object.fontFamily);
+                canvas.requestRenderAll();
+              }
+            },
+          });
+        }
+      }
+    }
   }
 
   static convertGradient(angle: number) {

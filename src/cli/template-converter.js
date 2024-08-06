@@ -1,12 +1,13 @@
 import path from "path";
 import fs from "fs/promises";
+import probe from "probe-image-size";
+import { Parser } from "htmlparser2";
 
 import { fileURLToPath } from "url";
 import { nanoid, customAlphabet } from "nanoid";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const __nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
 
 const dataMapping = {
@@ -294,48 +295,136 @@ function unpack(packed) {
   return packed;
 }
 
-function extractTextContent(element) {
-  try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(element, "text/html");
-    function getTextContentRecursively(element) {
-      let textContent = "";
-      function traverse(node) {
-        if (node.nodeType === Node.TEXT_NODE) textContent += node.textContent;
-        node.childNodes.forEach(traverse);
-      }
-      traverse(element);
-      return textContent;
+function parseStyles(styles) {
+  const style = {};
+  const rules = styles
+    .split(";")
+    .map((rule) => rule.trim())
+    .filter((rule) => rule);
+  rules.forEach((rule) => {
+    const [property, value] = rule.split(":").map((item) => item.trim());
+    if (property && value) {
+      const camelCaseProperty = property.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+      style[camelCaseProperty] = value;
     }
-    return getTextContentRecursively(doc.body);
-  } catch {
-    return "Unrecognized Text";
-  }
+  });
+  return style;
+}
+
+function extractTextContent(element) {
+  let styles = [];
+  let text = "";
+  const parser = new Parser({
+    onopentag(_, attrs) {
+      if (attrs.style) styles.push(parseStyles(attrs.style));
+    },
+    ontext(content) {
+      text += content;
+    },
+    onerror(error) {
+      console.log(error);
+    },
+  });
+  parser.write(element);
+  parser.end();
+  return { text, styles };
 }
 
 async function convertLayer(layer) {
   switch (layer.type.resolvedName) {
-    case "ImageLayer":
+    case "ImageLayer": {
+      const dimensions = await probe(layer.props.image.url);
       const image = createImage(layer.props.image.url, {
         top: layer.props.position.y,
         left: layer.props.position.x,
-        height: layer.props.image.boxSize.height,
-        width: layer.props.image.boxSize.width,
-        scaleX: layer.props.boxSize.width / layer.props.image.boxSize.width,
-        scaleY: layer.props.boxSize.height / layer.props.image.boxSize.height,
+        height: dimensions.height,
+        width: dimensions.width,
+        opacity: layer.props.transparency,
+        angle: layer.props.rotate,
+        scaleX: layer.props.image.boxSize.width / dimensions.width,
+        scaleY: layer.props.image.boxSize.height / dimensions.height,
       });
       return image;
-    case "TextLayer":
-      const textbox = createTextbox(extractTextContent(layer.props.text), {
+    }
+    case "TextLayer": {
+      const { text, styles } = extractTextContent(layer.props.text);
+      const textbox = createTextbox(text, {
         top: layer.props.position.y,
         left: layer.props.position.x,
         width: layer.props.boxSize.width,
         scaleY: layer.props.scale,
         angle: layer.props.rotate,
-        fill: layer.props.colors[0],
-        fontSize: layer.props.fontSizes[0],
+        opacity: layer.props.transparency,
+        lineHeight: styles.at(0)?.lineHeight || 1.16,
+        textAlign: styles.at(0)?.textAlign,
+        textTransform: styles.at(0)?.textTransform,
+        fill: styles.at(0)?.color || layer.props.colors.at(0),
+        fontSize: layer.props.fontSizes.at(0),
       });
       return textbox;
+    }
+    case "ShapeLayer": {
+      const shape = createPath(layer.props.clipPath, {
+        scaleX: layer.props.boxSize.width / +layer.props.shapeSize.width,
+        scaleY: layer.props.boxSize.height / +layer.props.shapeSize.height,
+        fill: layer.props.colors,
+        height: +layer.props.shapeSize.height,
+        width: +layer.props.shapeSize.width,
+        opacity: layer.props.transparency,
+        angle: layer.props.rotate,
+        top: layer.props.position.y,
+        left: layer.props.position.x,
+      });
+      return shape;
+    }
+    case "FrameLayer": {
+      let frame = null;
+      const dimensions = await probe(layer.props.image.url);
+      if (layer.props.border) {
+        frame = createPath(layer.props.clipPath, {
+          strokeWidth: layer.props.border.weight,
+          stroke: layer.props.border.color,
+          scaleX: layer.props.scale,
+          scaleY: layer.props.scale,
+          fill: layer.props.border.color,
+          height: layer.props.boxSize.height,
+          width: layer.props.boxSize.width,
+          opacity: layer.props.transparency,
+          angle: layer.props.rotate,
+          top: layer.props.position.y,
+          left: layer.props.position.x,
+        });
+      }
+      const clipPath = createPath(layer.props.clipPath, {
+        scaleX: layer.props.scale,
+        scaleY: layer.props.scale,
+        fill: layer.props.colors,
+        height: layer.props.boxSize.height,
+        width: layer.props.boxSize.width,
+        opacity: layer.props.transparency,
+        angle: layer.props.rotate,
+        top: layer.props.position.y,
+        left: layer.props.position.x,
+        opacity: 0.01,
+        excludeFromAlignment: true,
+        excludeFromTimeline: true,
+        absolutePositioned: true,
+        selectable: false,
+        evented: false,
+      });
+      const image = createImage(layer.props.image.url, {
+        top: layer.props.position.y,
+        left: layer.props.position.x,
+        height: dimensions.height,
+        width: dimensions.width,
+        opacity: layer.props.transparency,
+        angle: layer.props.rotate,
+        scaleX: layer.props.boxSize.width / dimensions.width,
+        scaleY: layer.props.boxSize.height / dimensions.height,
+        clipPath: clipPath,
+      });
+      return [frame, image].filter(Boolean);
+    }
   }
 }
 
@@ -344,11 +433,12 @@ async function convertLayers(template) {
   const data = { version: "5.3.0", objects: [], background: "#F0F0F0" };
   const result = { height: root.boxSize.height || 1080, width: root.boxSize.width || 1080, fill: root.color || "#FFFFFF", data: "" };
   for (const [key, layer] of Object.entries(template.layers)) {
-    if (key === "ROOT") continue;
     const converted = await convertLayer(layer);
-    data.objects.push(converted);
+    if (key === "ROOT" || !converted) continue;
+    if (Array.isArray(converted)) data.objects.push(...converted);
+    else data.objects.push(converted);
   }
-  result.data = JSON.stringify(data);
+  result.data = data;
   return result;
 }
 

@@ -54,10 +54,10 @@ function _TextToolbar() {
         </Button>
         <div className="relative">
           <Input
-            className="h-8 w-28 text-xs pr-14"
+            className="h-8 w-28 text-xs pr-[3.25rem] stepper-hidden"
             type="number"
-            value={Math.floor(selected.fontSize! * selected.scaleY!)}
-            onChange={(event) => (+event.target.value <= 0 ? null : editor.canvas.onChangeActiveTextboxProperty("fontSize", Math.floor(+event.target.value / selected.scaleY!)))}
+            value={selected.fontSize! * selected.scaleY!}
+            onChange={(event) => (+event.target.value <= 0 ? null : editor.canvas.onChangeActiveTextboxProperty("fontSize", +event.target.value / selected.scaleY!))}
           />
           <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs">px</span>
           <DropdownMenu>

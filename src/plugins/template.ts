@@ -1,10 +1,8 @@
-import { EditorFont } from "@/constants/fonts";
 import { FabricUtils } from "@/fabric/utils";
 import { createPromise } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
 import { EditorTemplatePage } from "@/types/editor";
 import { makeAutoObservable, runInAction } from "mobx";
-import WebFont from "webfontloader";
 
 export class CanvasTemplate {
   private _canvas: Canvas;
@@ -78,47 +76,24 @@ export class CanvasTemplate {
           this.workspace.changeFill("#CCCCCC");
           this.workspace.resizeArtboard({ height: this.page.height, width: this.page.width });
 
-          this.canvas.loadFromJSON(
-            this.page.data,
-            () => {
-              runInAction(() => {
-                this.canvas.insertAt(this.artboard, 0, false);
-                this.canvas.clipPath = this.artboard;
+          this.canvas.loadFromJSON(this.page.data, () => {
+            runInAction(() => {
+              this.canvas.insertAt(this.artboard, 0, false);
+              this.canvas.clipPath = this.artboard;
 
-                this.workspace.changeFill(this.page!.fill || "#FFFFFF");
-                this.workspace.resizeArtboard({ height: this.page!.height || 1080, width: this.page!.width || 1080 });
-                FabricUtils.applyTransformationsAfterLoad(this.canvas);
+              this.workspace.changeFill(this.page!.fill || "#FFFFFF");
+              this.workspace.resizeArtboard({ height: this.page!.height || 1080, width: this.page!.width || 1080 });
+              FabricUtils.applyTransformationsAfterLoad(this.canvas);
 
-                this.history.clear();
-                this.timeline.initialize(this.page!.duration || 5000);
+              this.history.clear();
+              this.timeline.initialize(this.page!.duration || 5000);
 
-                this.canvas.renderAll();
-                this.status = "completed";
+              this.canvas.renderAll();
+              this.status = "completed";
 
-                resolve();
-              });
-            },
-            (object: fabric.Object) => {
-              if (FabricUtils.isTextboxElement(object)) {
-                if (object.meta!.font) {
-                  const font = object.meta!.font as EditorFont;
-                  const styles = font.styles.map((style) => `${style.weight}`).join(",");
-                  const family = `${font.family}:${styles}`;
-                  WebFont.load({
-                    google: {
-                      families: [family],
-                    },
-                    fontactive: (family) => {
-                      if (family === font.family) {
-                        object.set("fontFamily", object.fontFamily);
-                        this.canvas.requestRenderAll();
-                      }
-                    },
-                  });
-                }
-              }
-            },
-          );
+              resolve();
+            });
+          });
         }
       });
     });
