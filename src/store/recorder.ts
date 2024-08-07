@@ -4,7 +4,7 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { makeAutoObservable } from "mobx";
 
 import { FabricUtils } from "@/fabric/utils";
-import { createInstance, createPromise, createUint8Array } from "@/lib/utils";
+import { createInstance, createPromise, createUint8Array, wait } from "@/lib/utils";
 import { Editor } from "@/store/editor";
 import { propertiesToInclude } from "@/fabric/constants";
 import { dataURLToUInt8Array } from "@/lib/media";
@@ -113,7 +113,7 @@ export class Recorder {
     for (let frame = 0; frame < count; frame++) {
       const seek = frame === count - 1 ? this.preview.duration : (frame / count) * this.preview.duration;
       this.timeline!.seek(seek);
-      yield this._toggleElements(seek);
+      yield Promise.all([this._toggleElements(seek), wait(0.1)]);
 
       const base64 = this.instance.toDataURL({ format: "image/png" });
       const buffer = dataURLToUInt8Array(base64);

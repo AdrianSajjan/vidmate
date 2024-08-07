@@ -52,6 +52,32 @@ export class CanvasTemplate {
     return !(this.status === "completed" || this.status === "error") && !!this.page;
   }
 
+  private *_loadScene() {
+    this.timeline.destroy();
+    this.workspace.changeFill("#CCCCCC");
+    this.workspace.resizeArtboard({ height: this.page!.data.height, width: this.page!.data.width });
+
+    return createPromise<void>((resolve) => {
+      this.canvas.loadFromJSON(this.page!.data.scene, () => {
+        runInAction(() => {
+          this.canvas.insertAt(this.artboard, 0, false);
+          this.canvas.clipPath = this.artboard;
+
+          this.workspace.changeFill(this.page!.data.fill || "#FFFFFF");
+          this.workspace.resizeArtboard({ height: this.page!.data.height || 1080, width: this.page!.data.width || 1080 });
+          FabricUtils.applyTransformationsAfterLoad(this.canvas);
+
+          this.history.clear();
+          this.timeline.initialize(this.page!.duration || 5000);
+
+          this.canvas.renderAll();
+          this.status = "completed";
+          resolve();
+        });
+      });
+    });
+  }
+
   set(template: EditorTemplatePage) {
     this.page = template;
   }
@@ -72,28 +98,9 @@ export class CanvasTemplate {
           this.cropper.active = null;
           this.selection.active = null;
 
-          this.timeline.destroy();
-          this.workspace.changeFill("#CCCCCC");
-          this.workspace.resizeArtboard({ height: this.page.height, width: this.page.width });
-
-          this.canvas.loadFromJSON(this.page.data, () => {
-            runInAction(() => {
-              this.canvas.insertAt(this.artboard, 0, false);
-              this.canvas.clipPath = this.artboard;
-
-              this.workspace.changeFill(this.page!.fill || "#FFFFFF");
-              this.workspace.resizeArtboard({ height: this.page!.height || 1080, width: this.page!.width || 1080 });
-              FabricUtils.applyTransformationsAfterLoad(this.canvas);
-
-              this.history.clear();
-              this.timeline.initialize(this.page!.duration || 5000);
-
-              this.canvas.renderAll();
-              this.status = "completed";
-
-              resolve();
-            });
-          });
+          Promise.all([this.audio.initialize(this.page!.data.audios), this._loadScene()])
+            .then(() => resolve())
+            .catch(() => reject());
         }
       });
     });

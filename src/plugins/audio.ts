@@ -6,6 +6,7 @@ import { FabricUtils } from "@/fabric/utils";
 import { createInstance } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
 import { EditorAudioElement } from "@/types/editor";
+import { toast } from "sonner";
 
 export class CanvasAudio {
   private _canvas: Canvas;
@@ -134,6 +135,25 @@ export class CanvasAudio {
     this.elements.push(audio);
 
     return audio;
+  }
+
+  *initialize(audios: Omit<EditorAudioElement, "buffer" | "source">[]) {
+    for (const audio of audios) {
+      try {
+        const response: Response = yield fetch(audio.url);
+        const data: ArrayBuffer = yield response.arrayBuffer();
+        const buffer: AudioBuffer = yield this.context.decodeAudioData(data);
+
+        const source = this.context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.context.destination);
+
+        const element: EditorAudioElement = Object.assign({ buffer, source }, audio);
+        this.elements.push(element);
+      } catch {
+        toast.error(`Ran into an error initializing audio - ${audio.name}`);
+      }
+    }
   }
 
   *extract(videos: fabric.Video[], { ffmpeg, signal }: { ffmpeg: FFmpeg; signal?: AbortSignal }) {

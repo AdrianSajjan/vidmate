@@ -467,21 +467,21 @@ async function convertLayer(layer) {
 
 async function convertLayers(template) {
   const root = template.layers.ROOT.props;
-  const data = { version: "5.3.0", objects: [], background: "#F0F0F0" };
-  const result = { height: root.boxSize.height || 1080, width: root.boxSize.width || 1080, fill: root.color || "#FFFFFF", data: "" };
+  const scene = { version: "5.3.0", objects: [], background: "#F0F0F0" };
+  const data = { height: root.boxSize.height || 1080, width: root.boxSize.width || 1080, fill: root.color || "#FFFFFF", audios: [], scene: "" };
   for (const [key, layer] of Object.entries(template.layers)) {
     const converted = await convertLayer(layer);
     if (key === "ROOT" || !converted) continue;
-    if (Array.isArray(converted)) data.objects.push(...converted);
-    else data.objects.push(converted);
+    if (Array.isArray(converted)) scene.objects.push(...converted);
+    else scene.objects.push(converted);
   }
-  result.data = JSON.stringify(data);
-  return result;
+  data.scene = JSON.stringify(scene);
+  return data;
 }
 
-async function convertPage(data, thumbnail) {
-  const props = await convertLayers(data);
-  return { id: nanoid(), name: "Untitled Page", thumbnail: thumbnail.url, duration: 10000, ...props };
+async function convertPage(layers, thumbnail) {
+  const data = await convertLayers(layers);
+  return { id: nanoid(), name: "Untitled Page", thumbnail: thumbnail.url, duration: 10000, data: data };
 }
 
 async function convertPages(template) {

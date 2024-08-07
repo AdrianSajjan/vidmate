@@ -1,18 +1,23 @@
-export type EditorTemplate = {
+export interface EditorTemplate {
   id: string;
   name: string;
   pages: EditorTemplatePage[];
-};
+}
+
+export interface EditorTemplatePageData {
+  scene: string;
+  audios: Omit<EditorAudioElement, "buffer" | "source">[];
+  fill: string;
+  width: number;
+  height: number;
+}
 
 export interface EditorTemplatePage {
   id: string;
   name: string;
-  data: string;
-  fill: string;
-  width: number;
-  height: number;
   thumbnail: string;
   duration: number;
+  data: EditorTemplatePageData;
 }
 
 export interface EditorMedia {

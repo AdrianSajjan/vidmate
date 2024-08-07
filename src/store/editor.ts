@@ -98,7 +98,7 @@ export class Editor {
     switch (this.exporting) {
       case ExportProgress.CaptureVideo:
         this.progress.capture = progress * 100;
-        this.frame = frame;
+        if (frame) this.frame = frame;
         break;
       case ExportProgress.CompileVideo:
         this.progress.compile = progress * 100;
@@ -176,8 +176,10 @@ export class Editor {
     const templates: EditorTemplatePage[] = [];
     for (const page of this.pages) {
       const thumbnail: string = yield this.recorder.screenshot(page.instance);
-      const data = JSON.stringify(page.instance.toDatalessJSON(propertiesToInclude));
-      templates.push({ thumbnail, data, id: page.id, name: page.name, duration: page.timeline.duration, fill: page.workspace.fill, height: page.workspace.height, width: page.workspace.width });
+      const scene = JSON.stringify(page.instance.toDatalessJSON(propertiesToInclude));
+      const audios: Omit<EditorAudioElement, "buffer" | "source">[] = page.audio.elements.map(({ buffer, source, ...audio }) => audio);
+      const data = { fill: page.workspace.fill, height: page.workspace.height, width: page.workspace.width, audios: audios, scene: scene };
+      templates.push({ thumbnail: thumbnail, data: data, id: page.id, name: page.name, duration: page.timeline.duration });
     }
     return templates;
   }
