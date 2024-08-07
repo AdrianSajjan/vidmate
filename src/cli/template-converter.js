@@ -1,8 +1,8 @@
 import path from "path";
 import fs from "fs/promises";
 import probe from "probe-image-size";
-import { Parser } from "htmlparser2";
 
+import { Parser } from "htmlparser2";
 import { fileURLToPath } from "url";
 import { nanoid, customAlphabet } from "nanoid";
 
@@ -183,7 +183,7 @@ function createImage(src, props) {
   };
 }
 
-function createTextbox(text, props) {
+function createTextbox(text, props, meta) {
   return {
     type: "textbox",
     version: "5.3.0",
@@ -191,7 +191,6 @@ function createTextbox(text, props) {
     originY: "top",
     left: 0,
     top: 0,
-    width: 500,
     fill: "#ffffff",
     stroke: null,
     strokeWidth: 1,
@@ -216,9 +215,9 @@ function createTextbox(text, props) {
     skewX: 0,
     skewY: 0,
     erasable: true,
-    fontFamily: "Inter",
-    fontWeight: 700,
-    fontSize: 64,
+    fontFamily: "Poppins",
+    fontWeight: 400,
+    fontSize: 48,
     text: text,
     underline: false,
     overline: false,
@@ -227,26 +226,26 @@ function createTextbox(text, props) {
     fontStyle: "normal",
     lineHeight: 1.16,
     textBackgroundColor: "",
-    charSpacing: 5,
+    charSpacing: 0,
     styles: [],
     direction: "ltr",
     path: null,
     pathStartOffset: 0,
     pathSide: "left",
     pathAlign: "baseline",
-    minWidth: 20,
     splitByGrapheme: false,
     name: elementID("text"),
     meta: {
       duration: 10000,
       offset: 0,
       font: {
-        family: "Inter",
+        family: "Poppins",
         styles: [
-          { name: "Inter Regular", weight: "400", style: "normal" },
-          { name: "Inter Bold 700", weight: "700", style: "normal" },
+          { name: "Poppins Regular", weight: "400", style: "normal" },
+          { name: "Poppins Bold 700", weight: "700", style: "normal" },
         ],
       },
+      ...(meta || {}),
     },
     anim: {
       in: {
@@ -311,6 +310,35 @@ function parseStyles(styles) {
   return style;
 }
 
+function parseFonts(fonts) {
+  const font = fonts?.at(0);
+  if (!fonts || !font) {
+    return {
+      family: "Poppins",
+      styles: [
+        { name: "Poppins Regular", weight: "400", style: "normal" },
+        { name: "Poppins Bold 700", weight: "700", style: "normal" },
+      ],
+    };
+  } else if (font.family === "Canva Sans") {
+    return {
+      family: "Alexandria",
+      styles: [
+        { name: "Alexandria Regular", weight: "400", style: "normal" },
+        { name: "Alexandria Bold 700", weight: "700", style: "normal" },
+      ],
+    };
+  } else {
+    return {
+      family: font.family,
+      styles: [
+        { name: `${font.family} Regular`, weight: "400", style: "normal" },
+        { name: `${font.family} Bold 700`, weight: "700", style: "normal" },
+      ],
+    };
+  }
+}
+
 function extractTextContent(element) {
   let styles = [];
   let text = "";
@@ -347,20 +375,29 @@ async function convertLayer(layer) {
       return image;
     }
     case "TextLayer": {
-      const { text, styles } = extractTextContent(layer.props.text);
-      const textbox = createTextbox(text, {
-        top: layer.props.position.y,
-        left: layer.props.position.x,
-        width: layer.props.boxSize.width,
-        scaleY: layer.props.scale,
-        angle: layer.props.rotate,
-        opacity: layer.props.transparency,
-        lineHeight: styles.at(0)?.lineHeight || 1.16,
-        textAlign: styles.at(0)?.textAlign,
-        textTransform: styles.at(0)?.textTransform,
-        fill: styles.at(0)?.color || layer.props.colors.at(0),
-        fontSize: layer.props.fontSizes.at(0),
-      });
+      const content = extractTextContent(layer.props.text);
+      const styles = content.styles[0];
+      const font = parseFonts(layer.props.fonts);
+      const textbox = createTextbox(
+        content.text,
+        {
+          top: layer.props.position.y,
+          left: layer.props.position.x,
+          width: layer.props.boxSize.width * layer.props.scale,
+          angle: layer.props.rotate,
+          opacity: layer.props.transparency,
+          lineHeight: styles?.lineHeight || 1.16,
+          textAlign: styles?.textAlign || "center",
+          textTransform: styles?.textTransform || "none",
+          fontWeight: styles?.fontWeight || 400,
+          fill: styles?.color || layer.props.colors[0],
+          fontFamily: font.family,
+          fontSize: Math.round(layer.props.fontSizes[0] * layer.props.scale),
+        },
+        {
+          font: font,
+        },
+      );
       return textbox;
     }
     case "ShapeLayer": {
@@ -438,7 +475,7 @@ async function convertLayers(template) {
     if (Array.isArray(converted)) data.objects.push(...converted);
     else data.objects.push(converted);
   }
-  result.data = data;
+  result.data = JSON.stringify(data);
   return result;
 }
 

@@ -8,6 +8,7 @@ import EdgeControl from "@/assets/editor/controls/edge-control.svg";
 import MiddleControlHorizontal from "@/assets/editor/controls/middle-control-horizontal.svg";
 import MiddleControlVertical from "@/assets/editor/controls/middle-control-vertical.svg";
 import RotationControl from "@/assets/editor/controls/rotate-icon.svg";
+import DragControl from "@/assets/editor/controls/drag-icon.svg";
 
 const middleControlVertical = document.createElement("img");
 middleControlVertical.src = MiddleControlVertical;
@@ -21,7 +22,10 @@ edgeControl.src = EdgeControl;
 const rotationControl = document.createElement("img");
 rotationControl.src = RotationControl;
 
-function renderIcon(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
+const dragControl = document.createElement("img");
+dragControl.src = DragControl;
+
+function renderIconVertical(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
   const wsize = 20;
   const hsize = 25;
   ctx.save();
@@ -31,7 +35,7 @@ function renderIcon(ctx: CanvasRenderingContext2D, left: number, top: number, _:
   ctx.restore();
 }
 
-function renderIconHoz(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
+function renderIconHorizontal(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
   const wsize = 25;
   const hsize = 20;
   ctx.save();
@@ -61,6 +65,16 @@ function renderIconRotate(ctx: CanvasRenderingContext2D, left: number, top: numb
   ctx.restore();
 }
 
+function renderIconDrag(ctx: CanvasRenderingContext2D, left: number, top: number, _: unknown, fabricObject: fabric.Object) {
+  const wsize = 40;
+  const hsize = 40;
+  ctx.save();
+  ctx.translate(left, top);
+  ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle!));
+  ctx.drawImage(dragControl, -wsize / 2, -hsize / 2, wsize, hsize);
+  ctx.restore();
+}
+
 fabric.Object.prototype.controls.ml = new fabric.Control({
   x: -0.5,
   y: 0,
@@ -68,7 +82,7 @@ fabric.Object.prototype.controls.ml = new fabric.Control({
   cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
   actionHandler: fabric.controlsUtils.scalingXOrSkewingY,
   getActionName: fabric.controlsUtils.scaleOrSkewActionName,
-  render: renderIcon,
+  render: renderIconVertical,
 });
 
 fabric.Object.prototype.controls.mr = new fabric.Control({
@@ -78,7 +92,7 @@ fabric.Object.prototype.controls.mr = new fabric.Control({
   cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
   actionHandler: fabric.controlsUtils.scalingXOrSkewingY,
   getActionName: fabric.controlsUtils.scaleOrSkewActionName,
-  render: renderIcon,
+  render: renderIconVertical,
 });
 
 fabric.Object.prototype.controls.mb = new fabric.Control({
@@ -88,7 +102,7 @@ fabric.Object.prototype.controls.mb = new fabric.Control({
   cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
   actionHandler: fabric.controlsUtils.scalingYOrSkewingX,
   getActionName: fabric.controlsUtils.scaleOrSkewActionName,
-  render: renderIconHoz,
+  render: renderIconHorizontal,
 });
 
 fabric.Object.prototype.controls.mt = new fabric.Control({
@@ -98,7 +112,7 @@ fabric.Object.prototype.controls.mt = new fabric.Control({
   cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
   actionHandler: fabric.controlsUtils.scalingYOrSkewingX,
   getActionName: fabric.controlsUtils.scaleOrSkewActionName,
-  render: renderIconHoz,
+  render: renderIconHorizontal,
 });
 
 fabric.Object.prototype.controls.tl = new fabric.Control({
@@ -138,10 +152,28 @@ fabric.Object.prototype.controls.mtr = new fabric.Control({
   y: 0.5,
   cursorStyleHandler: fabric.controlsUtils.rotationStyleHandler,
   actionHandler: fabric.controlsUtils.rotationWithSnapping,
-  offsetY: 30,
+  offsetY: 28,
+  offsetX: 20,
   withConnection: false,
   actionName: "rotate",
   render: renderIconRotate,
+});
+
+fabric.Object.prototype.controls.mbr = new fabric.Control({
+  x: 0,
+  y: 0.5,
+  cursorStyleHandler: (_e, _c, object) => {
+    if (object.lockMovementX && object.lockMovementY) return "not-allowed";
+    else if (!object.lockScalingX && object.lockMovementY) return "ew-resize";
+    else if (object.lockScalingX && !object.lockMovementY) return "ns-resize";
+    else return "all-scroll";
+  },
+  actionHandler: fabric.controlsUtils.dragHandler,
+  offsetY: 28,
+  offsetX: -20,
+  withConnection: false,
+  actionName: "drag",
+  render: renderIconDrag,
 });
 
 fabric.Textbox.prototype.controls.tr = fabric.Object.prototype.controls.tr;
@@ -149,6 +181,7 @@ fabric.Textbox.prototype.controls.br = fabric.Object.prototype.controls.br;
 fabric.Textbox.prototype.controls.tl = fabric.Object.prototype.controls.tl;
 fabric.Textbox.prototype.controls.bl = fabric.Object.prototype.controls.bl;
 fabric.Textbox.prototype.controls.mtr = fabric.Object.prototype.controls.mtr;
+fabric.Textbox.prototype.controls.mbr = fabric.Object.prototype.controls.mbr;
 
 fabric.Textbox.prototype.controls.mt = new fabric.Control({ visible: false });
 fabric.Textbox.prototype.controls.mb = new fabric.Control({ visible: false });
@@ -160,7 +193,7 @@ fabric.Textbox.prototype.controls.ml = new fabric.Control({
   cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
   actionHandler: fabric.controlsUtils.changeWidth,
   actionName: "resizing",
-  render: renderIcon,
+  render: renderIconVertical,
 });
 
 fabric.Textbox.prototype.controls.mr = new fabric.Control({
@@ -170,7 +203,7 @@ fabric.Textbox.prototype.controls.mr = new fabric.Control({
   cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
   actionHandler: fabric.controlsUtils.changeWidth,
   actionName: "resizing",
-  render: renderIcon,
+  render: renderIconVertical,
 });
 
 fabric.StaticCanvas.prototype.getItemByName = function (name) {
