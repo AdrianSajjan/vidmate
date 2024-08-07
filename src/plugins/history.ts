@@ -3,8 +3,6 @@ import { propertiesToInclude } from "@/fabric/constants";
 import { createPromise } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
 import { FabricUtils } from "@/fabric/utils";
-import { EditorFont } from "@/constants/fonts";
-import WebFont from "webfontloader";
 
 type HistoryStatus = "pending" | "idle";
 
@@ -41,36 +39,17 @@ export class CanvasHistory {
 
   private *_load(history: string) {
     return createPromise<void>((resolve) => {
-      this.canvas.loadFromJSON(
-        history,
-        () => {
-          this.canvas.insertAt(this._canvas.artboard, 0, false);
-          FabricUtils.applyTransformationsAfterLoad(this.canvas);
-          runInAction(() => (this.status = "idle"));
-          this.canvas.renderAll();
-          resolve();
-        },
-        (object: fabric.Object) => {
-          if (FabricUtils.isTextboxElement(object)) {
-            if (object.meta!.font) {
-              const font = object.meta!.font as EditorFont;
-              const styles = font.styles.map((style) => `${style.weight}`).join(",");
-              const family = `${font.family}:${styles}`;
-              WebFont.load({
-                google: {
-                  families: [family],
-                },
-                fontactive: (family) => {
-                  if (family === font.family) {
-                    object.set("fontFamily", object.fontFamily);
-                    this.canvas.requestRenderAll();
-                  }
-                },
-              });
-            }
-          }
-        },
-      );
+      FabricUtils.applyFontsBeforeLoad(JSON.parse(history).objects).then(() => {
+        this.canvas.loadFromJSON(history, () => {
+          runInAction(() => {
+            this.canvas.insertAt(this._canvas.artboard, 0, false);
+            FabricUtils.applyTransformationsAfterLoad(this.canvas);
+            this.status = "idle";
+            this.canvas.renderAll();
+            resolve();
+          });
+        });
+      });
     });
   }
 

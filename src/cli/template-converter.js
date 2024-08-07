@@ -312,12 +312,20 @@ function parseStyles(styles) {
 
 function parseFonts(fonts) {
   const font = fonts?.at(0);
-  if (!fonts || !font || font.family === "Canva Sans") {
+  if (!fonts || !font) {
     return {
       family: "Inter",
       styles: [
         { name: "Inter Regular", weight: "400", style: "normal" },
         { name: "Inter Bold 700", weight: "700", style: "normal" },
+      ],
+    };
+  } else if (font.family === "Canva Sans") {
+    return {
+      family: "Alexandria",
+      styles: [
+        { name: "Alexandria Regular", weight: "400", style: "normal" },
+        { name: "Alexandria Bold 700", weight: "700", style: "normal" },
       ],
     };
   } else {

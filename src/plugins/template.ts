@@ -52,27 +52,27 @@ export class CanvasTemplate {
     return !(this.status === "completed" || this.status === "error") && !!this.page;
   }
 
-  private *_loadScene() {
-    this.timeline.destroy();
-    this.workspace.changeFill("#CCCCCC");
-    this.workspace.resizeArtboard({ height: this.page!.data.height, width: this.page!.data.width });
-
+  private *_scene() {
     return createPromise<void>((resolve) => {
-      this.canvas.loadFromJSON(this.page!.data.scene, () => {
-        runInAction(() => {
-          this.canvas.insertAt(this.artboard, 0, false);
-          this.canvas.clipPath = this.artboard;
-
-          this.workspace.changeFill(this.page!.data.fill || "#FFFFFF");
-          this.workspace.resizeArtboard({ height: this.page!.data.height || 1080, width: this.page!.data.width || 1080 });
-          FabricUtils.applyTransformationsAfterLoad(this.canvas);
-
-          this.history.clear();
-          this.timeline.initialize(this.page!.duration || 5000);
-
-          this.canvas.renderAll();
-          this.status = "completed";
-          resolve();
+      console.log("before");
+      FabricUtils.applyFontsBeforeLoad(JSON.parse(this.page!.data.scene).objects).then(() => {
+        console.log("after");
+        this.timeline.destroy();
+        this.workspace.changeFill("#CCCCCC");
+        this.workspace.resizeArtboard({ height: this.page!.data.height, width: this.page!.data.width });
+        this.canvas.loadFromJSON(this.page!.data.scene, () => {
+          runInAction(() => {
+            this.canvas.insertAt(this.artboard, 0, false);
+            this.canvas.clipPath = this.artboard;
+            this.workspace.changeFill(this.page!.data.fill || "#FFFFFF");
+            this.workspace.resizeArtboard({ height: this.page!.data.height || 1080, width: this.page!.data.width || 1080 });
+            FabricUtils.applyTransformationsAfterLoad(this.canvas);
+            this.history.clear();
+            this.timeline.initialize(this.page!.duration || 5000);
+            this.canvas.renderAll();
+            this.status = "completed";
+            resolve();
+          });
         });
       });
     });
@@ -93,12 +93,10 @@ export class CanvasTemplate {
           this._canvas.elements = [];
           this._canvas.id = this.page.id;
           this._canvas.name = this.page.name;
-
           this.audio.elements = [];
           this.cropper.active = null;
           this.selection.active = null;
-
-          Promise.all([this.audio.initialize(this.page!.data.audios), this._loadScene()])
+          Promise.all([this.audio.initialize(this.page!.data.audios), this._scene()])
             .then(() => resolve())
             .catch(() => reject());
         }

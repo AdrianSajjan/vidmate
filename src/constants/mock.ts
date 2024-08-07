@@ -1,16 +1,14 @@
+import { useSyncExternalStore } from "react";
+
 import { createInstance } from "@/lib/utils";
 import { EditorAudio, EditorMedia, EditorTemplate } from "@/types/editor";
 import { PromptSession } from "@/types/prompt";
-import { useSyncExternalStore } from "react";
 
 const images: EditorMedia[] = [];
-
 const videos: EditorMedia[] = [];
-
-const prompts: PromptSession[] = [];
-
 const audios: EditorAudio[] = [];
 
+const prompts: PromptSession[] = [];
 const templates: EditorTemplate[] = [];
 
 export interface MockDataState {

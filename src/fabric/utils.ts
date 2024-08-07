@@ -1,5 +1,5 @@
 import { EditorFont } from "@/constants/fonts";
-import { createInstance } from "@/lib/utils";
+import { createInstance, createPromise } from "@/lib/utils";
 import { EditorAudioElement } from "@/types/editor";
 import { fabric } from "fabric";
 import { omit } from "lodash";
@@ -185,25 +185,21 @@ export abstract class FabricUtils {
         object.on("scaling", handler);
         object.on("rotating", handler);
       }
-      if (FabricUtils.isTextboxElement(object)) {
-        if (object.meta!.font) {
-          const font = object.meta!.font as EditorFont;
-          const styles = font.styles.map((style) => `${style.weight}`).join(",");
-          const family = `${font.family}:${styles}`;
-          WebFont.load({
-            google: {
-              families: [family],
-            },
-            fontactive: (family) => {
-              if (family === font.family) {
-                object.set("fontFamily", object.fontFamily);
-                canvas.requestRenderAll();
-              }
-            },
-          });
-        }
-      }
     }
+  }
+
+  static applyFontsBeforeLoad(objects: fabric.Object[]) {
+    return createPromise<void>((resolve) => {
+      const fonts = objects.filter(this.isTextboxElement).map((text) => {
+        const font: EditorFont = text.meta!.font;
+        const styles = font.styles.map((style) => `${style.weight}`).join(",");
+        return `${font.family}:${styles}`;
+      });
+      WebFont.load({
+        google: { families: fonts },
+        active: resolve,
+      });
+    });
   }
 
   static convertGradient(angle: number) {
