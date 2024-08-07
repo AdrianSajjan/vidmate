@@ -4,7 +4,7 @@ import probe from "probe-image-size";
 
 import { Parser } from "htmlparser2";
 import { fileURLToPath } from "url";
-import { nanoid, customAlphabet } from "nanoid";
+import { customAlphabet } from "nanoid";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -215,7 +215,7 @@ function createTextbox(text, props, meta) {
     skewX: 0,
     skewY: 0,
     erasable: true,
-    fontFamily: "Poppins",
+    fontFamily: "Inter",
     fontWeight: 400,
     fontSize: 48,
     text: text,
@@ -239,10 +239,10 @@ function createTextbox(text, props, meta) {
       duration: 10000,
       offset: 0,
       font: {
-        family: "Poppins",
+        family: "Inter",
         styles: [
-          { name: "Poppins Regular", weight: "400", style: "normal" },
-          { name: "Poppins Bold 700", weight: "700", style: "normal" },
+          { name: "Inter Regular", weight: "400", style: "normal" },
+          { name: "Inter Bold 700", weight: "700", style: "normal" },
         ],
       },
       ...(meta || {}),
@@ -312,20 +312,12 @@ function parseStyles(styles) {
 
 function parseFonts(fonts) {
   const font = fonts?.at(0);
-  if (!fonts || !font) {
+  if (!fonts || !font || font.family === "Canva Sans") {
     return {
-      family: "Poppins",
+      family: "Inter",
       styles: [
-        { name: "Poppins Regular", weight: "400", style: "normal" },
-        { name: "Poppins Bold 700", weight: "700", style: "normal" },
-      ],
-    };
-  } else if (font.family === "Canva Sans") {
-    return {
-      family: "Alexandria",
-      styles: [
-        { name: "Alexandria Regular", weight: "400", style: "normal" },
-        { name: "Alexandria Bold 700", weight: "700", style: "normal" },
+        { name: "Inter Regular", weight: "400", style: "normal" },
+        { name: "Inter Bold 700", weight: "700", style: "normal" },
       ],
     };
   } else {
@@ -467,9 +459,12 @@ async function convertLayer(layer) {
 }
 
 async function convertLayers(template) {
-  const root = template.layers.ROOT.props;
+  const height = Math.round(template.layers.ROOT.props.boxSize.height) || 1080;
+  const width = Math.round(template.layers.ROOT.props.boxSize.width) || 1080;
+  const fill = template.layers.ROOT.props.color || "#FFFFFF";
+  if (height !== 1080 || width !== 1080) return null;
   const scene = { version: "5.3.0", objects: [], background: "#F0F0F0" };
-  const data = { height: root.boxSize.height || 1080, width: root.boxSize.width || 1080, fill: root.color || "#FFFFFF", audios: [], scene: "" };
+  const data = { height: height, width: width, fill: fill, audios: [], scene: "" };
   for (const [key, layer] of Object.entries(template.layers)) {
     const converted = await convertLayer(layer);
     if (key === "ROOT" || !converted) continue;
@@ -482,7 +477,8 @@ async function convertLayers(template) {
 
 async function convertPage(layers, thumbnail) {
   const data = await convertLayers(layers);
-  return { id: nanoid(), name: "Untitled Page", thumbnail: thumbnail.url, duration: 10000, data: data };
+  if (!data) return null;
+  return { id: __nanoid(), name: "Untitled Page", thumbnail: thumbnail.url, duration: 10000, data: data };
 }
 
 async function convertPages(template) {
@@ -507,7 +503,7 @@ async function templateConverter() {
     const result = [];
     for (const template of json) {
       const pages = await convertPages(template);
-      result.push({ id: nanoid(), name: template.desc, pages: pages });
+      result.push({ id: __nanoid(), name: template.desc, pages: pages.filter(Boolean) });
     }
     fs.writeFile(path.resolve(__dirname, "converted-" + process.argv[2]), JSON.stringify(result, undefined, 2), "utf-8");
   } catch (error) {
