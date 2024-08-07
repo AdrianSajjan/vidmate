@@ -383,7 +383,7 @@ async function convertLayer(layer) {
         {
           top: layer.props.position.y,
           left: layer.props.position.x,
-          width: layer.props.boxSize.width * layer.props.scale + 1,
+          width: layer.props.boxSize.width,
           angle: layer.props.rotate,
           opacity: layer.props.transparency,
           lineHeight: styles?.lineHeight || 1.16,
