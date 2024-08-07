@@ -383,7 +383,7 @@ async function convertLayer(layer) {
         {
           top: layer.props.position.y,
           left: layer.props.position.x,
-          width: layer.props.boxSize.width * layer.props.scale + 10,
+          width: layer.props.boxSize.width * layer.props.scale + 1,
           angle: layer.props.rotate,
           opacity: layer.props.transparency,
           lineHeight: styles?.lineHeight || 1.16,
@@ -402,9 +402,11 @@ async function convertLayer(layer) {
     }
     case "ShapeLayer": {
       const shape = createPath(layer.props.clipPath, {
+        strokeWidth: layer.props.border?.weight,
+        stroke: layer.props.border?.color,
         scaleX: layer.props.boxSize.width / +layer.props.shapeSize.width,
         scaleY: layer.props.boxSize.height / +layer.props.shapeSize.height,
-        fill: layer.props.colors,
+        fill: layer.props.color || "",
         height: +layer.props.shapeSize.height,
         width: +layer.props.shapeSize.width,
         opacity: layer.props.transparency,
@@ -423,7 +425,7 @@ async function convertLayer(layer) {
           stroke: layer.props.border.color,
           scaleX: layer.props.scale,
           scaleY: layer.props.scale,
-          fill: layer.props.border.color,
+          fill: layer.props.color || "",
           height: layer.props.boxSize.height,
           width: layer.props.boxSize.width,
           opacity: layer.props.transparency,
@@ -435,7 +437,6 @@ async function convertLayer(layer) {
       const clipPath = createPath(layer.props.clipPath, {
         scaleX: layer.props.scale,
         scaleY: layer.props.scale,
-        fill: layer.props.colors,
         height: layer.props.boxSize.height,
         width: layer.props.boxSize.width,
         opacity: layer.props.transparency,
