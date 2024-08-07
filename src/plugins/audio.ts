@@ -151,7 +151,8 @@ export class CanvasAudio {
         const element: EditorAudioElement = Object.assign({ buffer, source }, audio);
         this.elements.push(element);
       } catch {
-        toast.error(`Ran into an error initializing audio - ${audio.name}`);
+        toast.dismiss(audio.id);
+        toast.error(`Ran into an error initializing audio - ${audio.name}`, { id: audio.id });
       }
     }
   }

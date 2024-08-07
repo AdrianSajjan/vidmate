@@ -133,7 +133,7 @@ export class CanvasAnimations {
         timeline.add(
           {
             targets: object,
-            scaleY: [0.01, scaleY],
+            scaleY: [1 / height, scaleY],
             top: [top + (height * scaleY) / 2, top],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
@@ -213,7 +213,7 @@ export class CanvasAnimations {
         timeline.add(
           {
             targets: object,
-            scaleY: [scaleY, 0.01],
+            scaleY: [scaleY, 1 / height],
             top: [top, top + (height * scaleY) / 2],
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
