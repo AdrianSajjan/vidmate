@@ -425,7 +425,7 @@ async function convertLayer(layer) {
           stroke: layer.props.border.color,
           scaleX: layer.props.scale,
           scaleY: layer.props.scale,
-          fill: layer.props.color || "",
+          fill: layer.props.border.color || "",
           height: layer.props.boxSize.height,
           width: layer.props.boxSize.width,
           opacity: layer.props.transparency,
