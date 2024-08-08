@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { fabric } from "fabric";
-import { floor } from "lodash";
+import { floor, isUndefined } from "lodash";
 import { makeAutoObservable, runInAction } from "mobx";
 
 import { CanvasAlignment } from "@/plugins/alignment";
@@ -167,6 +167,11 @@ export class Canvas {
     this.instance.clipPath = this.artboard;
     this.instance.add(this.artboard).renderAll();
     if (this.template.pending) yield this.template.load();
+  }
+
+  onToggleControls(visible?: boolean) {
+    if (isUndefined(visible)) this.controls = !this.controls;
+    else this.controls = visible;
   }
 
   onDeleteObject(object?: fabric.Object) {

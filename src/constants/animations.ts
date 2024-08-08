@@ -158,11 +158,17 @@ export const scene: EditorAnimation[] = [
     value: "zoom-in",
     label: "Zoom In",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    disabled: {
+      duration: true,
+    },
   },
   {
     value: "zoom-out",
     label: "Zoom out",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    disabled: {
+      duration: true,
+    },
   },
   {
     value: "blink",

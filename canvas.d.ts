@@ -2807,21 +2807,19 @@ export interface AnimationTimeline {
     name: EntryAnimation;
     duration: number;
     easing?: any;
-    state?: Record<string, any>;
   };
   scene: {
     name: SceneAnimations;
     duration?: number;
     easing?: any;
-    state?: Record<string, any>;
   };
   out: {
     name: ExitAnimation;
     duration: number;
     easing?: any;
-    state?: Record<string, any>;
   };
   state?: Record<string, any>;
+  preview?: Record<string, any>;
 }
 
 interface IObjectOptions {

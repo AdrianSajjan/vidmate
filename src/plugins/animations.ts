@@ -10,8 +10,6 @@ import { modifyAnimationEasing } from "@/lib/animations";
 type AnimationState = ReturnType<CanvasAnimations["_save"]>;
 export class CanvasAnimations {
   private _canvas: Canvas;
-
-  private _active: fabric.Object | null;
   private _preview: anime.AnimeTimelineInstance | null;
 
   private _zoomAmount = 0.25;
@@ -21,7 +19,6 @@ export class CanvasAnimations {
   constructor(canvas: Canvas) {
     this._canvas = canvas;
     this._preview = null;
-    this._active = null;
     makeAutoObservable(this);
   }
 
@@ -33,23 +30,36 @@ export class CanvasAnimations {
     return this._canvas.instance;
   }
 
+  private _update() {
+    this.canvas.requestRenderAll();
+  }
+
+  private _complete(object: fabric.Object) {
+    setTimeout(() => this.dispose(object), 500);
+  }
+
   private _save(object: fabric.Object) {
     const left = object.left!;
     const top = object.top!;
     const height = object.height!;
     const width = object.width!;
 
-    const opacity = object.opacity!;
     const fill = object.fill!;
     const stroke = object.stroke!;
+    const opacity = object.opacity!;
 
     const scaleX = object.scaleX!;
     const scaleY = object.scaleY!;
     const angle = object.angle!;
 
+    const state = { opacity, left, top, scaleX, scaleY, fill, stroke, angle };
+    const events = { selectable: object.selectable, evented: object.evented };
+    const controls = { hasControls: object.hasControls, hasBorders: object.hasBorders };
+    const locks = { lockMovementX: object.lockMovementX, lockMovementY: object.lockMovementY, lockScalingX: object.lockScalingX, lockScalingY: object.lockScalingY, lockRotation: object.lockRotation };
+
     if (!object.anim) FabricUtils.initializeAnimationProperties(object);
-    object.anim!.state = { opacity, left, top, scaleX, scaleY, fill, stroke, angle, selectable: object.selectable, evented: object.evented };
-    object.set({ selectable: false, evented: false });
+    object.anim!.state = Object.assign(state, events, locks, controls);
+    object.set({ lockMovementX: true, lockMovementY: true, lockScalingX: true, lockScalingY: true, lockRotation: true, hasBorders: false, hasControls: false, selectable: false, evented: false });
 
     return { left, top, height, width, opacity, fill, stroke, scaleX, scaleY, angle };
   }
@@ -77,7 +87,7 @@ export class CanvasAnimations {
           {
             targets: object,
             opacity: [0, opacity],
-            left: [left - Math.min((width * scaleX) / 2, Number.MAX_VALUE), left],
+            left: [left - Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER), left],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
@@ -91,7 +101,7 @@ export class CanvasAnimations {
           {
             targets: object,
             opacity: [0, opacity],
-            left: [left + Math.min((width * scaleX) / 2, Number.MAX_VALUE), left],
+            left: [left + Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER), left],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
@@ -104,7 +114,7 @@ export class CanvasAnimations {
         timeline.add(
           {
             targets: object,
-            left: [left - Math.min((width * scaleX) / 2, Number.MAX_VALUE), left],
+            left: [left - Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER), left],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
@@ -117,7 +127,7 @@ export class CanvasAnimations {
         timeline.add(
           {
             targets: object,
-            left: [left + Math.min((width * scaleX) / 2, Number.MAX_VALUE), left],
+            left: [left + Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER), left],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
@@ -131,7 +141,7 @@ export class CanvasAnimations {
           {
             targets: object,
             opacity: [0, opacity],
-            top: [top + Math.min((height * scaleY) / 2, 50), top],
+            top: [top + Math.min((height * scaleY) / 2, Number.MAX_SAFE_INTEGER), top],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
@@ -140,12 +150,12 @@ export class CanvasAnimations {
         break;
       }
 
-      case "rise-in-down": {
+      case "sink-in-down": {
         timeline.add(
           {
             targets: object,
             opacity: [0, opacity],
-            top: [top - Math.min((height * scaleY) / 2, 50), top],
+            top: [top - Math.min((height * scaleY) / 2, Number.MAX_SAFE_INTEGER), top],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
@@ -193,7 +203,7 @@ export class CanvasAnimations {
           {
             targets: object,
             opacity: 0,
-            left: [left, left - Math.min((width * scaleX) / 2, Number.MAX_VALUE)],
+            left: [left, left - Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
@@ -207,7 +217,7 @@ export class CanvasAnimations {
           {
             targets: object,
             opacity: 0,
-            left: [left, left + Math.min((width * scaleX) / 2, Number.MAX_VALUE)],
+            left: [left, left + Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
@@ -221,7 +231,7 @@ export class CanvasAnimations {
           {
             targets: object,
             opacity: 0,
-            top: [top, top - Math.min((height * scaleY) / 2, 50)],
+            top: [top, top - Math.min((height * scaleY) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
@@ -235,7 +245,7 @@ export class CanvasAnimations {
           {
             targets: object,
             opacity: 0,
-            top: [top, top + Math.min((height * scaleY) / 2, 50)],
+            top: [top, top + Math.min((height * scaleY) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
@@ -260,20 +270,11 @@ export class CanvasAnimations {
     }
   }
 
-  private _scene(
-    object: fabric.Object,
-    timeline: anime.AnimeTimelineInstance,
-    entry: AnimationTimeline["in"],
-    exit: AnimationTimeline["out"],
-    scene: AnimationTimeline["scene"],
-    state: AnimationState,
-    preview?: boolean,
-    mask?: boolean,
-  ) {
+  private _scene(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"], state: AnimationState, preview?: boolean, mask?: boolean) {
     const { scaleX, scaleY } = state;
 
     const animation = scene.duration || 1000;
-    const duration = preview ? animation : object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset) - (exit.name === "none" ? 0 : exit.duration + this._animationExitOffset);
+    const duration = preview ? 5000 : object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset) - (exit.name === "none" ? 0 : exit.duration + this._animationExitOffset);
     const offset = preview ? 0 : object.meta!.offset + (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset);
 
     switch (scene.name) {
@@ -365,8 +366,12 @@ export class CanvasAnimations {
   }
 
   preview(object: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline) {
+    if (animation[type].name === "none") return;
+
     const state = this._save(object);
-    this._preview = anime.timeline({ duration: animation[type].duration || 1000, change: this.canvas.requestRenderAll.bind(this.canvas), loop: true });
+    this._canvas.onToggleControls(false);
+    this._preview = anime.timeline({ update: this._update.bind(this), complete: this._complete.bind(this, object) });
+
     switch (type) {
       case "in":
         this._entry(object, this._preview, animation["in"], state, true);
@@ -376,21 +381,12 @@ export class CanvasAnimations {
         break;
       case "scene":
         this._scene(object, this._preview, animation["in"], animation["out"], animation["scene"], state, true);
-        if (object.clipPath) {
-          const state = this._save(object.clipPath);
-          this._scene(object.clipPath, this._preview, animation["in"], animation["out"], animation["scene"], state, true, true);
-        }
+        if (object.clipPath) this._scene(object.clipPath, this._preview, animation["in"], animation["out"], animation["scene"], this._save(object.clipPath), true, true);
         break;
     }
-    this._preview.play();
-  }
 
-  stop(object = this._active) {
-    this._preview?.pause();
-    anime.remove(this._preview);
-    this._preview = null;
-    object?.set({ ...(object?.anim?.state || {}) });
-    object?.clipPath?.set({ ...(object?.clipPath.anim?.state || {}) });
+    this._preview.play();
+    object.on("deselected", this.dispose.bind(this, object));
   }
 
   initialize(canvas: fabric.Canvas | fabric.StaticCanvas, timeline: anime.AnimeTimelineInstance, duration: number) {
@@ -398,9 +394,20 @@ export class CanvasAnimations {
     for (const object of canvas._objects) {
       if (object.excludeFromTimeline) continue;
       this._initialize(object, timeline, object.anim!.in, object.anim!.out, object.anim!.scene);
-      if (object.clipPath) {
-        this._initialize(object.clipPath, timeline, object.anim!.in, object.anim!.out, object.anim!.scene, true);
-      }
+      if (object.clipPath) this._initialize(object.clipPath, timeline, object.anim!.in, object.anim!.out, object.anim!.scene, true);
     }
+  }
+
+  dispose(object?: fabric.Object) {
+    this._preview?.pause();
+    anime.remove(this._preview);
+    this._preview = null;
+
+    object?.off("deselected");
+    object?.set({ ...(object?.anim?.state || {}) });
+    object?.clipPath?.set({ ...(object?.clipPath.anim?.state || {}) });
+
+    this._canvas.onToggleControls(true);
+    this.canvas.requestRenderAll();
   }
 }

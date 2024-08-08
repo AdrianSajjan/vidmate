@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { EditorAnimation, easings, entry, exit, scene } from "@/constants/animations";
 import { useEditorContext } from "@/context/editor";
+import { usePreviewAnimation } from "@/hooks/use-preview-animation";
 
 function _AnimationSidebar() {
   const editor = useEditorContext();
@@ -59,6 +60,8 @@ function _EntryAnimations() {
 
   const easing = selected.anim?.in.easing || "linear";
   const duration = (selected.anim?.in.duration || 0) / 1000;
+
+  usePreviewAnimation(selected, "in");
 
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangeActiveObjectAnimation("in", animation.value);
@@ -121,6 +124,8 @@ function _ExitAnimations() {
   const easing = selected.anim?.out.easing || "linear";
   const duration = (selected.anim?.out.duration || 0) / 1000;
 
+  usePreviewAnimation(selected, "out");
+
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangeActiveObjectAnimation("out", animation.value);
     if (animation.value !== "none") {
@@ -182,6 +187,8 @@ function _SceneAnimations() {
 
   const easing = selected.anim?.scene.easing || "linear";
   const duration = (selected.anim?.scene.duration || 0) / 1000;
+
+  usePreviewAnimation(selected, "scene");
 
   const handleSelectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangeActiveObjectAnimation("scene", animation.value);
