@@ -88,7 +88,7 @@ function _CreatePrompt() {
   const editor = useEditorContext();
 
   const [format, setFormat] = useState("banner");
-  const [prompt, setPrompt] = useState("Running Shoes");
+  const [prompt, setPrompt] = useState("Generate an ad for Nike Running Shoes");
 
   const createAdsFromPrompt = useMutation({
     mutationFn: async ({ prompt, format }: { prompt: string; format: string }) => {
@@ -126,8 +126,8 @@ function _CreatePrompt() {
           <Textarea className="text-xs min-h-20 h-24 max-h-40" readOnly value={prompt} onChange={(event) => setPrompt(event.target.value)} />
         </div>
       </div>
-      <Button size="sm" className="w-full mt-6" onClick={handleCreateVideo} disabled={createAdsFromPrompt.isPending}>
-        Generate Video
+      <Button size="sm" className="w-full mt-6" onClick={handleCreateVideo} disabled>
+        Coming Soon
       </Button>
     </section>
   );

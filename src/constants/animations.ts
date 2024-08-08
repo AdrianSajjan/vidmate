@@ -164,6 +164,11 @@ export const scene: EditorAnimation[] = [
     label: "Zoom out",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
   },
+  {
+    value: "blink",
+    label: "Blink",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+  },
 ];
 
 export const easings: EditorEasings[] = [

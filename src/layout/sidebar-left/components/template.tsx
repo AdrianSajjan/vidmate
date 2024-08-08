@@ -81,7 +81,7 @@ function _TemplateSidebar() {
           {store.templates.length ? (
             store.templates.map((template) => (
               <button className="w-full aspect-square rounded-md overflow-hidden group border" key={template.id} onClick={() => handleLoadTemplate(template)}>
-                <img src={template.pages[0].thumbnail} alt={template.name} className="group-hover:scale-110 transition-transform" />
+                <img src={template.pages.at(0)!.thumbnail} alt={template.name} className="group-hover:scale-110 transition-transform" />
               </button>
             ))
           ) : (

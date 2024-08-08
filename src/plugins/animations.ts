@@ -1,20 +1,27 @@
 import anime from "animejs";
+
 import { AnimationTimeline } from "canvas";
+import { makeAutoObservable } from "mobx";
+
+import { Canvas } from "@/store/canvas";
 import { FabricUtils } from "@/fabric/utils";
 import { modifyAnimationEasing } from "@/lib/animations";
-import { makeAutoObservable } from "mobx";
-import { Canvas } from "@/store/canvas";
 
+type AnimationState = ReturnType<CanvasAnimations["_save"]>;
 export class CanvasAnimations {
   private _canvas: Canvas;
 
-  private _zoomAmount = 0.25;
+  private _active: fabric.Object | null;
+  private _preview: anime.AnimeTimelineInstance | null;
 
+  private _zoomAmount = 0.25;
   private _animationExitOffset = 50;
   private _animationEntryOffset = 50;
 
   constructor(canvas: Canvas) {
     this._canvas = canvas;
+    this._preview = null;
+    this._active = null;
     makeAutoObservable(this);
   }
 
@@ -22,7 +29,11 @@ export class CanvasAnimations {
     return this._canvas.timeline;
   }
 
-  private _initialize(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"], mask?: boolean) {
+  get canvas() {
+    return this._canvas.instance;
+  }
+
+  private _save(object: fabric.Object) {
     const left = object.left!;
     const top = object.top!;
     const height = object.height!;
@@ -40,6 +51,13 @@ export class CanvasAnimations {
     object.anim!.state = { opacity, left, top, scaleX, scaleY, fill, stroke, angle, selectable: object.selectable, evented: object.evented };
     object.set({ selectable: false, evented: false });
 
+    return { left, top, height, width, opacity, fill, stroke, scaleX, scaleY, angle };
+  }
+
+  private _entry(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], state: AnimationState, preview?: boolean) {
+    const { left, top, height, width, opacity, scaleX, scaleY } = state;
+    const offset = preview ? 0 : object.meta!.offset + this._animationEntryOffset;
+
     switch (entry.name) {
       case "fade-in": {
         timeline.add(
@@ -49,10 +67,11 @@ export class CanvasAnimations {
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
-          object.meta!.offset + this._animationEntryOffset,
+          offset,
         );
         break;
       }
+
       case "slide-in-left": {
         timeline.add(
           {
@@ -62,10 +81,11 @@ export class CanvasAnimations {
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
-          object.meta!.offset + this._animationEntryOffset,
+          offset,
         );
         break;
       }
+
       case "slide-in-right": {
         timeline.add(
           {
@@ -75,10 +95,11 @@ export class CanvasAnimations {
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
-          object.meta!.offset + this._animationEntryOffset,
+          offset,
         );
         break;
       }
+
       case "pan-in-left": {
         timeline.add(
           {
@@ -87,10 +108,11 @@ export class CanvasAnimations {
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
-          object.meta!.offset + this._animationEntryOffset,
+          offset,
         );
         break;
       }
+
       case "pan-in-right": {
         timeline.add(
           {
@@ -99,10 +121,11 @@ export class CanvasAnimations {
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
-          object.meta!.offset + this._animationEntryOffset,
+          offset,
         );
         break;
       }
+
       case "rise-in-up": {
         timeline.add(
           {
@@ -112,10 +135,11 @@ export class CanvasAnimations {
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
-          object.meta!.offset + this._animationEntryOffset,
+          offset,
         );
         break;
       }
+
       case "rise-in-down": {
         timeline.add(
           {
@@ -125,10 +149,11 @@ export class CanvasAnimations {
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
-          object.meta!.offset + this._animationEntryOffset,
+          offset,
         );
         break;
       }
+
       case "pop-in": {
         timeline.add(
           {
@@ -138,11 +163,16 @@ export class CanvasAnimations {
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
-          object.meta!.offset + this._animationEntryOffset,
+          offset,
         );
         break;
       }
     }
+  }
+
+  private _exit(object: fabric.Object, timeline: anime.AnimeTimelineInstance, exit: AnimationTimeline["in"], state: AnimationState, preview?: boolean) {
+    const { left, top, height, width, scaleX, scaleY } = state;
+    const offset = preview ? 0 : object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset;
 
     switch (exit.name) {
       case "fade-out": {
@@ -153,10 +183,11 @@ export class CanvasAnimations {
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
-          object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
+          offset,
         );
         break;
       }
+
       case "slide-out-left": {
         timeline.add(
           {
@@ -166,10 +197,11 @@ export class CanvasAnimations {
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
-          object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
+          offset,
         );
         break;
       }
+
       case "slide-out-right": {
         timeline.add(
           {
@@ -179,10 +211,11 @@ export class CanvasAnimations {
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
-          object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
+          offset,
         );
         break;
       }
+
       case "rise-out-up": {
         timeline.add(
           {
@@ -192,10 +225,11 @@ export class CanvasAnimations {
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
-          object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
+          offset,
         );
         break;
       }
+
       case "sink-out-down": {
         timeline.add(
           {
@@ -205,10 +239,11 @@ export class CanvasAnimations {
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
-          object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
+          offset,
         );
         break;
       }
+
       case "pop-out": {
         timeline.add(
           {
@@ -218,21 +253,35 @@ export class CanvasAnimations {
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
-          object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset,
+          offset,
         );
         break;
       }
     }
+  }
+
+  private _scene(
+    object: fabric.Object,
+    timeline: anime.AnimeTimelineInstance,
+    entry: AnimationTimeline["in"],
+    exit: AnimationTimeline["out"],
+    scene: AnimationTimeline["scene"],
+    state: AnimationState,
+    preview?: boolean,
+    mask?: boolean,
+  ) {
+    const { scaleX, scaleY } = state;
+
+    const animation = scene.duration || 1000;
+    const duration = preview ? animation : object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset) - (exit.name === "none" ? 0 : exit.duration + this._animationExitOffset);
+    const offset = preview ? 0 : object.meta!.offset + (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset);
 
     switch (scene.name) {
       case "rotate": {
-        const duration = object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset) - (exit.name === "none" ? 0 : exit.duration + this._animationExitOffset);
-        const offset = object.meta!.offset + (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset);
-        const spin = scene.duration || 500;
         timeline.add(
           {
             targets: { angle: object.angle! },
-            angle: object.angle! + 360 * Math.round(duration / spin),
+            angle: object.angle! + 360 * Math.round(duration / animation),
             duration: duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
             update: (anim) => {
@@ -246,10 +295,9 @@ export class CanvasAnimations {
         );
         break;
       }
+
       case "zoom-in": {
         if (mask) return;
-        const duration = object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset) - (exit.name === "none" ? 0 : exit.duration + this._animationExitOffset);
-        const offset = object.meta!.offset + (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset);
         timeline.add(
           {
             targets: { scaleX: object.scaleX, scaleY: object.scaleY },
@@ -269,10 +317,9 @@ export class CanvasAnimations {
         );
         break;
       }
+
       case "zoom-out": {
         if (mask) return;
-        const duration = object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset) - (exit.name === "none" ? 0 : exit.duration + this._animationExitOffset);
-        const offset = object.meta!.offset + (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset);
         timeline.add(
           {
             targets: { scaleX: object.scaleX, scaleY: object.scaleY },
@@ -292,7 +339,58 @@ export class CanvasAnimations {
         );
         break;
       }
+
+      case "blink": {
+        Array.from({ length: Math.ceil(duration / animation) * 2 }, (_, index) => {
+          timeline.add(
+            {
+              targets: object,
+              duration: animation / 2,
+              opacity: index % 2,
+              easing: modifyAnimationEasing(exit.easing, exit.duration),
+            },
+            offset + (animation / 2) * index,
+          );
+        });
+        break;
+      }
     }
+  }
+
+  private _initialize(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"], mask?: boolean) {
+    const state = this._save(object);
+    this._entry(object, timeline, entry, state);
+    this._exit(object, timeline, exit, state);
+    this._scene(object, timeline, entry, exit, scene, state, false, mask);
+  }
+
+  preview(object: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline) {
+    const state = this._save(object);
+    this._preview = anime.timeline({ duration: animation[type].duration || 1000, change: this.canvas.requestRenderAll.bind(this.canvas), loop: true });
+    switch (type) {
+      case "in":
+        this._entry(object, this._preview, animation["in"], state, true);
+        break;
+      case "out":
+        this._exit(object, this._preview, animation["out"], state, true);
+        break;
+      case "scene":
+        this._scene(object, this._preview, animation["in"], animation["out"], animation["scene"], state, true);
+        if (object.clipPath) {
+          const state = this._save(object.clipPath);
+          this._scene(object.clipPath, this._preview, animation["in"], animation["out"], animation["scene"], state, true, true);
+        }
+        break;
+    }
+    this._preview.play();
+  }
+
+  stop(object = this._active) {
+    this._preview?.pause();
+    anime.remove(this._preview);
+    this._preview = null;
+    object?.set({ ...(object?.anim?.state || {}) });
+    object?.clipPath?.set({ ...(object?.clipPath.anim?.state || {}) });
   }
 
   initialize(canvas: fabric.Canvas | fabric.StaticCanvas, timeline: anime.AnimeTimelineInstance, duration: number) {

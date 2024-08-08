@@ -20,11 +20,11 @@ export abstract class FabricUtils {
   }
 
   static isImageElement(object?: any): object is fabric.Image {
-    return object?.type === "image" && !object?.meta?.placeholder;
+    return object?.type === "image";
   }
 
   static isVideoElement(object?: any): object is fabric.Video {
-    return object?.type === "video" && !object?.meta?.placeholder;
+    return object?.type === "video";
   }
 
   static isChartElement(object?: any): object is fabric.Chart {

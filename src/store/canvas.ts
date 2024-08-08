@@ -446,6 +446,17 @@ export class Canvas {
     return line;
   }
 
+  onMarkObjectAsPlaceholder(object: fabric.Object, label: string | false) {
+    if (!object || !object.meta) return;
+    object.meta.placeholder = !!label;
+    object.meta.label = label || undefined;
+  }
+
+  onMarkActiveObjectAsPlaceholder(label: string | false) {
+    const selected = this.instance.getActiveObject();
+    if (selected) this.onMarkObjectAsPlaceholder(selected, label);
+  }
+
   onChangeObjectTimelineProperty(object: fabric.Object, property: string, value: number) {
     if (!object || !object.meta) return;
     object.meta[property] = value;

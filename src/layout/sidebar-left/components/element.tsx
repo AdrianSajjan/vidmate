@@ -169,9 +169,9 @@ function ExpandedGridView({ match }: { match: string }) {
       ));
 
     case "abstract":
-      return abstract.map(({ name, path, height, width }) => (
+      return abstract.map(({ name, path, height, width, id }) => (
         <button
-          key={name}
+          key={id}
           onClick={() => editor.canvas.onAddAbstractShape(path, name)}
           className="group shrink-0 w-full aspect-square border flex items-center justify-center overflow-hidden rounded-lg p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
         >
@@ -182,9 +182,9 @@ function ExpandedGridView({ match }: { match: string }) {
       ));
 
     case "frames":
-      return frames.map(({ name, path, height, width }) => (
+      return frames.map(({ name, path, height, width, id }) => (
         <button
-          key={name}
+          key={id}
           onClick={() => editor.canvas.onAddAbstractShape(path, name)}
           className="group shrink-0 w-full aspect-square border flex items-center justify-center overflow-hidden rounded-lg p-2 text-gray-800/80 dark:text-gray-100/80 transition-colors shadow-sm hover:bg-card hover:text-gray-800 dark:hover:text-gray-100"
         >
