@@ -30,7 +30,7 @@ export class CanvasText {
     return this._canvas.artboard!;
   }
 
-  animated(text: string, { font, fontSize, fontWeight, offset = 0, duration = 6000 }: TextProps, animation: string, skip?: boolean) {
+  animated(text: string, { font, fontSize, fontWeight, offset = 0, duration = 6000 }: TextProps, animation: string, skip = false, render = true) {
     const elements: fabric.Textbox[] = [];
     const words = text.split(" ");
 
@@ -63,7 +63,7 @@ export class CanvasText {
           this.canvas.setActiveObject(selection);
         }
 
-        this.canvas.requestRenderAll();
+        if (render) this.canvas.requestRenderAll();
         return selection;
       }
 
@@ -93,7 +93,7 @@ export class CanvasText {
           this.canvas.setActiveObject(selection);
         }
 
-        this.canvas.requestRenderAll();
+        if (render) this.canvas.requestRenderAll();
         return selection;
       }
     }

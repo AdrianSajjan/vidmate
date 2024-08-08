@@ -1,11 +1,15 @@
-import { mock } from "@/constants/mock";
+import { isUndefined } from "lodash";
+import { makeAutoObservable } from "mobx";
+
 import { FabricUtils } from "@/fabric/utils";
 import { createMap } from "@/lib/utils";
 import { Editor } from "@/store/editor";
+
+import { inter } from "@/constants/fonts";
+import { mock } from "@/constants/mock";
+
 import { EditorAudioElement } from "@/types/editor";
 import { PromptSession } from "@/types/prompt";
-import { isUndefined } from "lodash";
-import { makeAutoObservable } from "mobx";
 
 export class Prompt {
   private _editor: Editor;
@@ -58,7 +62,7 @@ export class Prompt {
 
       for (const scene of session.scene) {
         if (scene.video) {
-          const video: fabric.Video = yield this.canvas.onAddVideoFromSource(scene.video.url, { meta: { duration: scene.duration * 1000, offset } }, true);
+          const video: fabric.Video = yield this.canvas.onAddVideoFromSource(scene.video.url, { meta: { duration: scene.duration * 1000, offset } }, true, false);
           const scaleX = this.canvas.artboard.width! / video.width!;
           const scaleY = this.canvas.artboard.height! / video.height!;
           video.scale(Math.max(scaleX, scaleY));
@@ -69,8 +73,8 @@ export class Prompt {
           const speech: EditorAudioElement = yield this.canvas.audio.add(scene.speech.url, FabricUtils.elementID(scene.speech.voice));
           this.canvas.audio.update(speech.id, { timeline: Math.min(speech.duration, scene.duration), offset: offset / 1000 });
           if (scene.speech.subtitle) {
-            const props = { fontFamily: "Inter", fontSize: 42, fontWeight: 700, duration: Math.min(speech.duration * 1000, scene.duration * 1000), offset: offset };
-            const selection: fabric.ActiveSelection = yield this.canvas.text.animated(scene.speech.subtitle, props, "typewriter", true);
+            const props = { font: inter, fontSize: 42, fontWeight: 700, duration: Math.min(speech.duration * 1000, scene.duration * 1000), offset: offset };
+            const selection: fabric.ActiveSelection = yield this.canvas.text.animated(scene.speech.subtitle, props, "typewriter", true, false);
             this.canvas.alignment.alignToPage(selection, "center");
             selection.set({ top: this.canvas.artboard.getScaledHeight() - selection.getScaledHeight() * 2 });
           }

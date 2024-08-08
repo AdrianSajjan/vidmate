@@ -1,8 +1,9 @@
 import Draggable from "react-draggable";
 import useMeasure from "react-use-measure";
 
+import { debounce } from "lodash";
 import { observer } from "mobx-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAnimationControls } from "framer-motion";
 import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, MinusIcon, MusicIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon, VideoIcon } from "lucide-react";
 
@@ -95,26 +96,25 @@ function _EditorTimeline() {
 
 function _TimelineElementItem({ element, trackWidth }: { element: fabric.Object; trackWidth: number }) {
   const editor = useEditorContext();
+  const handle = useRef<NodeJS.Timeout>();
   const [backgroundURL, setBackgroundURL] = useState("");
 
-  const drawElementAsBackground = useCallback(() => {
-    const object = editor.canvas.instance!.getItemByName(element.name);
-    object?.clone((clone: fabric.Object) => {
-      clone.set({ opacity: 1, visible: true, clipPath: undefined });
-      if (FabricUtils.isVideoElement(clone)) {
-        clone.seek(1);
-        setTimeout(() => setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true })), 1000);
-      } else if (FabricUtils.isChartElement(clone)) {
-        setTimeout(() => setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true })), 1000);
-      } else {
-        setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true }));
-      }
-    }, propertiesToInclude);
-  }, [element]);
+  const drawElementAsBackground = useMemo(() => {
+    return debounce((element: fabric.Object) => {
+      if (handle.current) clearTimeout(handle.current);
+      const object = editor.canvas.instance!.getItemByName(element.name);
+      object?.clone((clone: fabric.Object) => {
+        clone.set({ opacity: 1, visible: true, clipPath: undefined });
+        if (FabricUtils.isVideoElement(clone)) clone.seek(1);
+        handle.current = setTimeout(() => setBackgroundURL(clone.toDataURL({ format: "webp", withoutShadow: true, withoutTransform: true })), 1000);
+      }, propertiesToInclude);
+    }, 1000);
+  }, []);
 
   useEffect(() => {
-    drawElementAsBackground();
-  }, [drawElementAsBackground]);
+    drawElementAsBackground(element);
+    return () => drawElementAsBackground.cancel();
+  }, [element]);
 
   const isSelected = useMemo(() => {
     if (!editor.canvas.selection.active) return false;

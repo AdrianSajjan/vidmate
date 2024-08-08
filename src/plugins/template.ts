@@ -54,9 +54,7 @@ export class CanvasTemplate {
 
   private *_scene() {
     return createPromise<void>((resolve) => {
-      console.log("before");
       FabricUtils.applyFontsBeforeLoad(JSON.parse(this.page!.data.scene).objects).then(() => {
-        console.log("after");
         this.timeline.destroy();
         this.workspace.changeFill("#CCCCCC");
         this.workspace.resizeArtboard({ height: this.page!.data.height, width: this.page!.data.width });

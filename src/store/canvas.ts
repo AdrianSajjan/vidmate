@@ -141,7 +141,7 @@ export class Canvas {
 
   *initialize(element: HTMLCanvasElement, workspace: HTMLDivElement) {
     const props = { width: workspace.offsetWidth, height: workspace.offsetHeight, backgroundColor: "#F0F0F0" };
-    this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, preserveObjectStacking: true, controlsAboveOverlay: true, ...props });
+    this.instance = createInstance(fabric.Canvas, element, { stateful: true, centeredRotation: true, preserveObjectStacking: true, renderOnAddRemove: false, controlsAboveOverlay: true, ...props });
     this.artboard = createInstance(fabric.Rect, { name: "artboard", rx: 0, ry: 0, selectable: false, absolutePositioned: true, hoverCursor: "default", excludeFromExport: true, excludeFromTimeline: true });
 
     this.history = createInstance(CanvasHistory, this);
@@ -229,7 +229,7 @@ export class Canvas {
 
   onAddText(text: string, font: EditorFont, fontSize: number, fontWeight: number) {
     const dimensions = FabricUtils.measureTextDimensions(text, font.family, fontSize, fontWeight);
-    const options = { name: FabricUtils.elementID("text"), fontFamily: font.family, fontWeight, fontSize, width: Math.min(dimensions.width, this.workspace.width), objectCaching: false, textAlign: "center" };
+    const options = { name: FabricUtils.elementID("text"), fontFamily: font.family, fontWeight, fontSize, width: Math.min(dimensions.width, this.workspace.width), objectCaching: true, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
 
     textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
@@ -241,7 +241,7 @@ export class Canvas {
     return textbox;
   }
 
-  *onAddImageFromSource(source: string, options?: fabric.IImageOptions, skip?: boolean) {
+  *onAddImageFromSource(source: string, options?: fabric.IImageOptions, skip = false, render = true) {
     return createPromise<fabric.Image>((resolve, reject) => {
       fabric.Image.fromURL(
         source,
@@ -260,7 +260,7 @@ export class Canvas {
 
           this.instance.add(image);
           if (!skip) this.instance.setActiveObject(image);
-          this.instance.requestRenderAll();
+          if (render) this.instance.requestRenderAll();
 
           resolve(image);
         },
@@ -319,7 +319,7 @@ export class Canvas {
     });
   }
 
-  *onAddVideoFromSource(source: string, options?: fabric.IVideoOptions, skip?: boolean) {
+  *onAddVideoFromSource(source: string, options?: fabric.IVideoOptions, skip = false, render = true) {
     return createPromise<fabric.Video>((resolve, reject) => {
       fabric.Video.fromURL(
         source,
@@ -339,7 +339,7 @@ export class Canvas {
 
           this.instance.add(video);
           if (!skip) this.instance.setActiveObject(video);
-          this.instance.requestRenderAll();
+          if (render) this.instance.requestRenderAll();
 
           resolve(video);
         },

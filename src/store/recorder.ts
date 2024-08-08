@@ -54,7 +54,7 @@ export class Recorder {
   }
 
   initialize(element: HTMLCanvasElement) {
-    this.instance = createInstance(fabric.StaticCanvas, element);
+    this.instance = createInstance(fabric.StaticCanvas, element, { renderOnAddRemove: false });
   }
 
   *compile(frames: Uint8Array[], { ffmpeg, fps = "60", codec = "H.264", audio, signal }: { ffmpeg: FFmpeg; fps?: string; codec?: string; signal?: AbortSignal; audio?: Blob }) {
