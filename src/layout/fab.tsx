@@ -10,12 +10,7 @@ function _EditorFAB() {
   const editor = useEditorContext();
 
   return (
-    <div
-      className={cn(
-        "absolute bottom-3 left-3 sm:bottom-6 sm:left-6 flex flex-row-reverse items-center gap-2.5 z-20",
-        editor.canvas.timeline?.playing ? "pointer-events-none opacity-50" : "pointer-events-auto opacity-100",
-      )}
-    >
+    <div className={cn("absolute bottom-3 left-3 sm:bottom-6 sm:left-6 hidden flex-row-reverse items-center gap-2.5 z-20", editor.canvas.timeline?.playing ? "pointer-events-none opacity-50" : "pointer-events-auto opacity-100")}>
       <Tabs value={String(editor.page)} onValueChange={(value) => editor.onChangeActivePage(+value)}>
         <TabsList className="shadow-sm bg-card dark:bg-muted">
           {editor.pages.map((_, index) => (
