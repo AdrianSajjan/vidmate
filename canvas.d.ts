@@ -2807,16 +2807,19 @@ export interface AnimationTimeline {
     name: EntryAnimation;
     duration: number;
     easing?: any;
+    text?: "letter" | "word";
   };
   scene: {
     name: SceneAnimations;
     duration?: number;
     easing?: any;
+    text?: "letter" | "word";
   };
   out: {
     name: ExitAnimation;
     duration: number;
     easing?: any;
+    text?: "letter" | "word";
   };
   state?: Record<string, any>;
   preview?: Record<string, any>;

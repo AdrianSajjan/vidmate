@@ -53,6 +53,30 @@ export class CanvasAnimations {
     setTimeout(() => this.dispose(object), 500);
   }
 
+  private _lettersOrWords(lines: fabric.Group, type: "letter" | "word") {
+    return lines._objects
+      .map((line) => {
+        if (FabricUtils.isGroupElement(line)) {
+          if (type === "word") {
+            return line._objects;
+          } else {
+            return line._objects
+              .map((word) => {
+                if (FabricUtils.isGroupElement(word)) {
+                  return word._objects;
+                } else {
+                  return [];
+                }
+              })
+              .flat();
+          }
+        } else {
+          return [];
+        }
+      })
+      .flat();
+  }
+
   private _save(object: fabric.Object) {
     const left = object.left!;
     const top = object.top!;
@@ -192,81 +216,86 @@ export class CanvasAnimations {
         );
         break;
       }
+    }
 
-      case "typewriter": {
-        if (!FabricUtils.isAnimatedTextElement(object)) return;
-        const letters = object._objects.map((word) => (FabricUtils.isGroupElement(word) ? word._objects : [])).flat();
-        letters.map((letter, index) => {
-          const state = { opacity: 0 };
-          letter.set(Object.assign({}, state));
+    if (FabricUtils.isAnimatedTextElement(object)) {
+      const lettersOrWords = this._lettersOrWords(object, entry.text || "letter");
+
+      switch (entry.name) {
+        case "typewriter": {
+          lettersOrWords.map((letterOrWord, index) => {
+            const state = { opacity: 0 };
+            letterOrWord.set(Object.assign({}, state));
+            timeline.add(
+              {
+                targets: state,
+                opacity: 1,
+                duration: entry.duration / lettersOrWords.length,
+                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                update: () => letterOrWord.set({ opacity: state.opacity }),
+              },
+              offset + (entry.duration / lettersOrWords.length) * index,
+            );
+          });
+          break;
+        }
+
+        case "burst": {
+          lettersOrWords.map((letterOrWord, index) => {
+            const target = { scaleY: letterOrWord.scaleY, scaleX: letterOrWord.scaleX, top: letterOrWord.top!, left: letterOrWord.left! };
+            const state = {
+              scaleY: 1 / letterOrWord.height!,
+              scaleX: 1 / letterOrWord.width!,
+              top: letterOrWord.top! + (letterOrWord.height! * letterOrWord.scaleY!) / 2,
+              left: letterOrWord.left! + (letterOrWord.width! * letterOrWord.scaleX!) / 2,
+            };
+            letterOrWord.set(Object.assign({}, state));
+            timeline.add(
+              {
+                targets: state,
+                top: target.top,
+                left: target.left,
+                scaleX: target.scaleX,
+                scaleY: target.scaleY,
+                duration: entry.duration / lettersOrWords.length,
+                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                update: () => letterOrWord.set({ scaleX: state.scaleX, scaleY: state.scaleY, top: state.top, left: state.left }),
+              },
+              offset + (entry.duration / lettersOrWords.length) * index,
+            );
+          });
+          break;
+        }
+
+        case "clarify": {
+          lettersOrWords.map((letterOrWord) => {
+            const target = { opacity: 1, blur: 0 };
+            const state = { opacity: 0, blur: 10 };
+            const seed = random(0, Math.min(500, entry.duration - 250));
+            letterOrWord.set(Object.assign({}, state));
+            timeline.add(
+              {
+                targets: state,
+                opacity: target.opacity,
+                blur: target.blur,
+                duration: entry.duration - seed,
+                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                update: () => letterOrWord.set({ opacity: state.opacity, blur: state.blur }),
+              },
+              offset + seed,
+            );
+          });
           timeline.add(
             {
-              targets: state,
-              opacity: 1,
-              duration: entry.duration / letters.length,
+              targets: object,
+              left: [left - 15, left],
+              duration: entry.duration,
               easing: modifyAnimationEasing(entry.easing, entry.duration),
-              update: () => letter.set({ opacity: state.opacity }),
             },
-            offset + (entry.duration / letters.length) * index,
+            offset,
           );
-        });
-        break;
-      }
-
-      case "burst": {
-        if (!FabricUtils.isAnimatedTextElement(object)) return;
-        const letters = object._objects.map((word) => (FabricUtils.isGroupElement(word) ? word._objects : [])).flat();
-        letters.map((letter, index) => {
-          const target = { scaleY: letter.scaleY, scaleX: letter.scaleX, top: letter.top!, left: letter.left! };
-          const state = { scaleY: 1 / letter.height!, scaleX: 1 / letter.width!, top: letter.top! + (letter.height! * letter.scaleY!) / 2, left: letter.left! + (letter.width! * letter.scaleX!) / 2 };
-          letter.set(Object.assign({}, state));
-          timeline.add(
-            {
-              targets: state,
-              top: target.top,
-              left: target.left,
-              scaleX: target.scaleX,
-              scaleY: target.scaleY,
-              duration: entry.duration / letters.length,
-              easing: modifyAnimationEasing(entry.easing, entry.duration),
-              update: () => letter.set({ scaleX: state.scaleX, scaleY: state.scaleY, top: state.top, left: state.left }),
-            },
-            offset + (entry.duration / letters.length) * index,
-          );
-        });
-        break;
-      }
-
-      case "clarify": {
-        if (!FabricUtils.isAnimatedTextElement(object)) return;
-        const letters = object._objects.map((word) => (FabricUtils.isGroupElement(word) ? word._objects : [])).flat();
-        letters.map((letter) => {
-          const target = { opacity: 1, blur: 0 };
-          const state = { opacity: 0, blur: 10 };
-          const seed = random(0, Math.min(500, entry.duration - 250));
-          letter.set(Object.assign({}, state));
-          timeline.add(
-            {
-              targets: state,
-              opacity: target.opacity,
-              blur: target.blur,
-              duration: entry.duration - seed,
-              easing: modifyAnimationEasing(entry.easing, entry.duration),
-              update: () => letter.set({ opacity: state.opacity, blur: state.blur }),
-            },
-            offset + seed,
-          );
-        });
-        timeline.add(
-          {
-            targets: object,
-            left: [left - 15, left],
-            duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
-          },
-          offset,
-        );
-        break;
+          break;
+        }
       }
     }
   }

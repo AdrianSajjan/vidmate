@@ -1,5 +1,5 @@
 import { fabric } from "fabric";
-import { maxBy, sum } from "lodash";
+import { sum } from "lodash";
 import { makeAutoObservable } from "mobx";
 
 import { createInstance, createMap } from "@/lib/utils";
@@ -36,11 +36,12 @@ export class CanvasText {
   }
 
   animate(textbox: fabric.Textbox, canvas: fabric.Canvas | fabric.StaticCanvas) {
-    const sentences: fabric.Group[] = [];
+    const lines: fabric.Group[] = [];
     const exclude = { excludeFromTimeline: true, excludeFromExport: true, excludeFromAlignment: true };
 
     for (let outer = 0; outer < textbox.__charBounds!.length; outer++) {
-      const lines: fabric.Text[] = [];
+      let word: fabric.Text[] = [];
+      let line: fabric.Group[] = [];
       const char = textbox._textLines[outer];
 
       for (let inner = 0; inner < char.length; inner++) {
@@ -51,28 +52,34 @@ export class CanvasText {
         const decorations = { underline: textbox.underline, fill: textbox.fill, linethrough: textbox.linethrough };
         const dimensions = { top: sum(textbox.__lineHeights.slice(0, outer)), left: bounds.left, scaleX: 1, scaleY: 1 };
 
-        const letter = createInstance(fabric.Text, character, Object.assign({}, exclude, fonts, dimensions, decorations));
-        lines.push(letter);
+        if (character !== " ") {
+          const letter = createInstance(fabric.Text, character, Object.assign({}, exclude, fonts, dimensions, decorations));
+          word.push(letter);
+        }
+
+        if (character === " " || inner === char.length - 1) {
+          line.push(createInstance(fabric.Group, word, Object.assign({}, exclude)));
+          word = [];
+        }
       }
 
-      const group = createInstance(fabric.Group, lines, Object.assign({}, exclude));
-      sentences.push(group);
+      const group = createInstance(fabric.Group, line, Object.assign({}, exclude));
+      lines.push(group);
     }
 
-    const group = createInstance(fabric.Group, sentences, Object.assign({ type: "animated-text", name: "animated_" + textbox.name, meta: textbox.meta, anim: textbox.anim }, exclude));
-    const longest = maxBy(sentences, "width")!;
+    const rect = createInstance(fabric.Rect, Object.assign({ height: textbox.height! * textbox.scaleY!, width: textbox.width! * textbox.scaleX!, visible: false }, exclude));
+    const group = createInstance(fabric.Group, [...lines, rect], Object.assign({ type: "animated-text", name: "animated_" + textbox.name, meta: textbox.meta, anim: textbox.anim }, exclude));
 
-    for (const word of sentences) {
-      if (word === longest) continue;
+    for (const word of lines) {
       switch (textbox.textAlign) {
         case "left":
-          word.setPositionByOrigin(createInstance(fabric.Point, longest.left!, word.getCenterPoint().y), "left", "center");
+          word.setPositionByOrigin(createInstance(fabric.Point, rect.left!, word.getCenterPoint().y), "left", "center");
           break;
         case "center":
-          word.setPositionByOrigin(createInstance(fabric.Point, longest.getCenterPoint().x, word.getCenterPoint().y), "center", "center");
+          word.setPositionByOrigin(createInstance(fabric.Point, rect.getCenterPoint().x, word.getCenterPoint().y), "center", "center");
           break;
         case "right":
-          word.setPositionByOrigin(createInstance(fabric.Point, longest.left! + longest.width!, word.getCenterPoint().y), "right", "center");
+          word.setPositionByOrigin(createInstance(fabric.Point, rect.left! + rect.width!, word.getCenterPoint().y), "right", "center");
           break;
       }
     }
