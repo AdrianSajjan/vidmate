@@ -45,7 +45,7 @@ export class Recorder {
     for (const object of this.instance._objects) {
       if (object.excludeFromTimeline) continue;
       const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
-      object.visible = !hidden;
+      object.visible = FabricUtils.isTextboxElement(object) ? false : !hidden;
       if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder && !hidden) {
         yield object.seek((ms - object.meta!.offset) / 1000);
       }
@@ -161,7 +161,7 @@ export class Recorder {
     FabricUtils.applyTransformationsAfterLoad(this.instance);
     this.instance.renderAll();
 
-    this.timeline = anime.timeline({ duration: this.preview.duration, loop: false, autoplay: false, update: this.instance.requestRenderAll.bind(this.instance) });
+    this.timeline = anime.timeline({ duration: this.preview.duration, loop: false, autoplay: false, update: this.instance.renderAll.bind(this.instance) });
     this.animations.initialize(this.instance, this.timeline, this.preview.duration);
   }
 

@@ -35,7 +35,7 @@ export class CanvasAnimations {
   }
 
   private _update() {
-    this.canvas.requestRenderAll();
+    this.canvas.renderAll();
   }
 
   private _complete(object: fabric.Object) {
@@ -179,6 +179,25 @@ export class CanvasAnimations {
           },
           offset,
         );
+        break;
+      }
+
+      case "typewriter": {
+        if (!FabricUtils.isAnimatedTextElement(object)) return;
+        const letters = object._objects.map((word) => (FabricUtils.isGroupElement(word) ? word._objects : [])).flat();
+        letters.map((letter, index) => {
+          letter.set({ opacity: 0 });
+          timeline.add(
+            {
+              targets: { opacity: 0 },
+              opacity: 1,
+              duration: entry.duration / letters.length,
+              easing: modifyAnimationEasing(entry.easing, entry.duration),
+              update: (anim) => letter.set({ opacity: +anim.animations[0].currentValue }),
+            },
+            offset + (entry.duration / letters.length) * index,
+          );
+        });
         break;
       }
     }
@@ -372,11 +391,11 @@ export class CanvasAnimations {
   preview(object: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline) {
     if (animation[type].name === "none") return;
 
-    const element = FabricUtils.isTextboxElement(object) ? this.text.animate(object) : object;
+    const element = FabricUtils.isTextboxElement(object) ? this.text.animate(object, this.canvas) : object;
     const state = this._save(element);
 
     this._canvas.onToggleControls(false);
-    this._preview = anime.timeline({ update: this._update.bind(this), complete: this._complete.bind(this, element) });
+    this._preview = anime.timeline({ update: this._update.bind(this), complete: this._complete.bind(this, element), endDelay: 2000, loop: true });
 
     switch (type) {
       case "in":
@@ -400,7 +419,7 @@ export class CanvasAnimations {
     for (const object of canvas._objects) {
       if (object.excludeFromTimeline) continue;
       if (FabricUtils.isTextboxElement(object)) {
-        const textbox = this.text.animate(object);
+        const textbox = this.text.animate(object, canvas);
         this._initialize(textbox, timeline, textbox.anim!.in, textbox.anim!.out, textbox.anim!.scene);
       } else {
         this._initialize(object, timeline, object.anim!.in, object.anim!.out, object.anim!.scene);
@@ -419,9 +438,9 @@ export class CanvasAnimations {
     } else {
       object?.set({ ...(object?.anim?.state || {}) });
       object?.clipPath?.set({ ...(object?.clipPath.anim?.state || {}) });
+      object?.off("deselected");
     }
 
-    object?.off("deselected");
     this._canvas.onToggleControls(true);
     this.canvas.requestRenderAll();
   }

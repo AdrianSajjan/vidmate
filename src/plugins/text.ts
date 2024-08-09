@@ -35,7 +35,7 @@ export class CanvasText {
     }
   }
 
-  animate(textbox: fabric.Textbox) {
+  animate(textbox: fabric.Textbox, canvas: fabric.Canvas | fabric.StaticCanvas) {
     const words: fabric.Group[] = [];
     const exclude = { excludeFromTimeline: true, excludeFromExport: true, excludeFromAlignment: true };
 
@@ -76,11 +76,11 @@ export class CanvasText {
     }
 
     group.setPositionByOrigin(textbox.getCenterPoint(), "center", "center");
-    textbox.set({ visible: false });
-    this.canvas.add(group);
+    textbox.set({ visible: false, hasBorders: false, hasControls: false });
+    canvas.add(group);
 
     this.animated.set(textbox.name!, { textbox, group });
-    this.canvas.requestRenderAll();
+    canvas.requestRenderAll();
     return group;
   }
 
@@ -91,7 +91,7 @@ export class CanvasText {
     const animated = this.animated.get(id)!;
     this.animated.delete(id);
 
-    animated.textbox.set({ visible: true });
+    animated.textbox.set({ visible: true, hasBorders: true, hasControls: true });
     this.canvas.remove(animated.group);
   }
 }

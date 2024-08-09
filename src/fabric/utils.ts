@@ -43,6 +43,10 @@ export abstract class FabricUtils {
     return object?.type === "animated-text";
   }
 
+  static isGroupElement(object?: any): object is fabric.Group {
+    return object?.type === "group";
+  }
+
   static elementID(prefix: string) {
     return prefix.toLowerCase() + "_" + this.nanoid(4);
   }
