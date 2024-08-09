@@ -11,18 +11,21 @@ type AnimationState = ReturnType<CanvasAnimations["_save"]>;
 export class CanvasAnimations {
   private _canvas: Canvas;
 
+  private _extras: fabric.Object[];
   private _active: fabric.Object | null;
   private _preview: anime.AnimeTimelineInstance | null;
 
-  private _zoomAmount = 0.25;
-  private _animationExitOffset = 50;
-  private _animationEntryOffset = 50;
+  private _zoom = 0.25;
+  private _exitOffset = 50;
+  private _entryOffset = 50;
 
   previewing: boolean;
 
   constructor(canvas: Canvas) {
     this._active = null;
     this._preview = null;
+
+    this._extras = [];
     this.previewing = false;
 
     this._canvas = canvas;
@@ -77,7 +80,7 @@ export class CanvasAnimations {
 
   private _entry(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], state: AnimationState, preview?: boolean) {
     const { left, top, height, width, opacity, scaleX, scaleY } = state;
-    const offset = preview ? 0 : object.meta!.offset + this._animationEntryOffset;
+    const offset = preview ? 0 : object.meta!.offset + this._entryOffset;
 
     switch (entry.name) {
       case "fade-in": {
@@ -237,7 +240,7 @@ export class CanvasAnimations {
 
   private _exit(object: fabric.Object, timeline: anime.AnimeTimelineInstance, exit: AnimationTimeline["in"], state: AnimationState, preview?: boolean) {
     const { left, top, height, width, scaleX, scaleY } = state;
-    const offset = preview ? 0 : object.meta!.offset + object.meta!.duration - exit.duration - this._animationExitOffset;
+    const offset = preview ? 0 : object.meta!.offset + object.meta!.duration - exit.duration - this._exitOffset;
 
     switch (exit.name) {
       case "fade-out": {
@@ -329,8 +332,8 @@ export class CanvasAnimations {
     const { scaleX, scaleY } = state;
 
     const animation = scene.duration || 1000;
-    const duration = preview ? 5000 : object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset) - (exit.name === "none" ? 0 : exit.duration + this._animationExitOffset);
-    const offset = preview ? 0 : object.meta!.offset + (entry.name === "none" ? 0 : entry.duration + this._animationEntryOffset);
+    const duration = preview ? 5000 : object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._entryOffset) - (exit.name === "none" ? 0 : exit.duration + this._exitOffset);
+    const offset = preview ? 0 : object.meta!.offset + (entry.name === "none" ? 0 : entry.duration + this._entryOffset);
 
     switch (scene.name) {
       case "rotate": {
@@ -357,8 +360,8 @@ export class CanvasAnimations {
         timeline.add(
           {
             targets: { scaleX: object.scaleX, scaleY: object.scaleY },
-            scaleX: scaleX + this._zoomAmount,
-            scaleY: scaleY + this._zoomAmount,
+            scaleX: scaleX + this._zoom,
+            scaleY: scaleY + this._zoom,
             duration: duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
             update: (anim) => {
@@ -379,8 +382,8 @@ export class CanvasAnimations {
         timeline.add(
           {
             targets: { scaleX: object.scaleX, scaleY: object.scaleY },
-            scaleX: scaleX - this._zoomAmount,
-            scaleY: scaleY - this._zoomAmount,
+            scaleX: scaleX - this._zoom,
+            scaleY: scaleY - this._zoom,
             duration: duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
             update: (anim) => {
@@ -466,19 +469,22 @@ export class CanvasAnimations {
     this._preview?.pause();
     anime.remove(this._preview);
 
+    this.canvas.remove(...this._extras);
+    this._canvas.onToggleControls(true);
+
+    this._extras = [];
     this._active = null;
     this._preview = null;
-    this.previewing = false;
 
     if (FabricUtils.isTextboxElement(object) || FabricUtils.isAnimatedTextElement(object)) {
       this.text.restore(object.name!);
     } else {
       object?.set({ ...(object?.anim?.state || {}) });
-      object?.clipPath?.set({ ...(object?.clipPath.anim?.state || {}) });
-      object?.off("deselected");
+      object?.clipPath?.set({ ...(object?.clipPath?.anim?.state || {}) });
     }
 
-    this._canvas.onToggleControls(true);
+    object?.off("deselected");
+    this.previewing = false;
     this.canvas.renderAll();
   }
 }
