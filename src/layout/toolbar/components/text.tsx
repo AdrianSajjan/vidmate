@@ -1,18 +1,4 @@
-import {
-  AlignCenterIcon,
-  AlignJustifyIcon,
-  AlignLeftIcon,
-  AlignRightIcon,
-  ArrowDownZAIcon,
-  BoldIcon,
-  CaseLowerIcon,
-  CaseUpperIcon,
-  ChevronDownIcon,
-  ItalicIcon,
-  LigatureIcon,
-  UnderlineIcon,
-  WholeWordIcon,
-} from "lucide-react";
+import { AlignCenterIcon, AlignJustifyIcon, AlignLeftIcon, AlignRightIcon, ArrowDownZAIcon, BoldIcon, CaseLowerIcon, CaseUpperIcon, ChevronDownIcon, ItalicIcon, LigatureIcon, UnderlineIcon, WholeWordIcon } from "lucide-react";
 import { observer } from "mobx-react";
 
 import { Button } from "@/components/ui/button";
@@ -123,7 +109,7 @@ function _TextToolbar() {
         <ToggleGroupItem variant="outline" size="sm" value="right" aria-label="right" className="data-[state=on]:bg-card data-[state=on]:text-primary">
           <AlignRightIcon size={15} />
         </ToggleGroupItem>
-        <ToggleGroupItem variant="outline" size="sm" value="justify" aria-label="justify" className="data-[state=on]:bg-card data-[state=on]:text-primary">
+        <ToggleGroupItem variant="outline" size="sm" value="justify" aria-label="justify" className="data-[state=on]:bg-card data-[state=on]:text-primary hidden">
           <AlignJustifyIcon size={15} />
         </ToggleGroupItem>
       </ToggleGroup>

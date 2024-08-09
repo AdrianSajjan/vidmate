@@ -28,7 +28,10 @@ export class CanvasTimeline {
   }
 
   private get animations() {
-    return this._canvas.animations!;
+    return this._canvas.animations;
+  }
+  private get text() {
+    return this._canvas.text;
   }
 
   private _initEvents() {
@@ -42,15 +45,16 @@ export class CanvasTimeline {
 
   private _toggleElements(ms = this.seek) {
     for (const object of this.canvas._objects) {
-      if (object.excludeFromTimeline) continue;
-      this._toggleElement(object, ms);
+      if (!object.excludeFromTimeline || FabricUtils.isAnimatedTextElement(object)) {
+        this._toggleElement(object, ms);
+      }
     }
     this.canvas.requestRenderAll();
   }
 
   private _toggleElement(object: fabric.Object, ms = this.seek) {
     const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
-    object.visible = !hidden;
+    object.visible = !FabricUtils.isTextboxElement(object) || !this.playing ? !hidden : false;
     if (FabricUtils.isVideoElement(object)) {
       if (this.playing) {
         if (hidden) object.pause();
@@ -95,9 +99,13 @@ export class CanvasTimeline {
       this._timeline = null;
     }
     for (const object of this.canvas._objects) {
-      if (object.excludeFromTimeline) continue;
-      object.set({ ...(object.anim?.state || {}) });
-      if (object.clipPath) object.clipPath.set({ ...(object.clipPath.anim?.state || {}) });
+      if (FabricUtils.isAnimatedTextElement(object) || FabricUtils.isTextboxElement(object)) {
+        this.text.restore(object.name!);
+      } else {
+        if (object.excludeFromTimeline) continue;
+        object.set({ ...(object.anim?.state || {}) });
+        if (object.clipPath) object.clipPath.set({ ...(object.clipPath.anim?.state || {}) });
+      }
     }
     this._toggleElements();
   }

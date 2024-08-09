@@ -234,7 +234,7 @@ export class Canvas {
 
   onAddText(text: string, font: EditorFont, fontSize: number, fontWeight: number) {
     const dimensions = FabricUtils.measureTextDimensions(text, font.family, fontSize, fontWeight);
-    const options = { name: FabricUtils.elementID("text"), fontFamily: font.family, fontWeight, fontSize, width: Math.min(dimensions.width, this.workspace.width), objectCaching: true, textAlign: "center" };
+    const options = { name: FabricUtils.elementID("text"), fontFamily: font.family, fontWeight, fontSize, width: Math.min(dimensions.width, 200), objectCaching: false, textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
 
     textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");

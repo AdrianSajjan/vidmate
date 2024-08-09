@@ -9,6 +9,18 @@ import { inter } from "@/constants/fonts";
 function _TextSidebar() {
   const editor = useEditorContext();
 
+  const handleAddTitle = () => {
+    editor.canvas.onAddText("Your title goes here", inter, 64, 700);
+  };
+
+  const handleAddHeading = () => {
+    editor.canvas.onAddText("Your heading goes here", inter, 42, 700);
+  };
+
+  const handleAddParagraph = () => {
+    () => editor.canvas.onAddText("Your paragraph goes here", inter, 24, 400);
+  };
+
   return (
     <div className="h-full w-full">
       <div className="flex items-center justify-between h-14 border-b px-4">
@@ -28,22 +40,13 @@ function _TextSidebar() {
           <div className="flex flex-col gap-4">
             <h4 className="text-xs font-semibold line-clamp-1">Basic Texts</h4>
             <div className="flex flex-col gap-3">
-              <button
-                onClick={() => editor.canvas.onAddText("Your title goes here", inter, 64, 700)}
-                className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-2xl font-semibold text-center transition-colors shadow-sm hover:bg-card"
-              >
+              <button onClick={handleAddTitle} className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-2xl font-semibold text-center transition-colors shadow-sm hover:bg-card">
                 <span className="line-clamp-1">Add a Title</span>
               </button>
-              <button
-                onClick={() => editor.canvas.onAddText("Your heading goes here", inter, 42, 700)}
-                className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-lg font-semibold text-center transition-colors shadow-sm hover:bg-card"
-              >
+              <button onClick={handleAddHeading} className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-lg font-semibold text-center transition-colors shadow-sm hover:bg-card">
                 <span className="line-clamp-1">Add a Heading</span>
               </button>
-              <button
-                onClick={() => editor.canvas.onAddText("Your paragraph goes here", inter, 24, 400)}
-                className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-sm font-normal text-center transition-colors shadow-sm hover:bg-card"
-              >
+              <button onClick={handleAddParagraph} className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-sm font-normal text-center transition-colors shadow-sm hover:bg-card">
                 <span className="line-clamp-1">Add a Paragraph</span>
               </button>
             </div>

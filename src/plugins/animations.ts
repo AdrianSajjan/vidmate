@@ -30,6 +30,10 @@ export class CanvasAnimations {
     return this._canvas.instance;
   }
 
+  get text() {
+    return this._canvas.text;
+  }
+
   private _update() {
     this.canvas.requestRenderAll();
   }
@@ -368,33 +372,40 @@ export class CanvasAnimations {
   preview(object: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline) {
     if (animation[type].name === "none") return;
 
-    const state = this._save(object);
+    const element = FabricUtils.isTextboxElement(object) ? this.text.animate(object) : object;
+    const state = this._save(element);
+
     this._canvas.onToggleControls(false);
-    this._preview = anime.timeline({ update: this._update.bind(this), complete: this._complete.bind(this, object) });
+    this._preview = anime.timeline({ update: this._update.bind(this), complete: this._complete.bind(this, element) });
 
     switch (type) {
       case "in":
-        this._entry(object, this._preview, animation["in"], state, true);
+        this._entry(element, this._preview, animation["in"], state, true);
         break;
       case "out":
-        this._exit(object, this._preview, animation["out"], state, true);
+        this._exit(element, this._preview, animation["out"], state, true);
         break;
       case "scene":
-        this._scene(object, this._preview, animation["in"], animation["out"], animation["scene"], state, true);
-        if (object.clipPath) this._scene(object.clipPath, this._preview, animation["in"], animation["out"], animation["scene"], this._save(object.clipPath), true, true);
+        this._scene(element, this._preview, animation["in"], animation["out"], animation["scene"], state, true);
+        if (element.clipPath) this._scene(element.clipPath, this._preview, animation["in"], animation["out"], animation["scene"], this._save(element.clipPath), true, true);
         break;
     }
 
     this._preview.play();
-    object.on("deselected", this.dispose.bind(this, object));
+    element.on("deselected", this.dispose.bind(this, element));
   }
 
   initialize(canvas: fabric.Canvas | fabric.StaticCanvas, timeline: anime.AnimeTimelineInstance, duration: number) {
     timeline.add({ targets: canvas, duration: duration });
     for (const object of canvas._objects) {
       if (object.excludeFromTimeline) continue;
-      this._initialize(object, timeline, object.anim!.in, object.anim!.out, object.anim!.scene);
-      if (object.clipPath) this._initialize(object.clipPath, timeline, object.anim!.in, object.anim!.out, object.anim!.scene, true);
+      if (FabricUtils.isTextboxElement(object)) {
+        const textbox = this.text.animate(object);
+        this._initialize(textbox, timeline, textbox.anim!.in, textbox.anim!.out, textbox.anim!.scene);
+      } else {
+        this._initialize(object, timeline, object.anim!.in, object.anim!.out, object.anim!.scene);
+        if (object.clipPath) this._initialize(object.clipPath, timeline, object.anim!.in, object.anim!.out, object.anim!.scene, true);
+      }
     }
   }
 
@@ -403,10 +414,14 @@ export class CanvasAnimations {
     anime.remove(this._preview);
     this._preview = null;
 
-    object?.off("deselected");
-    object?.set({ ...(object?.anim?.state || {}) });
-    object?.clipPath?.set({ ...(object?.clipPath.anim?.state || {}) });
+    if (FabricUtils.isTextboxElement(object) || FabricUtils.isAnimatedTextElement(object)) {
+      this.text.restore(object.name!);
+    } else {
+      object?.set({ ...(object?.anim?.state || {}) });
+      object?.clipPath?.set({ ...(object?.clipPath.anim?.state || {}) });
+    }
 
+    object?.off("deselected");
     this._canvas.onToggleControls(true);
     this.canvas.requestRenderAll();
   }

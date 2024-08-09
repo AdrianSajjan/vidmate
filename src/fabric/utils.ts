@@ -39,6 +39,10 @@ export abstract class FabricUtils {
     return object?.type === "textbox";
   }
 
+  static isAnimatedTextElement(object?: any): object is fabric.Group {
+    return object?.type === "animated-text";
+  }
+
   static elementID(prefix: string) {
     return prefix.toLowerCase() + "_" + this.nanoid(4);
   }
