@@ -48,23 +48,6 @@ function _TextSidebar() {
               </button>
             </div>
           </div>
-          <div className="flex-col gap-4 hidden">
-            <h4 className="text-xs font-semibold line-clamp-1">Styled Texts</h4>
-            <div className="flex flex-col gap-3 relative">
-              <button
-                onClick={() => editor.canvas.text.animated("Introducing the ultimate performance boost, the new SprintX Sports Shoes!", { fontFamily: "Inter", fontSize: 48, fontWeight: 700 }, "typewriter")}
-                className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-base font-medium text-center transition-colors shadow-sm hover:bg-card"
-              >
-                <span className="line-clamp-1">Typewriter Text</span>
-              </button>
-              <button
-                onClick={() => editor.canvas.text.animated("Introducing the ultimate performance boost, the new SprintX Sports Shoes!", { fontFamily: "Inter", fontSize: 64, fontWeight: 700 }, "subtitle")}
-                className="h-16 border flex items-center justify-center overflow-hidden rounded-md px-3 text-base font-medium text-center transition-colors shadow-sm hover:bg-card"
-              >
-                <span className="line-clamp-1">Subtitle Text</span>
-              </button>
-            </div>
-          </div>
         </div>
       </section>
     </div>

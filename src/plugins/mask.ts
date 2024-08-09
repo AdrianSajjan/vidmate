@@ -56,7 +56,7 @@ export class CanvasClipMask {
     this._crop(image, clip);
     FabricUtils.bindObjectTransformToParent(image, [clip]);
 
-    const handler = () => FabricUtils.updateObjectTransformToParent(image, [{ object: clip }]);
+    const handler = FabricUtils.updateObjectTransformToParent.bind(FabricUtils, image, [{ object: clip }]);
     image.on("moving", handler);
     image.on("scaling", handler);
     image.on("rotating", handler);
@@ -93,7 +93,7 @@ export class CanvasClipMask {
     FabricUtils.initializeAnimationProperties(clip);
     FabricUtils.bindObjectTransformToParent(image, [clip]);
 
-    const handler = () => FabricUtils.updateObjectTransformToParent(image, [{ object: clip }]);
+    const handler = FabricUtils.updateObjectTransformToParent.bind(FabricUtils, image, [{ object: clip }]);
     image.on("moving", handler);
     image.on("scaling", handler);
     image.on("rotating", handler);
@@ -131,7 +131,7 @@ export class CanvasClipMask {
     FabricUtils.initializeAnimationProperties(clip);
     FabricUtils.bindObjectTransformToParent(image, [clip]);
 
-    const handler = () => FabricUtils.updateObjectTransformToParent(image, [{ object: clip }]);
+    const handler = FabricUtils.updateObjectTransformToParent.bind(FabricUtils, image, [{ object: clip }]);
     image.on("moving", handler);
     image.on("scaling", handler);
     image.on("rotating", handler);

@@ -60,10 +60,19 @@ export class CanvasSelection {
       if (!selection || selection.excludeFromTimeline) {
         this.active = null;
       } else if (FabricUtils.isActiveSelection(selection)) {
+        selection.off("moving");
+        selection.off("scaling");
+        selection.off("rotating");
         let preserveAspectRatio = false;
         selection.forEachObject((object) => {
           object.set({ hasBorders: false, hasControls: false });
           if (["image", "video", "textbox"].includes(object.type!)) preserveAspectRatio = true;
+          if (object.clipPath) {
+            const handler = FabricUtils.updateObjectTransformToParent.bind(FabricUtils, object, [{ object: object.clipPath! }]);
+            selection.on("moving", handler);
+            selection.on("scaling", handler);
+            selection.on("rotating", handler);
+          }
         });
         selection.setControlsVisibility({ mt: !preserveAspectRatio, mb: !preserveAspectRatio, mr: !preserveAspectRatio, ml: !preserveAspectRatio });
         this.active = selection.toObject(propertiesToInclude);

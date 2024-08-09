@@ -179,7 +179,7 @@ export abstract class FabricUtils {
 
         canvas.add(object.clipPath);
         FabricUtils.bindObjectTransformToParent(object, [object.clipPath]);
-        const handler = () => FabricUtils.updateObjectTransformToParent(object, [{ object: object.clipPath! }]);
+        const handler = FabricUtils.updateObjectTransformToParent.bind(this, object, [{ object: object.clipPath! }]);
 
         object.on("moving", handler);
         object.on("scaling", handler);
