@@ -18,13 +18,20 @@ function _EditorPlayback() {
   const editor = useEditorContext();
   const isTablet = useIsTablet();
 
+  const handleTimelineToggle = () => {
+    if (editor.canvas.timeline.playing) editor.canvas.timeline.pause();
+    else editor.canvas.timeline.play();
+  };
+
+  const disabled = editor.canvas.timeline.playing || editor.canvas.animations.previewing;
+
   return (
     <div className="h-14 sm:h-16 px-4 flex items-center gap-8 justify-between border-b shrink-0 overflow-x-scroll scrollbar-hidden">
       {isTablet ? (
         <div className="flex gap-px">
           <Popover>
             <PopoverTrigger asChild>
-              <Button size="sm" variant="secondary" className="gap-1.5 rounded-r-none" disabled={editor.canvas.timeline.playing}>
+              <Button size="sm" variant="secondary" className="gap-1.5 rounded-r-none" disabled={disabled}>
                 <TimerIcon size={15} />
                 <span>Duration</span>
               </Button>
@@ -32,11 +39,11 @@ function _EditorPlayback() {
             <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="pt-2 pb-3 px-3" align="start" side="top">
               <Label className="text-xs font-medium">Duration (s)</Label>
               <div className="flex items-center justify-between gap-4">
-                <Slider disabled={editor.canvas.timeline.playing} min={5} max={60} value={[editor.canvas.timeline.duration / 1000]} onValueChange={([duration]) => editor.canvas.timeline.set("duration", duration)} />
+                <Slider disabled={disabled} min={5} max={60} value={[editor.canvas.timeline.duration / 1000]} onValueChange={([duration]) => editor.canvas.timeline.set("duration", duration)} />
                 <Input
                   type="number"
                   className="h-8 w-16 text-xs"
-                  disabled={editor.canvas.timeline.playing}
+                  disabled={disabled}
                   value={editor.canvas.timeline.duration / 1000}
                   onChange={(event) => (+event.target.value < 5 || +event.target.value > 60 ? null : editor.canvas.timeline.set("duration", +event.target.value))}
                 />
@@ -45,13 +52,13 @@ function _EditorPlayback() {
           </Popover>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="secondary" className="rounded-l-none" disabled={editor.canvas.timeline.playing}>
+              <Button size="icon" variant="secondary" className="rounded-l-none" disabled={disabled}>
                 <ChevronUpIcon size={15} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="min-w-20" align="end" side="top">
               {presetDurations.map((duration) => (
-                <DropdownMenuItem disabled={editor.canvas.timeline.playing} key={duration} className="text-xs pl-2.5" onClick={() => editor.canvas.timeline.set("duration", duration)}>
+                <DropdownMenuItem disabled={disabled} key={duration} className="text-xs pl-2.5" onClick={() => editor.canvas.timeline.set("duration", duration)}>
                   {duration}s
                 </DropdownMenuItem>
               ))}
@@ -71,12 +78,7 @@ function _EditorPlayback() {
           <span className="mx-1">/</span>
           <span>{formatMediaDuration(editor.canvas.timeline.duration)}</span>
         </div>
-        <Button
-          size="icon"
-          className="rounded-full bg-card dark:bg-secondary shadow-sm border h-10 w-10 sm:h-11 sm:w-11"
-          variant="outline"
-          onClick={() => (editor.canvas.timeline.playing ? editor.canvas.timeline.pause() : editor.canvas.timeline.play())}
-        >
+        <Button size="icon" className="rounded-full bg-card dark:bg-secondary shadow-sm border h-10 w-10 sm:h-11 sm:w-11" variant="outline" disabled={editor.canvas.animations.previewing} onClick={handleTimelineToggle}>
           {editor.canvas.timeline.playing ? <PauseIcon size={20} className="fill-foreground text-foreground" /> : <PlayIcon size={20} className="fill-foreground text-foreground" />}
         </Button>
       </div>
@@ -84,18 +86,18 @@ function _EditorPlayback() {
         {!isTablet ? (
           <Popover>
             <PopoverTrigger asChild>
-              <Button size="icon" variant="secondary" disabled={editor.canvas.timeline.playing}>
+              <Button size="icon" variant="secondary" disabled={disabled}>
                 <TimerIcon size={15} />
               </Button>
             </PopoverTrigger>
             <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="pt-2 pb-3 px-3" align="start" side="top">
               <Label className="text-xs font-medium">Duration (s)</Label>
               <div className="flex items-center justify-between gap-4">
-                <Slider disabled={editor.canvas.timeline.playing} min={5} max={60} value={[editor.canvas.timeline.duration / 1000]} onValueChange={([duration]) => editor.canvas.timeline.set("duration", duration)} />
+                <Slider disabled={disabled} min={5} max={60} value={[editor.canvas.timeline.duration / 1000]} onValueChange={([duration]) => editor.canvas.timeline.set("duration", duration)} />
                 <Input
                   type="number"
                   className="h-8 w-16 text-xs"
-                  disabled={editor.canvas.timeline.playing}
+                  disabled={disabled}
                   value={editor.canvas.timeline.duration / 1000}
                   onChange={(event) => (+event.target.value < 5 || +event.target.value > 60 ? null : editor.canvas.timeline.set("duration", +event.target.value))}
                 />

@@ -10,15 +10,22 @@ import { modifyAnimationEasing } from "@/lib/animations";
 type AnimationState = ReturnType<CanvasAnimations["_save"]>;
 export class CanvasAnimations {
   private _canvas: Canvas;
+
+  private _active: fabric.Object | null;
   private _preview: anime.AnimeTimelineInstance | null;
 
   private _zoomAmount = 0.25;
   private _animationExitOffset = 50;
   private _animationEntryOffset = 50;
 
+  previewing: boolean;
+
   constructor(canvas: Canvas) {
-    this._canvas = canvas;
+    this._active = null;
     this._preview = null;
+    this.previewing = false;
+
+    this._canvas = canvas;
     makeAutoObservable(this);
   }
 
@@ -391,10 +398,12 @@ export class CanvasAnimations {
   preview(object: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline) {
     if (animation[type].name === "none") return;
 
+    this._canvas.onToggleControls(false);
     const element = FabricUtils.isTextboxElement(object) ? this.text.animate(object, this.canvas) : object;
     const state = this._save(element);
 
-    this._canvas.onToggleControls(false);
+    this._active = object;
+    this.previewing = true;
     this._preview = anime.timeline({ update: this._update.bind(this), complete: this._complete.bind(this, element), endDelay: 2000, loop: true });
 
     switch (type) {
@@ -428,10 +437,13 @@ export class CanvasAnimations {
     }
   }
 
-  dispose(object?: fabric.Object) {
+  dispose(object = this._active) {
     this._preview?.pause();
     anime.remove(this._preview);
+
+    this._active = null;
     this._preview = null;
+    this.previewing = false;
 
     if (FabricUtils.isTextboxElement(object) || FabricUtils.isAnimatedTextElement(object)) {
       this.text.restore(object.name!);
@@ -442,6 +454,6 @@ export class CanvasAnimations {
     }
 
     this._canvas.onToggleControls(true);
-    this.canvas.requestRenderAll();
+    this.canvas.renderAll();
   }
 }
