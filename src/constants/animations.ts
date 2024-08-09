@@ -31,6 +31,22 @@ export const entry: EditorAnimation[] = [
     value: "typewriter",
     label: "Typewriter",
     preview: "https://static.canva.com/web/images/fbd13e0808d49322114656453f8ae3fb.png",
+    duration: 1500,
+    fixed: {
+      duration: true,
+    },
+  },
+  {
+    type: "textbox",
+    value: "burst",
+    label: "Burst",
+    easing: "spring",
+    preview: "https://static.canva.com/web/images/0cc9d11aed1dcbbe12e10a50e571c8d7.png",
+    duration: 1500,
+    fixed: {
+      easing: true,
+      duration: true,
+    },
   },
   {
     value: "fade-in",

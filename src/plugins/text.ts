@@ -44,11 +44,13 @@ export class CanvasText {
       const char = textbox._textLines[outer];
 
       for (let inner = 0; inner < char.length; inner++) {
+        const bounds = textbox.__charBounds![outer][inner];
+        const character = this._transformText(char[inner], textbox.textTransform);
+
         const fonts = { fontFamily: textbox.fontFamily, fontSize: textbox.fontSize! * textbox.scaleY!, fontStyle: textbox.fontStyle, fontWeight: textbox.fontWeight };
         const decorations = { underline: textbox.underline, fill: textbox.fill, linethrough: textbox.linethrough };
-        const dimensions = { top: sum(textbox.__lineHeights.slice(0, outer)), left: textbox.__charBounds![outer][inner].left, scaleX: 1, scaleY: 1 };
+        const dimensions = { top: sum(textbox.__lineHeights.slice(0, outer)), left: bounds.left, scaleX: 1, scaleY: 1 };
 
-        const character = this._transformText(char[inner], textbox.textTransform);
         const letter = createInstance(fabric.IText, character, Object.assign({}, exclude, fonts, dimensions, decorations));
         letters.push(letter);
       }

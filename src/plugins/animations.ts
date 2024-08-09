@@ -193,14 +193,39 @@ export class CanvasAnimations {
         if (!FabricUtils.isAnimatedTextElement(object)) return;
         const letters = object._objects.map((word) => (FabricUtils.isGroupElement(word) ? word._objects : [])).flat();
         letters.map((letter, index) => {
-          letter.set({ opacity: 0 });
+          const state = { opacity: 0 };
+          letter.set(Object.assign({}, state));
           timeline.add(
             {
-              targets: { opacity: 0 },
+              targets: state,
               opacity: 1,
               duration: entry.duration / letters.length,
               easing: modifyAnimationEasing(entry.easing, entry.duration),
-              update: (anim) => letter.set({ opacity: +anim.animations[0].currentValue }),
+              update: () => letter.set({ opacity: state.opacity }),
+            },
+            offset + (entry.duration / letters.length) * index,
+          );
+        });
+        break;
+      }
+
+      case "burst": {
+        if (!FabricUtils.isAnimatedTextElement(object)) return;
+        const letters = object._objects.map((word) => (FabricUtils.isGroupElement(word) ? word._objects : [])).flat();
+        letters.map((letter, index) => {
+          const target = { scaleY: letter.scaleY, scaleX: letter.scaleX, top: letter.top!, left: letter.left! };
+          const state = { scaleY: 1 / letter.height!, scaleX: 1 / letter.width!, top: letter.top! + (letter.height! * letter.scaleY!) / 2, left: letter.left! + (letter.width! * letter.scaleX!) / 2 };
+          letter.set(Object.assign({}, state));
+          timeline.add(
+            {
+              targets: state,
+              top: target.top,
+              left: target.left,
+              scaleX: target.scaleX,
+              scaleY: target.scaleY,
+              duration: entry.duration / letters.length,
+              easing: modifyAnimationEasing(entry.easing, entry.duration),
+              update: () => letter.set({ scaleX: state.scaleX, scaleY: state.scaleY, top: state.top, left: state.left }),
             },
             offset + (entry.duration / letters.length) * index,
           );
