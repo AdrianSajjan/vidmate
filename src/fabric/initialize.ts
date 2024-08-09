@@ -1,9 +1,11 @@
+import "@/fabric/object";
 import "@/fabric/cropper";
 import "@/fabric/textbox";
 import "@/fabric/video";
 import "@/fabric/charts";
 
 import { fabric } from "fabric";
+
 import EdgeControl from "@/assets/editor/controls/edge-control.svg";
 import MiddleControlHorizontal from "@/assets/editor/controls/middle-control-horizontal.svg";
 import MiddleControlVertical from "@/assets/editor/controls/middle-control-vertical.svg";
@@ -270,6 +272,7 @@ fabric.Object.prototype.set({
   cornerStrokeColor: "#2563EB",
   borderOpacityWhenMoving: 0.75,
   strokeUniform: true,
+  objectCaching: false,
 });
 
 fabric.Image.prototype.set({

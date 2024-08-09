@@ -40,7 +40,7 @@ export class CanvasText {
     const exclude = { excludeFromTimeline: true, excludeFromExport: true, excludeFromAlignment: true };
 
     for (let outer = 0; outer < textbox.__charBounds!.length; outer++) {
-      const letters: fabric.IText[] = [];
+      const letters: fabric.Text[] = [];
       const char = textbox._textLines[outer];
 
       for (let inner = 0; inner < char.length; inner++) {
@@ -51,7 +51,7 @@ export class CanvasText {
         const decorations = { underline: textbox.underline, fill: textbox.fill, linethrough: textbox.linethrough };
         const dimensions = { top: sum(textbox.__lineHeights.slice(0, outer)), left: bounds.left, scaleX: 1, scaleY: 1 };
 
-        const letter = createInstance(fabric.IText, character, Object.assign({}, exclude, fonts, dimensions, decorations));
+        const letter = createInstance(fabric.Text, character, Object.assign({}, exclude, fonts, dimensions, decorations));
         letters.push(letter);
       }
 

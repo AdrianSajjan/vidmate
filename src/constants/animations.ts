@@ -49,6 +49,17 @@ export const entry: EditorAnimation[] = [
     },
   },
   {
+    type: "textbox",
+    value: "clarify",
+    label: "Clarify",
+    easing: "linear",
+    preview: "https://static.canva.com/web/images/9d13f1d768bf12af9aa1bb2786985220.png",
+    duration: 1500,
+    fixed: {
+      duration: true,
+    },
+  },
+  {
     value: "fade-in",
     label: "Fade",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",

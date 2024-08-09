@@ -6,6 +6,7 @@ import { makeAutoObservable } from "mobx";
 import { Canvas } from "@/store/canvas";
 import { FabricUtils } from "@/fabric/utils";
 import { modifyAnimationEasing } from "@/lib/animations";
+import { random } from "lodash";
 
 type AnimationState = ReturnType<CanvasAnimations["_save"]>;
 export class CanvasAnimations {
@@ -233,6 +234,38 @@ export class CanvasAnimations {
             offset + (entry.duration / letters.length) * index,
           );
         });
+        break;
+      }
+
+      case "clarify": {
+        if (!FabricUtils.isAnimatedTextElement(object)) return;
+        const letters = object._objects.map((word) => (FabricUtils.isGroupElement(word) ? word._objects : [])).flat();
+        letters.map((letter) => {
+          const target = { opacity: 1, blur: 0 };
+          const state = { opacity: 0, blur: 10 };
+          const seed = random(0, Math.min(500, entry.duration - 250));
+          letter.set(Object.assign({}, state));
+          timeline.add(
+            {
+              targets: state,
+              opacity: target.opacity,
+              blur: target.blur,
+              duration: entry.duration - seed,
+              easing: modifyAnimationEasing(entry.easing, entry.duration),
+              update: () => letter.set({ opacity: state.opacity, blur: state.blur }),
+            },
+            offset + seed,
+          );
+        });
+        timeline.add(
+          {
+            targets: object,
+            left: [left - 15, left],
+            duration: entry.duration,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
+          },
+          offset,
+        );
         break;
       }
     }

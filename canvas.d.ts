@@ -2847,6 +2847,11 @@ interface IObjectOptions {
   adjustments?: Record<string, any>;
 
   /**
+   * Custom property to allow blurring in fabric js native objects
+   */
+  blur?: number;
+
+  /**
    * State properies that are available on calling save state
    */
   _stateProperties?: any;
@@ -4150,6 +4155,8 @@ export class Object {
    * Defines the number of fraction digits to use when serializing object values.
    */
   static NUM_FRACTION_DIGITS?: number | undefined;
+
+  static ENLIVEN_PROPS: string[];
 }
 
 interface IPathOptions extends IObjectOptions {
