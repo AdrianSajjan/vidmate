@@ -36,11 +36,11 @@ export class CanvasText {
   }
 
   animate(textbox: fabric.Textbox, canvas: fabric.Canvas | fabric.StaticCanvas) {
-    const words: fabric.Group[] = [];
+    const sentences: fabric.Group[] = [];
     const exclude = { excludeFromTimeline: true, excludeFromExport: true, excludeFromAlignment: true };
 
     for (let outer = 0; outer < textbox.__charBounds!.length; outer++) {
-      const letters: fabric.Text[] = [];
+      const lines: fabric.Text[] = [];
       const char = textbox._textLines[outer];
 
       for (let inner = 0; inner < char.length; inner++) {
@@ -52,17 +52,17 @@ export class CanvasText {
         const dimensions = { top: sum(textbox.__lineHeights.slice(0, outer)), left: bounds.left, scaleX: 1, scaleY: 1 };
 
         const letter = createInstance(fabric.Text, character, Object.assign({}, exclude, fonts, dimensions, decorations));
-        letters.push(letter);
+        lines.push(letter);
       }
 
-      const group = createInstance(fabric.Group, letters, Object.assign({}, exclude));
-      words.push(group);
+      const group = createInstance(fabric.Group, lines, Object.assign({}, exclude));
+      sentences.push(group);
     }
 
-    const group = createInstance(fabric.Group, words, Object.assign({ type: "animated-text", name: "animated_" + textbox.name, meta: textbox.meta, anim: textbox.anim }, exclude));
-    const longest = maxBy(words, "width")!;
+    const group = createInstance(fabric.Group, sentences, Object.assign({ type: "animated-text", name: "animated_" + textbox.name, meta: textbox.meta, anim: textbox.anim }, exclude));
+    const longest = maxBy(sentences, "width")!;
 
-    for (const word of words) {
+    for (const word of sentences) {
       if (word === longest) continue;
       switch (textbox.textAlign) {
         case "left":
