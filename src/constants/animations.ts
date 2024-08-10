@@ -75,6 +75,12 @@ export const entry: EditorAnimation[] = [
     duration: 250,
   },
   {
+    value: "baseline-in",
+    label: "Baseline",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    duration: 250,
+  },
+  {
     value: "pop-in",
     label: "Pop",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",

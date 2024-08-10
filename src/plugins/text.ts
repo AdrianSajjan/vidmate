@@ -50,7 +50,7 @@ export class CanvasText {
 
         const fonts = { fontFamily: textbox.fontFamily, fontSize: textbox.fontSize! * textbox.scaleY!, fontStyle: textbox.fontStyle, fontWeight: textbox.fontWeight };
         const decorations = { underline: textbox.underline, fill: textbox.fill, linethrough: textbox.linethrough };
-        const dimensions = { top: sum(textbox.__lineHeights.slice(0, outer)), left: bounds.left, scaleX: 1, scaleY: 1 };
+        const dimensions = { top: sum(textbox.__lineHeights.slice(0, outer)), left: bounds.left * textbox.scaleX!, width: bounds.width * textbox.scaleX!, scaleX: 1, scaleY: 1 };
 
         if (character !== " ") {
           const letter = createInstance(fabric.Text, character, Object.assign({}, exclude, fonts, dimensions, decorations));

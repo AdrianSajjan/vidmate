@@ -235,6 +235,21 @@ export class CanvasAnimations {
         );
         break;
       }
+
+      case "baseline-in": {
+        const clipPath = createInstance(fabric.Rect, { height, width, top, left, absolutePositioned: true });
+        object.set({ clipPath });
+        timeline.add(
+          {
+            targets: object,
+            top: [top + height, top],
+            duration: entry.duration,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
+          },
+          offset,
+        );
+        break;
+      }
     }
 
     if (FabricUtils.isAnimatedTextElement(object)) {
