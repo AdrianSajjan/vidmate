@@ -81,9 +81,7 @@ export class CanvasChart {
 
     console.log(data);
 
-    chart._set("chart", {
-      data: data,
-    });
+    chart._set("chart", { data });
     this.canvas.fire("object:modified", { target: chart });
     this.canvas.requestRenderAll();
   }
