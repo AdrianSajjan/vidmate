@@ -1,6 +1,6 @@
 import { XIcon } from "lucide-react";
 import { observer } from "mobx-react";
-import { ChangeEventHandler, HTMLAttributes } from "react";
+import { HTMLAttributes } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,13 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { cn } from "@/lib/utils";
-import { EditorAnimation, easings, entry, exit, scene } from "@/constants/animations";
 import { useEditorContext } from "@/context/editor";
 import { usePreviewAnimation } from "@/hooks/use-preview-animation";
+import { useAnimationControls } from "@/layout/sidebar-right/hooks/use-animation-controls";
+import { useAnimationList } from "@/layout/sidebar-right/hooks/use-animations";
+
+import { EditorAnimation, easings, entry, exit, scene } from "@/constants/animations";
+import { cn } from "@/lib/utils";
 
 function _AnimationSidebar() {
   const editor = useEditorContext();
+  const selected = editor.canvas.selection.active!;
 
   return (
     <div className="h-full w-full @container">
@@ -30,21 +34,21 @@ function _AnimationSidebar() {
             <TabsTrigger value="in" className="text-xs h-full">
               In
             </TabsTrigger>
-            <TabsTrigger value="out" className="text-xs h-full">
-              Out
-            </TabsTrigger>
             <TabsTrigger value="scene" className="text-xs h-full">
               Scene
             </TabsTrigger>
+            <TabsTrigger value="out" className="text-xs h-full">
+              Out
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="in" className="mt-0 pt-5">
-            <EntryAnimations />
-          </TabsContent>
-          <TabsContent value="out" className="mt-0 pt-5">
-            <ExitAnimations />
+            <Animations animations={entry} selected={selected} type="in" />
           </TabsContent>
           <TabsContent value="scene" className="mt-0 pt-5">
-            <SceneAnimations />
+            <Animations animations={scene} selected={selected} type="scene" />
+          </TabsContent>
+          <TabsContent value="out" className="mt-0 pt-5">
+            <Animations animations={exit} selected={selected} type="out" />
           </TabsContent>
         </Tabs>
       </section>
@@ -52,191 +56,31 @@ function _AnimationSidebar() {
   );
 }
 
-function _EntryAnimations() {
-  const editor = useEditorContext();
-
-  const selected = editor.canvas.selection.active!;
-  const disabled = !selected.anim?.in.name || selected.anim?.in.name === "none";
-
-  const easing = selected.anim?.in.easing || "linear";
-  const duration = (selected.anim?.in.duration || 0) / 1000;
-
-  usePreviewAnimation(selected, "in");
-
-  const handleSelectAnimation = (animation: EditorAnimation) => {
-    editor.canvas.onChangeActiveObjectAnimation("in", animation.value);
-    if (animation.value !== "none") {
-      const duration = animation.fixed?.duration ? animation.duration : selected.anim?.out.duration;
-      const easing = animation.fixed?.easing ? animation.easing : selected.anim?.out.easing;
-      editor.canvas.onChangeActiveObjectAnimationDuration("in", duration || 500);
-      editor.canvas.onChangeActiveObjectAnimationEasing("in", easing || "linear");
-    }
-  };
-
-  const handleChangeEasing = (easing: string) => {
-    editor.canvas.onChangeActiveObjectAnimationEasing("in", easing);
-  };
-
-  const handleChangeDuration: ChangeEventHandler<HTMLInputElement> = (event) => {
-    const value = +event.target.value * 1000;
-    if (isNaN(value) || value < 0) return;
-    editor.canvas.onChangeActiveObjectAnimationDuration("in", value);
-  };
-
-  return (
-    <div className="flex flex-col px-1">
-      <div className="flex items-center justify-between gap-6">
-        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={duration} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.1} className="text-xs h-8 w-40" />
-      </div>
-      <div className="flex items-center justify-between gap-6 mt-3">
-        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
-        <Select value={easing} onValueChange={handleChangeEasing} disabled={disabled}>
-          <SelectTrigger className="h-8 text-xs w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {easings.map((easing) => (
-              <SelectItem key={easing.value} className="text-xs" value={easing.value}>
-                {easing.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid grid-cols-2 @sm:grid-cols-3 @md:grid-cols-4 gap-5 pt-6">
-        {entry
-          .filter((animation) => !animation.type || animation.type === selected.type)
-          .map((animation) => (
-            <AnimationItem key={animation.label} animation={animation} selected={selected.anim?.in.name === animation.value} onClick={() => handleSelectAnimation(animation)} />
-          ))}
-      </div>
-    </div>
-  );
+interface AnimationProps {
+  animations: EditorAnimation[];
+  type: "in" | "out" | "scene";
+  selected: fabric.Object;
 }
 
-function _ExitAnimations() {
-  const editor = useEditorContext();
-
-  const selected = editor.canvas.selection.active!;
-  const disabled = !selected.anim?.out.name || selected.anim?.out.name === "none";
-
-  const easing = selected.anim?.out.easing || "linear";
-  const duration = (selected.anim?.out.duration || 0) / 1000;
-
-  usePreviewAnimation(selected, "out");
-
-  const handleSelectAnimation = (animation: EditorAnimation) => {
-    editor.canvas.onChangeActiveObjectAnimation("out", animation.value);
-    if (animation.value !== "none") {
-      const duration = animation.fixed?.duration ? animation.duration : selected.anim?.out.duration;
-      const easing = animation.fixed?.easing ? animation.easing : selected.anim?.out.easing;
-      editor.canvas.onChangeActiveObjectAnimationDuration("out", duration || 500);
-      editor.canvas.onChangeActiveObjectAnimationEasing("out", easing || "linear");
-    }
-  };
-
-  const handleChangeEasing = (easing: string) => {
-    editor.canvas.onChangeActiveObjectAnimationEasing("out", easing);
-  };
-
-  const handleChangeDuration: ChangeEventHandler<HTMLInputElement> = (event) => {
-    const value = +event.target.value * 1000;
-    if (isNaN(value) || value < 0) return;
-    editor.canvas.onChangeActiveObjectAnimationDuration("out", value);
-  };
+function _Animations({ animations: list, selected, type }: AnimationProps) {
+  const controls = useAnimationControls(selected, type);
+  const animations = useAnimationList(selected, list);
+  usePreviewAnimation(selected, type);
 
   return (
     <div className="flex flex-col px-1">
-      <div className="flex items-center justify-between gap-6">
-        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={duration} onChange={handleChangeDuration} disabled={disabled} type="number" step={0.1} className="text-xs h-8 w-40" />
-      </div>
-      <div className="flex items-center justify-between gap-6 mt-3">
-        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
-        <Select value={easing} onValueChange={handleChangeEasing} disabled={disabled}>
-          <SelectTrigger className="h-8 text-xs w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {easings.map((easing) => (
-              <SelectItem key={easing.value} className="text-xs" value={easing.value}>
-                {easing.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid grid-cols-2 @sm:grid-cols-3 @md:grid-cols-4 gap-5 pt-6">
-        {exit
-          .filter((animation) => !animation.type || animation.type === selected.type)
-          .map((animation) => (
-            <AnimationItem key={animation.label} animation={animation} selected={selected.anim?.out.name === animation.value} onClick={() => handleSelectAnimation(animation)} />
-          ))}
-      </div>
-    </div>
-  );
-}
-
-function _SceneAnimations() {
-  const editor = useEditorContext();
-  const selected = editor.canvas.selection.active!;
-
-  const animation = scene.find((animation) => animation.value === selected.anim?.scene.name);
-  const disabled = !selected.anim?.scene.name || selected.anim?.scene.name === "none";
-
-  const easing = selected.anim?.scene.easing || "linear";
-  const duration = (selected.anim?.scene.duration || 0) / 1000;
-
-  usePreviewAnimation(selected, "scene");
-
-  const handleSelectAnimation = (animation: EditorAnimation) => {
-    editor.canvas.onChangeActiveObjectAnimation("scene", animation.value);
-    if (animation.value !== "none") {
-      const duration = animation.fixed?.duration ? animation.duration : selected.anim?.scene.duration;
-      const easing = animation.fixed?.easing ? animation.easing : selected.anim?.scene.easing;
-      editor.canvas.onChangeActiveObjectAnimationDuration("scene", duration || 500);
-      editor.canvas.onChangeActiveObjectAnimationEasing("scene", easing || "linear");
-    }
-  };
-
-  const handleChangeEasing = (easing: string) => {
-    editor.canvas.onChangeActiveObjectAnimationEasing("scene", easing);
-  };
-
-  const handleChangeDuration: ChangeEventHandler<HTMLInputElement> = (event) => {
-    const value = +event.target.value * 1000;
-    if (isNaN(value) || value < 0) return;
-    editor.canvas.onChangeActiveObjectAnimationDuration("scene", value);
-  };
-
-  return (
-    <div className="flex flex-col px-1">
-      <div className="flex items-center justify-between gap-6">
-        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={duration} onChange={handleChangeDuration} disabled={disabled || animation?.disabled?.duration} type="number" step={0.1} className="text-xs h-8 w-40" />
-      </div>
-      <div className="flex items-center justify-between gap-6 mt-3">
-        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
-        <Select value={easing} onValueChange={handleChangeEasing} disabled={disabled || animation?.disabled?.easing}>
-          <SelectTrigger className="h-8 text-xs w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {easings.map((easing) => (
-              <SelectItem key={easing.value} className="text-xs" value={easing.value}>
-                {easing.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid grid-cols-2 @sm:grid-cols-3 @md:grid-cols-4 gap-5 pt-6">
-        {scene
-          .filter((animation) => !animation.type || animation.type === selected.type)
-          .map((animation) => (
-            <AnimationItem key={animation.label} animation={animation} selected={selected.anim?.scene.name === animation.value} onClick={() => handleSelectAnimation(animation)} />
-          ))}
+      <AnimationControls selected={selected} type={type} />
+      <div className="pt-7 flex flex-col gap-7">
+        {animations.map((animation) => (
+          <div className="flex flex-col gap-4" key={animation.title}>
+            <h4 className="text-xs font-medium text-center">{animation.title}</h4>
+            <div className="grid grid-cols-2 @sm:grid-cols-3 @md:grid-cols-4 gap-5">
+              {animation.list.map((animation) => (
+                <AnimationItem key={animation.label} animation={animation} selected={selected.anim?.[type].name === animation.value} onClick={() => controls.selectAnimation(animation)} />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -258,8 +102,59 @@ function _AnimationItem({ animation, selected, className, ...props }: AnimationI
   );
 }
 
+interface AnimationControlsProps {
+  selected: fabric.Object;
+  type: "in" | "out" | "scene";
+}
+
+function _AnimationControls({ selected, type }: AnimationControlsProps) {
+  const controls = useAnimationControls(selected, type);
+
+  const easing = selected.anim?.[type].easing || "linear";
+  const animate = selected.anim?.[type].text || "letter";
+  const duration = (selected.anim?.[type].duration || 0) / 1000;
+  const disabled = !selected.anim?.[type].name || selected.anim?.[type].name === "none";
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center justify-between gap-6">
+        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
+        <Input value={duration} onChange={controls.changeDuration} disabled={disabled} type="number" step={0.1} className="text-xs h-8 w-40" />
+      </div>
+      <div className="flex items-center justify-between gap-6 mt-3">
+        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
+        <Select value={easing} onValueChange={controls.changeEasing} disabled={disabled}>
+          <SelectTrigger className="h-8 text-xs w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {easings.map((easing) => (
+              <SelectItem key={easing.value} className="text-xs" value={easing.value}>
+                {easing.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center justify-between gap-6 mt-3">
+        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Animate</Label>
+        <Tabs value={animate} onValueChange={controls.changeTextAnimate} className="w-40">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="letter" disabled={disabled} className="text-xs h-full">
+              Letter
+            </TabsTrigger>
+            <TabsTrigger value="word" disabled={disabled} className="text-xs h-full">
+              Word
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+
+const Animations = observer(_Animations);
 const AnimationItem = observer(_AnimationItem);
-const ExitAnimations = observer(_ExitAnimations);
-const EntryAnimations = observer(_EntryAnimations);
-const SceneAnimations = observer(_SceneAnimations);
+const AnimationControls = observer(_AnimationControls);
+
 export const AnimationSidebar = observer(_AnimationSidebar);

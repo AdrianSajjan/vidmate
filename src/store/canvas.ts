@@ -532,6 +532,17 @@ export class Canvas {
     if (selected) this.onChangeObjectAnimationDuration(selected, type, duration);
   }
 
+  onChangeTextAnimationType(object: fabric.Object, type: "in" | "out" | "scene", animate: "letter" | "word") {
+    if (!object) return;
+    object.anim![type].text = animate;
+    this.instance.fire("object:modified", { target: object }).requestRenderAll();
+  }
+
+  onChangeActiveTextAnimationType(type: "in" | "out" | "scene", animate: "letter" | "word") {
+    const selected = this.instance.getActiveObject();
+    if (selected) this.onChangeTextAnimationType(selected, type, animate);
+  }
+
   onChangeTextboxProperty(textbox: fabric.Textbox, property: keyof fabric.Textbox, value: any, _selection = false) {
     if (textbox.type !== "textbox") return;
     textbox.set(property, value);
