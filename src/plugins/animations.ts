@@ -1,5 +1,6 @@
 import anime from "animejs";
 
+import { fabric } from "fabric";
 import { AnimationTimeline } from "canvas";
 import { makeAutoObservable } from "mobx";
 
@@ -7,8 +8,10 @@ import { Canvas } from "@/store/canvas";
 import { FabricUtils } from "@/fabric/utils";
 import { modifyAnimationEasing } from "@/lib/animations";
 import { random } from "lodash";
+import { createInstance } from "@/lib/utils";
 
 type AnimationState = ReturnType<CanvasAnimations["_save"]>;
+
 export class CanvasAnimations {
   private _canvas: Canvas;
 
@@ -90,8 +93,9 @@ export class CanvasAnimations {
     const scaleX = object.scaleX!;
     const scaleY = object.scaleY!;
     const angle = object.angle!;
+    const clipPath = object.clipPath;
 
-    const state = { opacity, left, top, scaleX, scaleY, fill, stroke, angle };
+    const state = { opacity, left, top, scaleX, scaleY, fill, stroke, angle, clipPath };
     const events = { selectable: object.selectable, evented: object.evented };
     const controls = { hasControls: object.hasControls, hasBorders: object.hasBorders };
     const locks = { lockMovementX: object.lockMovementX, lockMovementY: object.lockMovementY, lockScalingX: object.lockScalingX, lockScalingY: object.lockScalingY, lockRotation: object.lockRotation };
@@ -209,6 +213,21 @@ export class CanvasAnimations {
             targets: object,
             scaleY: [1 / height, scaleY],
             top: [top + (height * scaleY) / 2, top],
+            duration: entry.duration,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
+          },
+          offset,
+        );
+        break;
+      }
+
+      case "wipe-in": {
+        const clipPath = createInstance(fabric.Rect, { height, width, top, left: left - width * scaleX, absolutePositioned: true });
+        object.set({ clipPath });
+        timeline.add(
+          {
+            targets: clipPath,
+            left: [left - width * scaleX, left],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },

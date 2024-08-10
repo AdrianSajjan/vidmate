@@ -15,6 +15,7 @@ import { useAnimationList } from "@/layout/sidebar-right/hooks/use-animations";
 
 import { EditorAnimation, easings, entry, exit, scene } from "@/constants/animations";
 import { cn } from "@/lib/utils";
+import { FabricUtils } from "@/fabric/utils";
 
 function _AnimationSidebar() {
   const editor = useEditorContext();
@@ -110,8 +111,9 @@ interface AnimationControlsProps {
 function _AnimationControls({ selected, type }: AnimationControlsProps) {
   const controls = useAnimationControls(selected, type);
 
-  const easing = selected.anim?.[type].easing || "linear";
   const animate = selected.anim?.[type].text || "letter";
+  const easing = selected.anim?.[type].easing || "linear";
+
   const duration = (selected.anim?.[type].duration || 0) / 1000;
   const disabled = !selected.anim?.[type].name || selected.anim?.[type].name === "none";
 
@@ -136,19 +138,21 @@ function _AnimationControls({ selected, type }: AnimationControlsProps) {
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center justify-between gap-6 mt-3">
-        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Animate</Label>
-        <Tabs value={animate} onValueChange={controls.changeTextAnimate} className="w-40">
-          <TabsList className="w-full grid grid-cols-2">
-            <TabsTrigger value="letter" disabled={disabled} className="text-xs h-full">
-              Letter
-            </TabsTrigger>
-            <TabsTrigger value="word" disabled={disabled} className="text-xs h-full">
-              Word
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      {FabricUtils.isTextboxElement(selected) ? (
+        <div className="flex items-center justify-between gap-6 mt-3">
+          <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Animate</Label>
+          <Tabs value={animate} onValueChange={controls.changeTextAnimate} className="w-40">
+            <TabsList className="w-full grid grid-cols-2">
+              <TabsTrigger value="letter" disabled={disabled} className="text-xs h-full">
+                Letter
+              </TabsTrigger>
+              <TabsTrigger value="word" disabled={disabled} className="text-xs h-full">
+                Word
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      ) : null}
     </div>
   );
 }
