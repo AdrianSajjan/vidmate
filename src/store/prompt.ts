@@ -73,10 +73,15 @@ export class Prompt {
           const speech: EditorAudioElement = yield this.canvas.audio.add(scene.speech.url, FabricUtils.elementID(scene.speech.voice));
           this.canvas.audio.update(speech.id, { timeline: Math.min(speech.duration, scene.duration), offset: offset / 1000 });
           if (scene.speech.subtitle) {
-            const props = { font: inter, fontSize: 42, fontWeight: 700, duration: Math.min(speech.duration * 1000, scene.duration * 1000), offset: offset };
-            const selection: fabric.ActiveSelection = yield this.canvas.text.animated(scene.speech.subtitle, props, "typewriter", true, false);
-            this.canvas.alignment.alignToPage(selection, "center");
-            selection.set({ top: this.canvas.artboard.getScaledHeight() - selection.getScaledHeight() * 2 });
+            const text = this.canvas.onAddText(scene.speech.subtitle, inter, 42, 700);
+            text.meta!.duration = Math.min(speech.duration * 1000, scene.duration * 1000);
+            text.meta!.offset = offset;
+            text.anim!.in.name = "typewriter";
+            text.anim!.in.easing = "linear";
+            text.anim!.in.text = "word";
+            text.anim!.in.duration = Math.min(speech.duration * 1000, scene.duration * 1000);
+            this.canvas.alignment.alignToPage(text, "center");
+            text.set({ top: this.canvas.artboard.getScaledHeight() - text.getScaledHeight() * 2 });
           }
         }
 

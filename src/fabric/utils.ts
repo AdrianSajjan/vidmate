@@ -81,12 +81,12 @@ export abstract class FabricUtils {
   static bindObjectTransformToParent(parent: fabric.Object, children: fabric.Object[]) {
     const invertedTransform = fabric.util.invertTransform(parent.calcTransformMatrix());
     for (const child of children) {
-      if (!child.meta) child.meta = {};
-      child.meta.relationship = fabric.util.multiplyTransformMatrices(invertedTransform, parent.calcTransformMatrix());
-      child.meta.originalScaleX = child.scaleX;
-      child.meta.originalScaleY = child.scaleY;
-      child.meta.initialParentScaleX = parent.scaleX;
-      child.meta.initialParentScaleY = parent.scaleY;
+      if (!child.meta) this.initializeMetaProperties(child);
+      child.meta!.relationship = fabric.util.multiplyTransformMatrices(invertedTransform, parent.calcTransformMatrix());
+      child.meta!.originalScaleX = child.scaleX;
+      child.meta!.originalScaleY = child.scaleY;
+      child.meta!.initialParentScaleX = parent.scaleX;
+      child.meta!.initialParentScaleY = parent.scaleY;
     }
   }
 
