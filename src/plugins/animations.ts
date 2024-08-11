@@ -108,7 +108,7 @@ export class CanvasAnimations {
   }
 
   private _entry(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], state: AnimationState, preview?: boolean) {
-    const { left, top, height, width, opacity, scaleX, scaleY } = state;
+    const { left, top, height, width, opacity, angle, scaleX, scaleY } = state;
     const offset = preview ? 0 : object.meta!.offset + this._entryOffset;
 
     switch (entry.name) {
@@ -222,12 +222,15 @@ export class CanvasAnimations {
       }
 
       case "wipe-in": {
-        const clipPath = createInstance(fabric.Rect, { height, width, top, left: left - width * scaleX, absolutePositioned: true });
+        const delta = FabricUtils.calculateAnimationPositionDelta(object);
+        const props = { angle, height, width, top: top - delta.x * delta.diagonal, left: left - delta.y * delta.diagonal, absolutePositioned: true };
+        const clipPath = createInstance(fabric.Rect, props);
         object.set({ clipPath });
         timeline.add(
           {
             targets: clipPath,
-            left: [left - width * scaleX, left],
+            left: [props.left, left],
+            top: [props.top, top],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },
@@ -237,12 +240,14 @@ export class CanvasAnimations {
       }
 
       case "baseline-in": {
-        const clipPath = createInstance(fabric.Rect, { height, width, top, left, absolutePositioned: true });
+        const delta = FabricUtils.calculateAnimationPositionDelta(object);
+        const clipPath = createInstance(fabric.Rect, { angle, height, width, top, left, absolutePositioned: true });
         object.set({ clipPath });
         timeline.add(
           {
             targets: object,
-            top: [top + height, top],
+            top: [top + delta.y * height, top],
+            left: [left - delta.x * height, left],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },

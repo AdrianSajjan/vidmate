@@ -85,6 +85,7 @@ export class CanvasText {
     }
 
     group.setPositionByOrigin(textbox.getCenterPoint(), "center", "center");
+    group.rotate(textbox.angle!);
     textbox.set({ visible: false, hasBorders: false, hasControls: false });
     canvas.add(group);
 

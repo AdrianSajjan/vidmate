@@ -231,4 +231,17 @@ export abstract class FabricUtils {
     if (angleDegrees < 0) angleDegrees += 360;
     return Math.round(angleDegrees);
   }
+
+  static calculateAnimationPositionDelta(object: fabric.Object) {
+    const width = object.width! * object.scaleX!;
+    const height = object.height! * object.scaleY!;
+
+    const diagonal = Math.sqrt(width * width + height * height);
+    const radian = fabric.util.degreesToRadians(object.angle!);
+
+    const x = Math.sin(radian);
+    const y = Math.cos(radian);
+
+    return { x, y, diagonal };
+  }
 }
