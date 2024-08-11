@@ -246,8 +246,8 @@ export class CanvasAnimations {
         timeline.add(
           {
             targets: object,
-            top: [top + delta.y * height, top],
-            left: [left - delta.x * height, left],
+            top: [top + delta.y * delta.height, top],
+            left: [left - delta.x * delta.height, left],
             duration: entry.duration,
             easing: modifyAnimationEasing(entry.easing, entry.duration),
           },

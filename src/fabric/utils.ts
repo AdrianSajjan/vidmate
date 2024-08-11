@@ -242,6 +242,6 @@ export abstract class FabricUtils {
     const x = Math.sin(radian);
     const y = Math.cos(radian);
 
-    return { x, y, diagonal };
+    return { x, y, diagonal, height, width };
   }
 }
