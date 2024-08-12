@@ -4405,11 +4405,16 @@ interface TextOptions extends IObjectOptions {
 export interface Text extends TextOptions {}
 export class Text extends Object {
   _text: string[];
+
   cursorOffsetCache: { top: number; left: number };
   /**
    * Properties which when set cause object to change dimensions
    */
   _dimensionAffectingProps: string[];
+  /**
+   * Text transform of the sentence
+   */
+  textTransform?: "none" | "uppercase" | "lowercase" | (string & {});
   /**
    * List of lines in text object
    */
@@ -4769,6 +4774,12 @@ export class Text extends Object {
    * @returns {Object} Lines and text in the text
    */
   _splitTextIntoLines(text): string[];
+
+  /**
+   * Transforms text to uppercase or lowercase
+   * @returns {string} Transformed text
+   */
+  _transformText(text: string): string;
 
   /**
    * @param {Object} prevStyle
@@ -5266,10 +5277,6 @@ interface ITextboxOptions extends ITextOptions {
    * Minimum width of textbox, in pixels.
    */
   minWidth?: number | undefined;
-  /**
-   * Text transform of the sentence
-   */
-  textTransform?: "none" | "uppercase" | "lowercase" | (string & {});
   /**
    * Minimum calculated width of a textbox, in pixels.
    * fixed to 2 so that an empty textbox cannot go to 0

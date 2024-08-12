@@ -1,35 +1,18 @@
 import { fabric } from "fabric";
 
-const Textbox = fabric.util.createClass(fabric.Textbox, {
-  type: "textbox",
+const _splitTextIntoLines = fabric.Text.prototype._splitTextIntoLines;
 
-  initialize: function (text: string, options?: fabric.ITextboxOptions) {
-    options = options || {};
-    this.callSuper("initialize", text, options);
-  },
+fabric.Text.prototype._transformText = function (text) {
+  switch (this.textTransform) {
+    case "uppercase":
+      return text.toUpperCase();
+    case "lowercase":
+      return text.toLowerCase();
+    default:
+      return text;
+  }
+};
 
-  _splitTextIntoLines: function (_text: string) {
-    const text = this._transformText(_text);
-    return this.callSuper("_splitTextIntoLines", text);
-  },
-
-  _transformText: function (text: string) {
-    switch (this.textTransform) {
-      case "uppercase":
-        return text.toUpperCase();
-      case "lowercase":
-        return text.toLowerCase();
-      default:
-        return text;
-    }
-  },
-
-  _render(ctx: CanvasRenderingContext2D) {
-    this.callSuper("_render", ctx);
-  },
-});
-
-Textbox.fromObject = fabric.Textbox.fromObject;
-Textbox.fromElement = fabric.Textbox.fromElement;
-
-fabric.Textbox = Textbox;
+fabric.Text.prototype._splitTextIntoLines = function (text) {
+  return _splitTextIntoLines.call(this, this._transformText(text));
+};
