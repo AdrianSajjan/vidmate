@@ -19,5 +19,5 @@ export function usePreviewAnimation(element: fabric.Object, type: "in" | "out" |
       previewAnimation.cancel();
       editor.canvas.animations.dispose(object);
     };
-  }, [element.anim]);
+  }, [element]);
 }

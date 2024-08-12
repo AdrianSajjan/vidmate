@@ -17,7 +17,7 @@ export class CanvasAnimations {
 
   private _extras: fabric.Object[];
   private _active: fabric.Object | null;
-  private _preview: anime.AnimeTimelineInstance | null;
+  private _timeline: anime.AnimeTimelineInstance | null;
 
   private _zoom = 0.25;
   private _exitOffset = 50;
@@ -27,7 +27,7 @@ export class CanvasAnimations {
 
   constructor(canvas: Canvas) {
     this._active = null;
-    this._preview = null;
+    this._timeline = null;
 
     this._extras = [];
     this.previewing = false;
@@ -95,7 +95,7 @@ export class CanvasAnimations {
     const angle = object.angle!;
     const clipPath = object.clipPath;
 
-    const state = { opacity, left, top, scaleX, scaleY, fill, stroke, angle, clipPath };
+    const state = { opacity, left, top, scaleX, scaleY, fill, stroke, angle, clipPath, height, width };
     const events = { selectable: object.selectable, evented: object.evented };
     const controls = { hasControls: object.hasControls, hasBorders: object.hasBorders };
     const locks = { lockMovementX: object.lockMovementX, lockMovementY: object.lockMovementY, lockScalingX: object.lockScalingX, lockScalingY: object.lockScalingY, lockRotation: object.lockRotation };
@@ -104,10 +104,12 @@ export class CanvasAnimations {
     object.anim!.state = Object.assign(state, events, locks, controls);
     object.set({ lockMovementX: true, lockMovementY: true, lockScalingX: true, lockScalingY: true, lockRotation: true, hasBorders: false, hasControls: false, selectable: false, evented: false });
 
-    return { left, top, height, width, opacity, fill, stroke, scaleX, scaleY, angle };
+    return { ...state };
   }
 
-  private _entry(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], state: AnimationState, preview?: boolean) {
+  private _entry(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], state: AnimationState, mask?: boolean, preview?: boolean) {
+    if (!entry) return;
+
     const { left, top, height, width, opacity, angle, scaleX, scaleY } = state;
     const offset = preview ? 0 : object.meta!.offset + this._entryOffset;
 
@@ -222,10 +224,17 @@ export class CanvasAnimations {
       }
 
       case "wipe-in": {
+        if (mask) return;
+
+        let clipPath = object.clipPath;
         const delta = FabricUtils.calculateAnimationPositionDelta(object);
-        const props = { angle, height, width, top: top - delta.x * delta.diagonal, left: left - delta.y * delta.diagonal, absolutePositioned: true };
-        const clipPath = createInstance(fabric.Rect, props);
-        object.set({ clipPath });
+        const props = { angle, height, width, top: top - delta.x * delta.width, left: left - delta.y * delta.width, absolutePositioned: true };
+
+        if (!clipPath) {
+          clipPath = createInstance(fabric.Rect, props);
+          object.set({ clipPath });
+        }
+
         timeline.add(
           {
             targets: clipPath,
@@ -240,9 +249,11 @@ export class CanvasAnimations {
       }
 
       case "baseline-in": {
+        if (mask) return;
+
         const delta = FabricUtils.calculateAnimationPositionDelta(object);
-        const clipPath = createInstance(fabric.Rect, { angle, height, width, top, left, absolutePositioned: true });
-        object.set({ clipPath });
+        if (!object.clipPath) object.clipPath = createInstance(fabric.Rect, { angle, height, width, top, left, absolutePositioned: true });
+
         timeline.add(
           {
             targets: object,
@@ -339,7 +350,9 @@ export class CanvasAnimations {
     }
   }
 
-  private _exit(object: fabric.Object, timeline: anime.AnimeTimelineInstance, exit: AnimationTimeline["in"], state: AnimationState, preview?: boolean) {
+  private _exit(object: fabric.Object, timeline: anime.AnimeTimelineInstance, exit: AnimationTimeline["in"], state: AnimationState, _mask?: boolean, preview?: boolean) {
+    if (!exit) return;
+
     const { left, top, height, width, scaleX, scaleY } = state;
     const offset = preview ? 0 : object.meta!.offset + object.meta!.duration - exit.duration - this._exitOffset;
 
@@ -429,10 +442,12 @@ export class CanvasAnimations {
     }
   }
 
-  private _scene(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"], state: AnimationState, preview?: boolean, mask?: boolean) {
-    const { scaleX, scaleY } = state;
+  private _scene(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"], state: AnimationState, mask?: boolean, preview?: boolean) {
+    if (!scene) return;
 
+    const { scaleX, scaleY } = state;
     const animation = scene.duration || 1000;
+
     const duration = preview ? 5000 : object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._entryOffset) - (exit.name === "none" ? 0 : exit.duration + this._exitOffset);
     const offset = preview ? 0 : object.meta!.offset + (entry.name === "none" ? 0 : entry.duration + this._entryOffset);
 
@@ -517,38 +532,42 @@ export class CanvasAnimations {
     }
   }
 
+  private _preview(element: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline, mask?: boolean) {
+    const state = this._save(element);
+    switch (type) {
+      case "in":
+        this._entry(element, this._timeline!, animation["in"], state, mask, true);
+        break;
+      case "out":
+        this._exit(element, this._timeline!, animation["out"], state, mask, true);
+        break;
+      case "scene":
+        this._scene(element, this._timeline!, animation["in"], animation["out"], animation["scene"], state, mask, true);
+        break;
+    }
+  }
+
   private _initialize(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"], mask?: boolean) {
     const state = this._save(object);
-    this._entry(object, timeline, entry, state);
-    this._exit(object, timeline, exit, state);
-    this._scene(object, timeline, entry, exit, scene, state, false, mask);
+    this._entry(object, timeline, entry, state, mask);
+    this._exit(object, timeline, exit, state, mask);
+    this._scene(object, timeline, entry, exit, scene, state, mask);
   }
 
   preview(object: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline) {
     if (animation[type].name === "none") return;
 
+    this.previewing = true;
     this._canvas.onToggleControls(false);
     const element = FabricUtils.isTextboxElement(object) ? this.text.animate(object, this.canvas) : object;
-    const state = this._save(element);
 
     this._active = object;
-    this.previewing = true;
-    this._preview = anime.timeline({ update: this._update.bind(this), complete: this._complete.bind(this, element), endDelay: 2000, loop: true });
+    this._timeline = anime.timeline({ update: this._update.bind(this), complete: this._complete.bind(this, element), endDelay: 2000, loop: true });
 
-    switch (type) {
-      case "in":
-        this._entry(element, this._preview, animation["in"], state, true);
-        break;
-      case "out":
-        this._exit(element, this._preview, animation["out"], state, true);
-        break;
-      case "scene":
-        this._scene(element, this._preview, animation["in"], animation["out"], animation["scene"], state, true);
-        if (element.clipPath) this._scene(element.clipPath, this._preview, animation["in"], animation["out"], animation["scene"], this._save(element.clipPath), true, true);
-        break;
-    }
+    if (element.clipPath) this._preview(element.clipPath, type, animation, true);
+    this._preview(element, type, animation);
 
-    this._preview.play();
+    this._timeline.play();
     element.on("deselected", this.dispose.bind(this, element));
   }
 
@@ -560,22 +579,22 @@ export class CanvasAnimations {
         const textbox = this.text.animate(object, canvas);
         this._initialize(textbox, timeline, textbox.anim!.in, textbox.anim!.out, textbox.anim!.scene);
       } else {
-        this._initialize(object, timeline, object.anim!.in, object.anim!.out, object.anim!.scene);
         if (object.clipPath) this._initialize(object.clipPath, timeline, object.anim!.in, object.anim!.out, object.anim!.scene, true);
+        this._initialize(object, timeline, object.anim!.in, object.anim!.out, object.anim!.scene);
       }
     }
   }
 
   dispose(object = this._active) {
-    this._preview?.pause();
-    anime.remove(this._preview);
+    this._timeline?.pause();
+    anime.remove(this._timeline);
 
     this.canvas.remove(...this._extras);
     this._canvas.onToggleControls(true);
 
     this._extras = [];
     this._active = null;
-    this._preview = null;
+    this._timeline = null;
 
     if (FabricUtils.isTextboxElement(object) || FabricUtils.isAnimatedTextElement(object)) {
       this.text.restore(object.name!);

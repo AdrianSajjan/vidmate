@@ -55,6 +55,7 @@ export class CanvasTimeline {
   private _toggleElement(object: fabric.Object, ms = this.seek) {
     const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
     object.visible = !FabricUtils.isTextboxElement(object) || !this.playing ? !hidden : false;
+    if (object.clipPath) object.clipPath.visible = object.visible;
     if (FabricUtils.isVideoElement(object)) {
       if (this.playing) {
         if (hidden) object.pause();
