@@ -41,13 +41,19 @@ export class Recorder {
     return this._editor.canvas.animations;
   }
 
+  private *_toggleElement(object: fabric.Object, ms: number) {
+    const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
+    object.visible = FabricUtils.isTextboxElement(object) ? false : !hidden;
+    if (object.clipPath) object.clipPath.visible = object.visible;
+    if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder && !hidden) {
+      yield object.seek((ms - object.meta!.offset) / 1000);
+    }
+  }
+
   private *_toggleElements(ms: number) {
     for (const object of this.instance._objects) {
-      if (object.excludeFromTimeline) continue;
-      const hidden = object.meta!.offset > ms || object.meta!.offset + object.meta!.duration < ms;
-      object.visible = FabricUtils.isTextboxElement(object) ? false : !hidden;
-      if (FabricUtils.isVideoElement(object) && !object.meta!.placeholder && !hidden) {
-        yield object.seek((ms - object.meta!.offset) / 1000);
+      if (!object.excludeFromTimeline || FabricUtils.isAnimatedTextElement(object)) {
+        this._toggleElement(object, ms);
       }
     }
     this.instance.requestRenderAll();

@@ -234,7 +234,7 @@ export class Canvas {
 
   onAddText(text: string, font: EditorFont, fontSize: number, fontWeight: number) {
     const dimensions = FabricUtils.measureTextDimensions(text, font.family, fontSize, fontWeight);
-    const options = { name: FabricUtils.elementID("text"), fontFamily: font.family, fontWeight, fontSize, width: Math.min(dimensions.width, this.workspace.width), textAlign: "center" };
+    const options = { name: FabricUtils.elementID("text"), objectCaching: false, fontFamily: font.family, fontWeight, fontSize, width: Math.min(dimensions.width, this.workspace.width), textAlign: "center" };
     const textbox = createInstance(fabric.Textbox, text, options);
 
     textbox.setPositionByOrigin(this.artboard!.getCenterPoint(), "center", "center");
@@ -269,7 +269,7 @@ export class Canvas {
 
           resolve(image);
         },
-        { ...options, name: FabricUtils.elementID("image"), crossOrigin: "anonymous", effects: {}, adjustments: {} },
+        { ...options, name: FabricUtils.elementID("image"), crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
       );
     });
   }
@@ -319,7 +319,7 @@ export class Canvas {
 
           resolve(image);
         },
-        { name: id, crossOrigin: "anonymous", effects: {}, adjustments: {} },
+        { name: id, crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
       );
     });
   }
@@ -348,7 +348,7 @@ export class Canvas {
 
           resolve(video);
         },
-        { ...options, name: FabricUtils.elementID("video"), crossOrigin: "anonymous", effects: {}, adjustments: {} },
+        { ...options, name: FabricUtils.elementID("video"), objectCaching: false, crossOrigin: "anonymous", effects: {}, adjustments: {} },
       );
     });
   }
@@ -399,13 +399,13 @@ export class Canvas {
 
           resolve(video);
         },
-        { name: id, crossOrigin: "anonymous", effects: {}, adjustments: {} },
+        { name: id, crossOrigin: "anonymous", objectCaching: false, effects: {}, adjustments: {} },
       );
     });
   }
 
   onAddBasicShape(klass: string, params: any) {
-    const shape: fabric.Object = createInstance((fabric as any)[klass], { name: FabricUtils.elementID(klass), ...params });
+    const shape: fabric.Object = createInstance((fabric as any)[klass], { name: FabricUtils.elementID(klass), ...params, objectCaching: false });
     shape.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
 
     FabricUtils.initializeMetaProperties(shape);
@@ -419,7 +419,7 @@ export class Canvas {
   }
 
   onAddAbstractShape(path: string, name = "shape") {
-    const options = { name: FabricUtils.elementID(name), fill: "#000000" };
+    const options = { name: FabricUtils.elementID(name), fill: "#000000", objectCaching: false };
     const shape = createInstance(fabric.Path, path, { ...options });
 
     shape.scaleToHeight(500);
@@ -436,7 +436,7 @@ export class Canvas {
   }
 
   onAddLine(points: number[], name = "line") {
-    const options = { name: FabricUtils.elementID(name), strokeWidth: 4, stroke: "#000000", hasBorders: false };
+    const options = { name: FabricUtils.elementID(name), strokeWidth: 4, stroke: "#000000", hasBorders: false, objectCaching: false };
     const line = createInstance(fabric.Line, points, options);
 
     line.setPositionByOrigin(this.artboard.getCenterPoint(), "center", "center");
@@ -465,6 +465,7 @@ export class Canvas {
   onChangeObjectTimelineProperty(object: fabric.Object, property: string, value: number) {
     if (!object || !object.meta) return;
     object.meta[property] = value;
+    this.timeline.update(object);
     this.instance.fire("object:modified", { target: object });
     this.instance.requestRenderAll();
   }

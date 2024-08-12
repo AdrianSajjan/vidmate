@@ -4711,6 +4711,12 @@ export class Text extends Object {
   _measureChar(_char: string, charStyle: any, previousChar: string, prevCharStyle: any): { width: number; kernedWidth: number };
 
   /**
+   * @param {number} lineIndex
+   * @description Measure every grapheme of a line, populating __charBounds
+   */
+  _measureLine(lineIndex: number): Object;
+
+  /**
    * @param {String} method
    * @param {CanvasRenderingContext2D} ctx Context to render on
    * @param {String} line Content of the line
@@ -4757,6 +4763,12 @@ export class Text extends Object {
    * @returns {Object} Lines and text in the text
    */
   _splitText(): { _unwrappedLines: string[]; lines: string[]; graphemeText: string[]; graphemeLines: string[] };
+
+  /**
+   * Divides text into lines of text and lines of graphemes.
+   * @returns {Object} Lines and text in the text
+   */
+  _splitTextIntoLines(text): string[];
 
   /**
    * @param {Object} prevStyle

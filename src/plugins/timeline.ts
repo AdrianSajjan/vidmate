@@ -117,6 +117,14 @@ export class CanvasTimeline {
     this._toggleElements();
   }
 
+  update(object?: fabric.Object) {
+    if (object) {
+      this._toggleElement(object, this.seek);
+    } else {
+      this._toggleElements();
+    }
+  }
+
   play() {
     this._initializeTimeline();
     this.canvas.fire("timeline:start");

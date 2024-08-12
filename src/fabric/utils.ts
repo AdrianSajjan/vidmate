@@ -185,14 +185,15 @@ export abstract class FabricUtils {
 
   static applyTransformationsAfterLoad(canvas: fabric.Canvas | fabric.StaticCanvas) {
     for (const object of canvas._objects) {
+      object.set({ objectCaching: false });
       if (object.clipPath) {
         const existing = canvas.getItemByName(object.clipPath.name);
         if (existing) canvas.remove(existing);
-
-        canvas.add(object.clipPath);
-        FabricUtils.bindObjectTransformToParent(object, [object.clipPath]);
-        const handler = FabricUtils.updateObjectTransformToParent.bind(this, object, [{ object: object.clipPath! }]);
-
+        const clipPath = object.clipPath;
+        clipPath.set({ objectCaching: false });
+        canvas.add(clipPath);
+        FabricUtils.bindObjectTransformToParent(object, [clipPath]);
+        const handler = FabricUtils.updateObjectTransformToParent.bind(this, object, [{ object: clipPath }]);
         object.on("moving", handler);
         object.on("scaling", handler);
         object.on("rotating", handler);

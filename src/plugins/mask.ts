@@ -79,7 +79,7 @@ export class CanvasClipMask {
     const height = image.getScaledHeight();
     const width = image.getScaledWidth();
 
-    const props = { absolutePositioned: true, opacity: 0.001, selectable: false, evented: false, excludeFromTimeline: true, excludeFromAlignment: true };
+    const props = { absolutePositioned: true, opacity: 0.001, selectable: false, evented: false, objectCaching: false, excludeFromTimeline: true, excludeFromAlignment: true };
     const clip: fabric.Object = createInstance(_fabric[klass], { name, ...params, ...props });
 
     height > width ? clip.scaleToWidth(width) : clip.scaleToHeight(height);
@@ -117,7 +117,7 @@ export class CanvasClipMask {
     const height = image.getScaledHeight();
     const width = image.getScaledWidth();
 
-    const props = { absolutePositioned: true, opacity: 0.001, selectable: false, evented: false, excludeFromTimeline: true, excludeFromAlignment: true };
+    const props = { absolutePositioned: true, opacity: 0.001, selectable: false, evented: false, objectCaching: false, excludeFromTimeline: true, excludeFromAlignment: true };
     const clip: fabric.Object = createInstance(fabric.Path, path, { name: id, ...props });
 
     height > width ? clip.scaleToWidth(width) : clip.scaleToHeight(height);

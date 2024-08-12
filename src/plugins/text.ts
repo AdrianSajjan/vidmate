@@ -39,6 +39,8 @@ export class CanvasText {
     const lines: fabric.Group[] = [];
     const exclude = { excludeFromTimeline: true, excludeFromExport: true, excludeFromAlignment: true };
 
+    if (!textbox.__charBounds?.length) textbox._textLines.map((_, index) => textbox._measureLine(index));
+
     for (let outer = 0; outer < textbox.__charBounds!.length; outer++) {
       let word: fabric.Text[] = [];
       let line: fabric.Group[] = [];
@@ -53,22 +55,22 @@ export class CanvasText {
         const dimensions = { top: sum(textbox.__lineHeights.slice(0, outer)), left: bounds.left * textbox.scaleX!, width: bounds.width * textbox.scaleX!, scaleX: 1, scaleY: 1 };
 
         if (character !== " ") {
-          const letter = createInstance(fabric.Text, character, Object.assign({}, exclude, fonts, dimensions, decorations));
+          const letter = createInstance(fabric.Text, character, Object.assign({ objectCaching: false }, exclude, fonts, dimensions, decorations));
           word.push(letter);
         }
 
         if (character === " " || inner === char.length - 1) {
-          line.push(createInstance(fabric.Group, word, Object.assign({}, exclude)));
+          line.push(createInstance(fabric.Group, word, Object.assign({ objectCaching: false }, exclude)));
           word = [];
         }
       }
 
-      const group = createInstance(fabric.Group, line, Object.assign({}, exclude));
+      const group = createInstance(fabric.Group, line, Object.assign({ objectCaching: false }, exclude));
       lines.push(group);
     }
 
-    const rect = createInstance(fabric.Rect, Object.assign({ height: textbox.height! * textbox.scaleY!, width: textbox.width! * textbox.scaleX!, visible: false }, exclude));
-    const group = createInstance(fabric.Group, [...lines, rect], Object.assign({ type: "animated-text", name: "animated_" + textbox.name, meta: textbox.meta, anim: textbox.anim }, exclude));
+    const rect = createInstance(fabric.Rect, Object.assign({ height: textbox.height! * textbox.scaleY!, width: textbox.width! * textbox.scaleX!, visible: false, objectCaching: false }, exclude));
+    const group = createInstance(fabric.Group, [...lines, rect], Object.assign({ type: "animated-text", name: "animated_" + textbox.name, meta: textbox.meta, anim: textbox.anim, objectCaching: false }, exclude));
 
     for (const word of lines) {
       switch (textbox.textAlign) {
@@ -85,12 +87,13 @@ export class CanvasText {
     }
 
     group.setPositionByOrigin(textbox.getCenterPoint(), "center", "center");
-    group.rotate(textbox.angle!);
+    group.set({ visible: textbox.visible }).rotate(textbox.angle!);
     textbox.set({ visible: false, hasBorders: false, hasControls: false });
-    canvas.add(group);
 
+    canvas.add(group);
     this.animated.set(textbox.name!, { textbox, group });
-    canvas.requestRenderAll();
+    canvas.renderAll();
+
     return group;
   }
 
