@@ -2,10 +2,11 @@ import { clamp } from "lodash";
 import { motion } from "framer-motion";
 import { observer } from "mobx-react";
 import { useMemo } from "react";
-import { CopyPlusIcon, GroupIcon, PencilIcon, RepeatIcon, SparklesIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, CopyPlusIcon, GroupIcon, PencilIcon, RepeatIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useEditorContext } from "@/context/editor";
+import { FabricUtils } from "@/fabric/utils";
 
 const MENU_OFFSET_Y = 60;
 
@@ -66,12 +67,19 @@ function _EditorElementControlsBase() {
           </Button>
         </div>
       ) : null}
-      {selected.type === "textbox" ? (
+      {FabricUtils.isTextboxElement(selected) ? (
         <div className="flex items-center p-1">
-          <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2">
-            <PencilIcon size={14} />
-            <span>Edit</span>
-          </Button>
+          {selected.isEditing ? (
+            <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.canvas.onExitActiveTextboxEdit()}>
+              <CheckIcon size={14} />
+              <span>Finish</span>
+            </Button>
+          ) : (
+            <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.canvas.onEnterActiveTextboxEdit()}>
+              <PencilIcon size={14} />
+              <span>Edit</span>
+            </Button>
+          )}
         </div>
       ) : selected.type === "image" || selected.type === "video" ? (
         <div className="flex items-center p-1" onClick={handleReplaceObject}>

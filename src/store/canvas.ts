@@ -572,6 +572,22 @@ export class Canvas {
     this.onChangeTextboxFontFamily(selected, font, family);
   }
 
+  onEnterActiveTextboxEdit() {
+    const selected = this.instance.getActiveObject() as fabric.Textbox | null;
+    if (!selected || selected.type !== "textbox") return;
+    selected.enterEditing();
+    this.instance.fire("object:modified", { target: selected });
+    this.instance.requestRenderAll();
+  }
+
+  onExitActiveTextboxEdit() {
+    const selected = this.instance.getActiveObject() as fabric.Textbox | null;
+    if (!selected || selected.type !== "textbox") return;
+    selected.exitEditing();
+    this.instance.fire("object:modified", { target: selected });
+    this.instance.requestRenderAll();
+  }
+
   onChangeImageProperty(image: fabric.Image, property: keyof fabric.Image, value: any) {
     if (!(image.type === "image" || image.type === "video")) return;
     image.set(property, value);

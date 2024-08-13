@@ -17,6 +17,7 @@ export const propertiesToInclude = [
   "evented",
   "hasControls",
   "textTransform",
+  "isEditing",
   "objectCaching",
   "excludeFromTimeline",
   "excludeFromAlignment",
