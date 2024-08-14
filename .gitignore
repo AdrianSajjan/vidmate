@@ -29,4 +29,6 @@ lerna-debug.log*
 
 public/models
 api/uploads
-cli/**/*.json
+cli/json
+cli/assets
+cli/database
