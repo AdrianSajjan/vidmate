@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 async function shapeConverter() {
   try {
     const buffer = await fs.readFile(path.resolve(__dirname, process.argv[2]));
-    const json = JSON.parse(buffer);
+    const json = JSON.parse(String(buffer));
     const result = json.map((data) => ({
       id: data._id["$oid"],
       name: data.desc.replace(/ /g, "-"),
