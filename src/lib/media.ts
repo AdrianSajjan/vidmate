@@ -128,14 +128,11 @@ export async function drawWavefromFromAudioBuffer(buffer: AudioBuffer, height = 
 export function dataURLToUInt8Array(dataURL: string) {
   const base64String = dataURL.split(",")[1];
   const binaryString = atob(base64String);
-
   const binaryLength = binaryString.length;
   const bytes = new Uint8Array(binaryLength);
-
   for (let i = 0; i < binaryLength; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
-
   return bytes;
 }
 
@@ -162,7 +159,7 @@ export function recalculateImageSize(image: HTMLImageElement | HTMLVideoElement,
   return { width, height };
 }
 
-export function compressImageFile(file: File, maxWidth = 1080, maxHeight = 1080) {
+export function compressImageFile(file: File, maxWidth = 2000, maxHeight = 2000) {
   return createPromise<Blob>((resolve, reject) => {
     const source = URL.createObjectURL(file);
     const image = createInstance(Image);
@@ -197,7 +194,7 @@ export function compressImageFile(file: File, maxWidth = 1080, maxHeight = 1080)
 
 export async function fetchVideoDimensions(file: File) {
   return createInstance(Promise<{ width: number; height: number }>, (resolve, reject) => {
-    const video = createInstance(HTMLVideoElement);
+    const video = document.createElement("video");
     const source = URL.createObjectURL(file);
     video.crossOrigin = "anonymous";
     video.preload = "auto";
@@ -214,14 +211,14 @@ export async function fetchVideoDimensions(file: File) {
   });
 }
 
-export async function compressVideoFile(ffmpeg: FFmpeg, file: File, width = 1920, height = 1080) {
+export async function compressVideoFile(ffmpeg: FFmpeg, file: File, width = 2000, height = 2000) {
   const dimensions = await fetchVideoDimensions(file);
   if (dimensions.height <= height && dimensions.width <= width) return file;
   const input = await fetchFile(file);
   await ffmpeg.writeFile(file.name, input);
   const scale = height ? `scale=-1:${height}` : `scale=${width}:-1`;
   const output = nanoid() + ".mp4";
-  await ffmpeg.exec(["-i", file.name, "-vf", scale, output]);
+  await ffmpeg.exec(["-i", file.name, "-vf", scale, "-preset", "ultrafast", output]);
   const data = (await ffmpeg.readFile(output)) as Uint8Array;
   return createInstance(Blob, [data.buffer], { type: "video/mp4" });
 }

@@ -1,13 +1,19 @@
-import { compressImageFile } from "@/lib/media";
+import { editor } from "@/context/editor";
+import { compressImageFile, compressVideoFile } from "@/lib/media";
 import { createInstance, createPromise, wait } from "@/lib/utils";
 
-export async function uploadAssetToS3(file: File, type?: "image" | "video" | "audio") {
-  await wait(1000);
+export async function uploadAssetToS3(file: File, type?: "image" | "video" | "audio" | "thumbnail") {
   switch (type) {
-    case "image":
+    case "image": {
       const compressed = await compressImageFile(file);
       return URL.createObjectURL(compressed);
+    }
+    case "video": {
+      const compressed = await compressVideoFile(editor.ffmpeg, file);
+      return URL.createObjectURL(compressed);
+    }
     default:
+      await wait(1000);
       return URL.createObjectURL(file);
   }
 }

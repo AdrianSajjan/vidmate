@@ -21,7 +21,7 @@ function _VideoSidebar() {
 
   const upload = useMutation({
     mutationFn: async (file: File) => {
-      const source = await uploadAssetToS3(file);
+      const source = await uploadAssetToS3(file, "video");
       const thumbnail = await extractThumbnailFromVideoURL(source);
       return { source, thumbnail };
     },
