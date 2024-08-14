@@ -533,13 +533,13 @@ export class Canvas {
     if (selected) this.onChangeObjectAnimationDuration(selected, type, duration);
   }
 
-  onChangeTextAnimationType(object: fabric.Object, type: "in" | "out" | "scene", animate: "letter" | "word") {
+  onChangeTextAnimationType(object: fabric.Object, type: "in" | "out" | "scene", animate: fabric.TextAnimateOptions) {
     if (!object) return;
     object.anim![type].text = animate;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangeActiveTextAnimationType(type: "in" | "out" | "scene", animate: "letter" | "word") {
+  onChangeActiveTextAnimationType(type: "in" | "out" | "scene", animate: fabric.TextAnimateOptions) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeTextAnimationType(selected, type, animate);
   }

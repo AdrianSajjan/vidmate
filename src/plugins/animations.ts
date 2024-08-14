@@ -56,28 +56,32 @@ export class CanvasAnimations {
     setTimeout(() => this.dispose(object), 500);
   }
 
-  private _lettersOrWords(lines: fabric.Group, type: "letter" | "word") {
-    return lines._objects
-      .map((line) => {
-        if (FabricUtils.isGroupElement(line)) {
-          if (type === "word") {
-            return line._objects;
+  private _ungroupAnimatedText(lines: fabric.Group, type: fabric.TextAnimateOptions) {
+    if (type === "line") {
+      return lines._objects;
+    } else {
+      return lines._objects
+        .map((line) => {
+          if (FabricUtils.isGroupElement(line)) {
+            if (type === "word") {
+              return line._objects;
+            } else {
+              return line._objects
+                .map((word) => {
+                  if (FabricUtils.isGroupElement(word)) {
+                    return word._objects;
+                  } else {
+                    return [];
+                  }
+                })
+                .flat();
+            }
           } else {
-            return line._objects
-              .map((word) => {
-                if (FabricUtils.isGroupElement(word)) {
-                  return word._objects;
-                } else {
-                  return [];
-                }
-              })
-              .flat();
+            return [];
           }
-        } else {
-          return [];
-        }
-      })
-      .flat();
+        })
+        .flat();
+    }
   }
 
   private _save(object: fabric.Object) {
@@ -114,7 +118,7 @@ export class CanvasAnimations {
     const offset = preview ? 0 : object.meta!.offset + this._entryOffset;
 
     switch (entry.name) {
-      case "fade-in": {
+      case "fade": {
         timeline.add(
           {
             targets: object,
@@ -127,7 +131,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "slide-in-left": {
+      case "slide-left": {
         timeline.add(
           {
             targets: object,
@@ -141,7 +145,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "slide-in-right": {
+      case "slide-right": {
         timeline.add(
           {
             targets: object,
@@ -155,7 +159,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "pan-in-left": {
+      case "pan-left": {
         timeline.add(
           {
             targets: object,
@@ -168,7 +172,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "pan-in-right": {
+      case "pan-right": {
         timeline.add(
           {
             targets: object,
@@ -181,7 +185,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "rise-in-up": {
+      case "rise-up": {
         timeline.add(
           {
             targets: object,
@@ -195,7 +199,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "sink-in-down": {
+      case "sink-down": {
         timeline.add(
           {
             targets: object,
@@ -209,7 +213,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "pop-in": {
+      case "pop": {
         timeline.add(
           {
             targets: object,
@@ -223,7 +227,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "wipe-in": {
+      case "wipe": {
         if (mask) return;
 
         let clipPath = object.clipPath;
@@ -248,7 +252,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "baseline-in": {
+      case "baseline": {
         if (mask) return;
 
         const delta = FabricUtils.calculateAnimationPositionDelta(object);
@@ -269,37 +273,37 @@ export class CanvasAnimations {
     }
 
     if (FabricUtils.isAnimatedTextElement(object)) {
-      const lettersOrWords = this._lettersOrWords(object, entry.text || "letter");
+      const text = this._ungroupAnimatedText(object, entry.text || "letter");
 
       switch (entry.name) {
         case "typewriter": {
-          lettersOrWords.map((letterOrWord, index) => {
+          text.map((element, index) => {
             const state = { opacity: 0 };
-            letterOrWord.set(Object.assign({}, state));
+            element.set(Object.assign({}, state));
             timeline.add(
               {
                 targets: state,
                 opacity: 1,
-                duration: entry.duration / lettersOrWords.length,
+                duration: entry.duration / text.length,
                 easing: modifyAnimationEasing(entry.easing, entry.duration),
-                update: () => letterOrWord.set({ opacity: state.opacity }),
+                update: () => element.set({ opacity: state.opacity }),
               },
-              offset + (entry.duration / lettersOrWords.length) * index,
+              offset + (entry.duration / text.length) * index,
             );
           });
           break;
         }
 
         case "burst": {
-          lettersOrWords.map((letterOrWord, index) => {
-            const target = { scaleY: letterOrWord.scaleY, scaleX: letterOrWord.scaleX, top: letterOrWord.top!, left: letterOrWord.left! };
+          text.map((element, index) => {
+            const target = { scaleY: element.scaleY, scaleX: element.scaleX, top: element.top!, left: element.left! };
             const state = {
-              scaleY: 1 / letterOrWord.height!,
-              scaleX: 1 / letterOrWord.width!,
-              top: letterOrWord.top! + (letterOrWord.height! * letterOrWord.scaleY!) / 2,
-              left: letterOrWord.left! + (letterOrWord.width! * letterOrWord.scaleX!) / 2,
+              scaleY: 1 / element.height!,
+              scaleX: 1 / element.width!,
+              top: element.top! + (element.height! * element.scaleY!) / 2,
+              left: element.left! + (element.width! * element.scaleX!) / 2,
             };
-            letterOrWord.set(Object.assign({}, state));
+            element.set(Object.assign({}, state));
             timeline.add(
               {
                 targets: state,
@@ -307,22 +311,22 @@ export class CanvasAnimations {
                 left: target.left,
                 scaleX: target.scaleX,
                 scaleY: target.scaleY,
-                duration: entry.duration / lettersOrWords.length,
+                duration: entry.duration / text.length,
                 easing: modifyAnimationEasing(entry.easing, entry.duration),
-                update: () => letterOrWord.set({ scaleX: state.scaleX, scaleY: state.scaleY, top: state.top, left: state.left }),
+                update: () => element.set({ scaleX: state.scaleX, scaleY: state.scaleY, top: state.top, left: state.left }),
               },
-              offset + (entry.duration / lettersOrWords.length) * index,
+              offset + (entry.duration / text.length) * index,
             );
           });
           break;
         }
 
         case "clarify": {
-          lettersOrWords.map((letterOrWord) => {
+          text.map((element) => {
             const target = { opacity: 1, blur: 0 };
             const state = { opacity: 0, blur: 10 };
             const seed = random(0, Math.min(500, entry.duration - 250));
-            letterOrWord.set(Object.assign({}, state));
+            element.set(Object.assign({}, state));
             timeline.add(
               {
                 targets: state,
@@ -330,7 +334,7 @@ export class CanvasAnimations {
                 blur: target.blur,
                 duration: entry.duration - seed,
                 easing: modifyAnimationEasing(entry.easing, entry.duration),
-                update: () => letterOrWord.set({ opacity: state.opacity, blur: state.blur }),
+                update: () => element.set({ opacity: state.opacity, blur: state.blur }),
               },
               offset + seed,
             );
@@ -346,6 +350,54 @@ export class CanvasAnimations {
           );
           break;
         }
+
+        case "bounce": {
+          text.map((element, index) => {
+            const target = { top: element.top!, opacity: 1 };
+            const state = { top: element.top! - element.height! / 2, opacity: 0 };
+            element.set(Object.assign({}, state));
+            timeline.add(
+              {
+                targets: state,
+                top: target.top,
+                opacity: target.opacity,
+                duration: entry.duration,
+                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                update: () => element.set({ top: state.top, opacity: state.opacity }),
+              },
+              offset + (entry.duration / text.length) * index,
+            );
+          });
+          break;
+        }
+
+        case "ascend": {
+          const delta = FabricUtils.calculateAnimationPositionDelta(object);
+          object._objects.map((line) => {
+            if (!line.clipPath) {
+              const top = object.top! + line.top! + object.height! / 2;
+              const left = object.left! + line.left! + object.width! / 2;
+              line.clipPath = createInstance(fabric.Rect, { angle, top, left, height: line.height, width: line.width, absolutePositioned: true });
+            }
+          });
+          text.map((element, index) => {
+            const target = { top: element.top!, left: element.left! };
+            const state = { top: target.top + delta.y * element.height! * element.scaleY!, left: target.left - delta.x * element.height! * element.scaleX! };
+            element.set(Object.assign({}, state));
+            timeline.add(
+              {
+                targets: state,
+                top: target.top,
+                left: target.left,
+                duration: entry.duration / text.length,
+                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                update: () => element.set({ top: state.top, left: state.left }),
+              },
+              offset + (entry.duration / text.length) * index,
+            );
+          });
+          break;
+        }
       }
     }
   }
@@ -357,7 +409,7 @@ export class CanvasAnimations {
     const offset = preview ? 0 : object.meta!.offset + object.meta!.duration - exit.duration - this._exitOffset;
 
     switch (exit.name) {
-      case "fade-out": {
+      case "fade": {
         timeline.add(
           {
             targets: object,
@@ -370,7 +422,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "slide-out-left": {
+      case "slide-left": {
         timeline.add(
           {
             targets: object,
@@ -384,7 +436,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "slide-out-right": {
+      case "slide-right": {
         timeline.add(
           {
             targets: object,
@@ -398,7 +450,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "rise-out-up": {
+      case "rise-up": {
         timeline.add(
           {
             targets: object,
@@ -412,7 +464,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "sink-out-down": {
+      case "sink-down": {
         timeline.add(
           {
             targets: object,
@@ -426,7 +478,7 @@ export class CanvasAnimations {
         break;
       }
 
-      case "pop-out": {
+      case "pop": {
         timeline.add(
           {
             targets: object,

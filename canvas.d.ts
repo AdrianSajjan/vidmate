@@ -2801,25 +2801,25 @@ export class Line {
 export type EntryAnimation = "none" | (string & {});
 export type ExitAnimation = "none" | (string & {});
 export type SceneAnimations = "none" | (string & {});
-
+export type TextAnimateOptions = "letter" | "word" | "line";
 export interface AnimationTimeline {
   in: {
     name: EntryAnimation;
     duration: number;
     easing?: any;
-    text?: "letter" | "word";
+    text?: TextAnimateOptions;
   };
   scene: {
     name: SceneAnimations;
     duration?: number;
     easing?: any;
-    text?: "letter" | "word";
+    text?: TextAnimateOptions;
   };
   out: {
     name: ExitAnimation;
     duration: number;
     easing?: any;
-    text?: "letter" | "word";
+    text?: TextAnimateOptions;
   };
   state?: Record<string, any>;
   preview?: Record<string, any>;

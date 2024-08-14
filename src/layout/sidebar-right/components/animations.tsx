@@ -13,9 +13,10 @@ import { usePreviewAnimation } from "@/hooks/use-preview-animation";
 import { useAnimationControls } from "@/layout/sidebar-right/hooks/use-animation-controls";
 import { useAnimationList } from "@/layout/sidebar-right/hooks/use-animations";
 
-import { EditorAnimation, easings, entry, exit, scene } from "@/constants/animations";
 import { cn } from "@/lib/utils";
+import { EditorAnimation, easings, entry, exit, scene } from "@/constants/animations";
 import { FabricUtils } from "@/fabric/utils";
+import { upperFirst } from "lodash";
 
 function _AnimationSidebar() {
   const editor = useEditorContext();
@@ -111,7 +112,7 @@ interface AnimationControlsProps {
 function _AnimationControls({ selected, type }: AnimationControlsProps) {
   const controls = useAnimationControls(selected, type);
 
-  const animate = selected.anim?.[type].text || "letter";
+  const text = selected.anim?.[type].text || "letter";
   const easing = selected.anim?.[type].easing || "linear";
 
   const duration = (selected.anim?.[type].duration || 0) / 1000;
@@ -140,17 +141,19 @@ function _AnimationControls({ selected, type }: AnimationControlsProps) {
       </div>
       {FabricUtils.isTextboxElement(selected) ? (
         <div className="flex items-center justify-between gap-6 mt-3">
-          <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Animate</Label>
-          <Tabs value={animate} onValueChange={controls.changeTextAnimate} className="w-40">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="letter" disabled={disabled} className="text-xs h-full">
-                Letter
-              </TabsTrigger>
-              <TabsTrigger value="word" disabled={disabled} className="text-xs h-full">
-                Word
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Text Animate</Label>
+          <Select value={text} onValueChange={controls.changeTextAnimate} disabled={disabled}>
+            <SelectTrigger className="h-8 text-xs w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["letter", "word", "line"].map((type) => (
+                <SelectItem key={type} className="text-xs" value={type}>
+                  {upperFirst(type)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       ) : null}
     </div>

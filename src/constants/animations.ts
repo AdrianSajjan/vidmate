@@ -15,7 +15,7 @@ export interface EditorAnimation {
   value: EntryAnimation | ExitAnimation | SceneAnimations;
 }
 
-export interface EditorEasings {
+export interface EditorEasing {
   label: string;
   value: string;
 }
@@ -27,61 +27,61 @@ export const entry: EditorAnimation[] = [
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
   },
   {
-    value: "fade-in",
+    value: "fade",
     label: "Fade",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "slide-in-left",
+    value: "slide-left",
     label: "Slide Left",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "slide-in-right",
+    value: "slide-right",
     label: "Slide Right",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "pan-in-left",
+    value: "pan-left",
     label: "Pan Left",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "pan-in-right",
+    value: "pan-right",
     label: "Pan Right",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "rise-in-up",
+    value: "rise-up",
     label: "Rise Up",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "sink-in-down",
+    value: "sink-down",
     label: "Sink Down",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "wipe-in",
+    value: "wipe",
     label: "Wipe",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "baseline-in",
+    value: "baseline",
     label: "Baseline",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "pop-in",
+    value: "pop",
     label: "Pop",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 300,
@@ -124,6 +124,29 @@ export const entry: EditorAnimation[] = [
       duration: true,
     },
   },
+  {
+    type: "textbox",
+    value: "bounce",
+    label: "Bounce",
+    easing: "spring",
+    preview: "https://static.canva.com/web/images/9d13f1d768bf12af9aa1bb2786985220.png",
+    duration: 1500,
+    fixed: {
+      easing: true,
+      duration: true,
+    },
+  },
+  {
+    type: "textbox",
+    value: "ascend",
+    label: "Ascend",
+    easing: "linear",
+    preview: "https://static.canva.com/web/images/9d13f1d768bf12af9aa1bb2786985220.png",
+    duration: 1500,
+    fixed: {
+      duration: true,
+    },
+  },
 ];
 
 export const exit: EditorAnimation[] = [
@@ -133,49 +156,37 @@ export const exit: EditorAnimation[] = [
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
   },
   {
-    value: "fade-out",
+    value: "fade",
     label: "Fade",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "slide-out-left",
+    value: "slide-left",
     label: "Slide Left",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "slide-out-right",
+    value: "slide-right",
     label: "Slide Right",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "pan-out-left",
-    label: "Pan Left",
-    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
-    duration: 250,
-  },
-  {
-    value: "pan-out-right",
-    label: "Pan Right",
-    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
-    duration: 250,
-  },
-  {
-    value: "rise-out-up",
+    value: "rise-up",
     label: "Rise Up",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "sink-out-down",
+    value: "sink-down",
     label: "Sink Down",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
   },
   {
-    value: "pop-out",
+    value: "pop",
     label: "Pop",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
@@ -222,7 +233,7 @@ export const scene: EditorAnimation[] = [
   },
 ];
 
-export const easings: EditorEasings[] = [
+export const easings: EditorEasing[] = [
   {
     label: "Linear",
     value: "linear",
