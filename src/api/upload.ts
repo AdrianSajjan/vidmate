@@ -1,8 +1,15 @@
+import { compressImageFile } from "@/lib/media";
 import { createInstance, createPromise, wait } from "@/lib/utils";
 
-export async function uploadAssetToS3(file: File, _?: string) {
+export async function uploadAssetToS3(file: File, type?: "image" | "video" | "audio") {
   await wait(1000);
-  return URL.createObjectURL(file);
+  switch (type) {
+    case "image":
+      const compressed = await compressImageFile(file);
+      return URL.createObjectURL(compressed);
+    default:
+      return URL.createObjectURL(file);
+  }
 }
 
 export async function readAssetAsDataURL(file: File) {

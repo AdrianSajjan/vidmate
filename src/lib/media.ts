@@ -43,11 +43,15 @@ export async function extractThumbnailFromVideoURL(url: string) {
     video.addEventListener("loadeddata", () => {
       video.height = video.videoHeight;
       video.width = video.videoWidth;
+
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d")!;
-      canvas.height = video.videoHeight;
-      canvas.width = video.videoWidth;
-      context.drawImage(video, 0, 0);
+
+      const compressed = recalculateImageSize(video, 256, 256);
+      canvas.width = compressed.width;
+      canvas.height = compressed.height;
+
+      context.drawImage(video, 0, 0, compressed.width, compressed.height);
       canvas.toBlob((blob) => {
         if (!blob) return reject();
         const url = URL.createObjectURL(blob);
@@ -61,6 +65,29 @@ export async function extractThumbnailFromVideoURL(url: string) {
 
     video.src = url;
     video.load();
+  });
+}
+
+export function extractThumbnailFromImageURL(url: string) {
+  return createInstance(Promise<string>, (resolve, reject) => {
+    const image = createInstance(Image);
+    image.crossOrigin = "anonymous";
+    image.addEventListener("load", () => {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d")!;
+
+      const { width, height } = recalculateImageSize(image, 256, 256);
+      canvas.width = width;
+      canvas.height = height;
+
+      context.drawImage(image, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (!blob) return reject();
+        const url = URL.createObjectURL(blob);
+        resolve(url);
+      });
+    });
+    image.src = url;
   });
 }
 
@@ -178,4 +205,56 @@ export function convertBufferToWaveBlob(_buffer: AudioBuffer, _length: number) {
   }
 
   return createInstance(Blob, [buffer], { type: "audio/wav" });
+}
+
+export function recalculateImageSize(image: HTMLImageElement | HTMLVideoElement, maxWidth: number, maxHeight: number) {
+  let width = image.width;
+  let height = image.height;
+  if (width > height) {
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width);
+      width = maxWidth;
+    }
+  } else {
+    if (height > maxHeight) {
+      width = Math.round((width * maxHeight) / height);
+      height = maxHeight;
+    }
+  }
+  return { width, height };
+}
+
+export function compressImageFile(file: File, maxWidth = 1080, maxHeight = 1080) {
+  return createPromise<Blob>((resolve, reject) => {
+    const reader = createInstance(FileReader);
+    reader.addEventListener("load", () => {
+      const image = createInstance(Image);
+      image.addEventListener("load", () => {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d")!;
+
+        const { width, height } = recalculateImageSize(image, maxWidth, maxHeight);
+        canvas.width = width;
+        canvas.height = height;
+
+        context.drawImage(image, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject();
+            resolve(blob);
+          },
+          "image/png",
+          1,
+        );
+      });
+      image.src = reader.result as string;
+    });
+    reader.readAsDataURL(file);
+  });
+}
+
+export function readableFileBytes(bytes: number) {
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const sizes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+  return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
 }

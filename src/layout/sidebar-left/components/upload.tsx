@@ -15,7 +15,7 @@ import { mock, useMockStore } from "@/constants/mock";
 import { EditorAudio } from "@/types/editor";
 import { formatMediaDuration } from "@/lib/time";
 import { uploadAssetToS3 } from "@/api/upload";
-import { extractAudioWaveformFromAudioFile, extractThumbnailFromVideoURL } from "@/lib/media";
+import { extractAudioWaveformFromAudioFile, extractThumbnailFromImageURL, extractThumbnailFromVideoURL } from "@/lib/media";
 
 interface UploadResponse {
   source: string;
@@ -30,10 +30,10 @@ function _UploadSidebar() {
 
   const upload = useMutation({
     mutationFn: async ({ file, type }: { type: "image" | "video" | "audio"; file: File }): Promise<UploadResponse> => {
-      const source = await uploadAssetToS3(file);
+      const source = await uploadAssetToS3(file, type);
       switch (type) {
         case "image": {
-          const thumbnail = source; // await createThumbnailFromImage(source)
+          const thumbnail = await extractThumbnailFromImageURL(source);
           return { source, thumbnail };
         }
         case "video": {
