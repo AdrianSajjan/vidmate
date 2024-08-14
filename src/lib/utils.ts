@@ -56,3 +56,13 @@ export function createBase64Download(data: any, type: string, name: string) {
   anchor.href = href;
   anchor.click();
 }
+
+export function createFormData(data: Record<string, any>, names?: Record<string, any>) {
+  const formData = createInstance(FormData);
+  for (const key in data) {
+    const name = names?.[key];
+    if (name) formData.append(key, data[key], name);
+    else formData.append(key, data[key]);
+  }
+  return formData;
+}

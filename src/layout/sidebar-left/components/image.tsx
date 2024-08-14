@@ -13,18 +13,13 @@ import { uploadAssetToS3 } from "@/api/upload";
 import { mock, useMockStore } from "@/constants/mock";
 import { useEditorContext } from "@/context/editor";
 import { isImageLoaded } from "@/lib/utils";
-import { extractThumbnailFromImageURL } from "@/lib/media";
 
 function _ImageSidebar() {
   const store = useMockStore();
   const editor = useEditorContext();
 
   const upload = useMutation({
-    mutationFn: async (file: File) => {
-      const source = await uploadAssetToS3(file, "image");
-      const thumbnail = await extractThumbnailFromImageURL(source);
-      return { source, thumbnail };
-    },
+    mutationFn: async (file: File) => uploadAssetToS3(file, "image"),
     onSuccess: (response) => mock.upload("image", response),
   });
 

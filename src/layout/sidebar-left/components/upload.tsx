@@ -1,50 +1,28 @@
+import { useMutation } from "@tanstack/react-query";
+import { PauseIcon, PlayIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { flowResult } from "mobx";
 import { observer } from "mobx-react";
-import { PauseIcon, PlayIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { Fragment, MouseEventHandler, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useEditorContext } from "@/context/editor";
-import { isImageLoaded } from "@/lib/utils";
+import { UploadAsset, uploadAssetToS3 } from "@/api/upload";
 import { mock, useMockStore } from "@/constants/mock";
-import { EditorAudio } from "@/types/editor";
+import { useEditorContext } from "@/context/editor";
 import { formatMediaDuration } from "@/lib/time";
-import { uploadAssetToS3 } from "@/api/upload";
-import { extractAudioWaveformFromAudioFile, extractThumbnailFromImageURL, extractThumbnailFromVideoURL } from "@/lib/media";
-
-interface UploadResponse {
-  source: string;
-  thumbnail: string;
-  duration?: number;
-  name?: string;
-}
+import { isImageLoaded } from "@/lib/utils";
+import { EditorAudio } from "@/types/editor";
 
 function _UploadSidebar() {
   const store = useMockStore();
   const editor = useEditorContext();
 
   const upload = useMutation({
-    mutationFn: async ({ file, type }: { type: "image" | "video" | "audio"; file: File }): Promise<UploadResponse> => {
-      const source = await uploadAssetToS3(file, type);
-      switch (type) {
-        case "image": {
-          const thumbnail = await extractThumbnailFromImageURL(source);
-          return { source, thumbnail };
-        }
-        case "video": {
-          const thumbnail = await extractThumbnailFromVideoURL(source);
-          return { source, thumbnail };
-        }
-        case "audio": {
-          const waveform = await extractAudioWaveformFromAudioFile(file);
-          return { source, name: file.name, ...waveform };
-        }
-      }
+    mutationFn: async ({ file, type }: { type: "image" | "video" | "audio"; file: File }): Promise<UploadAsset> => {
+      return uploadAssetToS3(file, type);
     },
     onSuccess: (response, params) => {
       switch (params.type) {
@@ -55,7 +33,7 @@ function _UploadSidebar() {
           mock.upload("video", response);
           break;
         case "audio":
-          mock.upload("audio", response as Required<UploadResponse>);
+          mock.upload("audio", response as Required<UploadAsset>);
           break;
       }
     },

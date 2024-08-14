@@ -9,9 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useEditorContext } from "@/context/editor";
-import { uploadAssetToS3 } from "@/api/upload";
+import { UploadAsset, uploadAssetToS3 } from "@/api/upload";
 import { mock, useMockStore } from "@/constants/mock";
-import { extractAudioWaveformFromAudioFile } from "@/lib/media";
 import { formatMediaDuration } from "@/lib/time";
 import { EditorAudio } from "@/types/editor";
 
@@ -20,12 +19,8 @@ function _AudioSidebar() {
   const editor = useEditorContext();
 
   const upload = useMutation({
-    mutationFn: async (file: File) => {
-      const source = await uploadAssetToS3(file);
-      const waveform = await extractAudioWaveformFromAudioFile(file);
-      return { source, name: file.name, ...waveform };
-    },
-    onSuccess: (response) => mock.upload("audio", response),
+    mutationFn: async (file: File) => uploadAssetToS3(file, "audio"),
+    onSuccess: (response) => mock.upload("audio", response as Required<UploadAsset>),
   });
 
   const handleUpload = (files: FileList | null) => {

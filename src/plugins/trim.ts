@@ -1,8 +1,9 @@
+import { makeAutoObservable, runInAction } from "mobx";
+
 import { propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { Canvas } from "@/store/canvas";
 import { EditorAudioElement, EditorTrim } from "@/types/editor";
-import { makeAutoObservable, runInAction } from "mobx";
 
 export class CanvasTrimmer {
   private _canvas: Canvas;

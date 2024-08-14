@@ -205,7 +205,8 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
   }, [editor.canvas.selection.active, audio]);
 
   useEffect(() => {
-    drawWavefromFromAudioBuffer(audio.buffer, 40, width).then(setBackgroundURL);
+    drawWavefromFromAudioBuffer(audio.buffer, 40, width).then((blob) => setBackgroundURL(URL.createObjectURL(blob)));
+    return () => URL.revokeObjectURL(backgroundURL);
   }, []);
 
   useEffect(() => {

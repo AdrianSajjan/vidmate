@@ -1,10 +1,11 @@
 import { createInstance, createPromise } from "@/lib/utils";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
+import { isString } from "lodash";
 import { nanoid } from "nanoid";
 
 interface AudioWaveform {
-  thumbnail: string;
+  thumbnail: Blob;
   duration: number;
 }
 
@@ -35,8 +36,9 @@ export function extractAudioDurationFromSource(source: string) {
   });
 }
 
-export async function extractThumbnailFromVideoURL(url: string) {
-  return createInstance(Promise<string>, (resolve, reject) => {
+export async function extractThumbnailFromVideo(url: string | Blob) {
+  const source = isString(url) ? url : URL.createObjectURL(url);
+  return createInstance(Promise<Blob>, (resolve, reject) => {
     const video = document.createElement("video");
     video.crossOrigin = "anonymous";
     video.playsInline = true;
@@ -51,21 +53,23 @@ export async function extractThumbnailFromVideoURL(url: string) {
       canvas.height = compressed.height;
       context.drawImage(video, 0, 0, compressed.width, compressed.height);
       canvas.toBlob((blob) => {
+        if (isString(url)) URL.revokeObjectURL(source);
         if (!blob) return reject();
-        const url = URL.createObjectURL(blob);
-        resolve(url);
+        resolve(blob);
       });
     });
     video.addEventListener("error", () => {
+      if (isString(url)) URL.revokeObjectURL(source);
       reject();
     });
-    video.src = url;
+    video.src = source;
     video.load();
   });
 }
 
-export function extractThumbnailFromImageURL(url: string) {
-  return createInstance(Promise<string>, (resolve, reject) => {
+export function extractThumbnailFromImage(url: string | Blob) {
+  const source = isString(url) ? url : URL.createObjectURL(url);
+  return createInstance(Promise<Blob>, (resolve, reject) => {
     const image = createInstance(Image);
     image.crossOrigin = "anonymous";
     image.addEventListener("load", () => {
@@ -76,12 +80,16 @@ export function extractThumbnailFromImageURL(url: string) {
       canvas.height = height;
       context.drawImage(image, 0, 0, width, height);
       canvas.toBlob((blob) => {
+        if (isString(url)) URL.revokeObjectURL(source);
         if (!blob) return reject();
-        const url = URL.createObjectURL(blob);
-        resolve(url);
+        resolve(blob);
       });
     });
-    image.src = url;
+    image.addEventListener("error", () => {
+      if (isString(url)) URL.revokeObjectURL(source);
+      reject();
+    });
+    image.src = source;
   });
 }
 
@@ -103,7 +111,7 @@ export async function extractAudioWaveformFromAudioFile(file: File) {
 }
 
 export async function drawWavefromFromAudioBuffer(buffer: AudioBuffer, height = 320, width = 320) {
-  return createInstance(Promise<string>, (resolve, reject) => {
+  return createInstance(Promise<Blob>, (resolve, reject) => {
     const raw = buffer.getChannelData(0);
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d")!;
@@ -119,8 +127,7 @@ export async function drawWavefromFromAudioBuffer(buffer: AudioBuffer, height = 
     }
     canvas.toBlob((blob) => {
       if (!blob) return reject();
-      const url = URL.createObjectURL(blob);
-      resolve(url);
+      resolve(blob);
     });
   });
 }

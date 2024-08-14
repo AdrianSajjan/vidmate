@@ -1,20 +1,49 @@
+import { nanoid } from "nanoid";
+import { api } from "@/config/api";
 import { editor } from "@/context/editor";
-import { compressImageFile, compressVideoFile } from "@/lib/media";
-import { createInstance, createPromise, wait } from "@/lib/utils";
+import { compressImageFile, compressVideoFile, extractAudioWaveformFromAudioFile, extractThumbnailFromImage, extractThumbnailFromVideo } from "@/lib/media";
+import { createFormData, createInstance, createPromise } from "@/lib/utils";
 
-export async function uploadAssetToS3(file: File, type?: "image" | "video" | "audio" | "thumbnail") {
+export interface UploadAsset {
+  name?: string;
+  source: string;
+  duration?: number;
+  thumbnail: string;
+}
+
+async function upload(file: File | Blob, name: string): Promise<string> {
+  const response = await api.post("/engine/ads/api/v1/upload_template_S3", createFormData({ template_file: file }, { template_file: name }));
+  return response.data.url;
+}
+
+export async function uploadAssetToS3(file: File, type: "image" | "video" | "audio"): Promise<UploadAsset> {
+  const id = nanoid();
+  const thumbname = id + ".png";
+  const filename = id + file.name.split(".").pop();
+
   switch (type) {
     case "image": {
-      const compressed = await compressImageFile(file);
-      return URL.createObjectURL(compressed);
+      const files = await Promise.all([compressImageFile(file), extractThumbnailFromImage(file)]);
+      const [source, thumbnail] = await Promise.all([upload(files[0], filename), upload(files[1], thumbname)]);
+      return { source, thumbnail, name: file.name };
     }
+
     case "video": {
-      const compressed = await compressVideoFile(editor.ffmpeg, file);
-      return URL.createObjectURL(compressed);
+      const files = await Promise.all([compressVideoFile(editor.ffmpeg, file), extractThumbnailFromVideo(file)]);
+      const [source, thumbnail] = await Promise.all([upload(files[0], filename), upload(files[1], thumbname)]);
+      return { source, thumbnail, name: file.name };
     }
+
+    case "audio": {
+      const [source, { duration, thumbnail }] = await Promise.all([
+        upload(file, filename),
+        extractAudioWaveformFromAudioFile(file).then((waveform) => upload(waveform.thumbnail, thumbname).then((thumbnail) => ({ thumbnail, duration: waveform.duration }))),
+      ]);
+      return { source, duration, thumbnail, name: file.name };
+    }
+
     default:
-      await wait(1000);
-      return URL.createObjectURL(file);
+      throw createInstance(Error, "The provided asset type is not valid!");
   }
 }
 

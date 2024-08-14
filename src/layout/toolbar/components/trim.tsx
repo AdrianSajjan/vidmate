@@ -138,7 +138,8 @@ function _TrimToolbarAudio() {
 
   useEffect(() => {
     if (!dimensions.width) return;
-    drawWavefromFromAudioBuffer(audio.buffer, 40, dimensions.width).then(setBackground);
+    drawWavefromFromAudioBuffer(audio.buffer, 40, dimensions.width).then((blob) => setBackground(URL.createObjectURL(blob)));
+    return () => URL.revokeObjectURL(background);
   }, [dimensions]);
 
   const handleChanges = () => {
