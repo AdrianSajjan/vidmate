@@ -2,11 +2,14 @@ import { clamp } from "lodash";
 import { motion } from "framer-motion";
 import { observer } from "mobx-react";
 import { useMemo } from "react";
-import { CheckIcon, CopyPlusIcon, GroupIcon, PencilIcon, RepeatIcon, SparklesIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, CopyPlusIcon, GroupIcon, LinkIcon, PencilIcon, RepeatIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useEditorContext } from "@/context/editor";
 import { FabricUtils } from "@/fabric/utils";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { placeholders } from "@/constants/editor";
+import { cn } from "@/lib/utils";
 
 const MENU_OFFSET_Y = 60;
 
@@ -89,6 +92,30 @@ function _EditorElementControlsBase() {
           </Button>
         </div>
       ) : null}
+      <div className="flex items-center p-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className={cn("gap-1.5 rounded-sm h-7 px-2 transition-none",
+              selected.meta?.label ? "bg-violet-600 text-white hover:bg-violet-700 hover:text-white" : "bg-transparent"
+            )}>
+              <LinkIcon size={14} />
+              <span>Placeholder</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {placeholders.map((placeholder) => (
+              <DropdownMenuCheckboxItem
+                className="text-xs"
+                key={placeholder.value}
+                checked={selected.meta?.label === placeholder.value}
+                onCheckedChange={(value) => editor.canvas.onMarkActiveObjectAsPlaceholder(!value ? false : placeholder.value)}
+              >
+                {placeholder.label}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <div className="flex items-center gap-1 p-1">
         <Button size="icon" variant="ghost" className="rounded-sm h-7 w-7" onClick={() => editor.canvas.onCloneActiveObject()} disabled={selected.meta?.thumbnail}>
           <CopyPlusIcon size={14} />

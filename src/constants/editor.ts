@@ -33,7 +33,7 @@ export const formats = [
     name: "Logo",
     dimensions: { height: 500, width: 500 },
     aspectRatio: 1 / 1,
-    preview: "https://img.ly/showcases/cesdk/cases/page-sizes/thumbnail-brochure.svg"
+    preview: "https://img.ly/showcases/cesdk/cases/page-sizes/thumbnail-brochure.svg",
   },
   {
     name: "Flyer",
@@ -58,5 +58,28 @@ export const formats = [
     dimensions: { height: 1080, width: 1080 },
     aspectRatio: 1 / 1,
     preview: "https://img.ly/showcases/cesdk/cases/page-sizes/thumbnail-ig-profile.svg",
+  },
+];
+
+export const placeholders = [
+  {
+    label: "Main Image",
+    value: "main-image",
+  },
+  {
+    label: "Brand Image",
+    value: "brand-image",
+  },
+  {
+    label: "CTA Text",
+    value: "cta-text",
+  },
+  {
+    label: "Headline Text",
+    value: "headline-text",
+  },
+  {
+    label: "Description Text",
+    value: "description-text",
   },
 ];
