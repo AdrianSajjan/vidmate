@@ -1,5 +1,6 @@
 import { EditorAnimation } from "@/constants/animations";
 import { useEditorContext } from "@/context/editor";
+import { FabricUtils } from "@/fabric/utils";
 import { ChangeEventHandler } from "react";
 
 export function useAnimationControls(selected: fabric.Object, type: "in" | "out" | "scene") {
@@ -8,10 +9,14 @@ export function useAnimationControls(selected: fabric.Object, type: "in" | "out"
   const selectAnimation = (animation: EditorAnimation) => {
     editor.canvas.onChangeActiveObjectAnimation(type, animation.value);
     if (animation.value !== "none") {
-      const duration = animation.fixed?.duration ? animation.duration : selected.anim?.in.duration;
-      const easing = animation.fixed?.easing ? animation.easing : selected.anim?.in.easing;
+      const duration = animation.fixed?.duration ? animation.duration : selected.anim?.[type].duration;
+      const easing = animation.fixed?.easing ? animation.easing : selected.anim?.[type].easing;
       editor.canvas.onChangeActiveObjectAnimationDuration(type, duration || 500);
       editor.canvas.onChangeActiveObjectAnimationEasing(type, easing || "linear");
+      if (FabricUtils.isTextboxElement(selected)) {
+        const animate = animation.fixed?.text ? animation.text : selected.anim?.[type].text;
+        editor.canvas.onChangeActiveTextAnimationType(type, animate);
+      }
     }
   };
 
@@ -26,7 +31,7 @@ export function useAnimationControls(selected: fabric.Object, type: "in" | "out"
   };
 
   const changeTextAnimate = (animate: string) => {
-    editor.canvas.onChangeActiveTextAnimationType(type, animate as "letter" | "word");
+    editor.canvas.onChangeActiveTextAnimationType(type, animate as fabric.TextAnimateOptions);
   };
 
   return {

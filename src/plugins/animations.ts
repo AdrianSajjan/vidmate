@@ -1,5 +1,6 @@
 import anime from "animejs";
 
+import { random } from "lodash";
 import { fabric } from "fabric";
 import { AnimationTimeline } from "canvas";
 import { makeAutoObservable } from "mobx";
@@ -7,7 +8,6 @@ import { makeAutoObservable } from "mobx";
 import { Canvas } from "@/store/canvas";
 import { FabricUtils } from "@/fabric/utils";
 import { modifyAnimationEasing } from "@/lib/animations";
-import { random } from "lodash";
 import { createInstance } from "@/lib/utils";
 
 type AnimationState = ReturnType<CanvasAnimations["_save"]>;
@@ -19,7 +19,10 @@ export class CanvasAnimations {
   private _active: fabric.Object | null;
   private _timeline: anime.AnimeTimelineInstance | null;
 
+  private _blur = 10;
+  private _merge = 15;
   private _zoom = 0.25;
+
   private _exitOffset = 50;
   private _entryOffset = 50;
 
@@ -213,29 +216,6 @@ export class CanvasAnimations {
         break;
       }
 
-      case "merge": {
-        if (mask) return;
-
-        const props = { angle, height, width, top: top + height * scaleY, left: left + width * scaleX, absolutePositioned: true };
-
-        if (!object.clipPath) {
-          object.clipPath = createInstance(fabric.Rect, props);
-          object.set({ clipPath: object.clipPath });
-        }
-
-        timeline.add(
-          {
-            targets: object.clipPath,
-            left: [props.left, left],
-            top: [props.top, top],
-            duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
-          },
-          offset,
-        );
-        break;
-      }
-
       case "pop": {
         timeline.add(
           {
@@ -251,15 +231,13 @@ export class CanvasAnimations {
       }
 
       case "wipe": {
-        if (mask) return;
-
         let clipPath = object.clipPath;
         const delta = FabricUtils.calculateAnimationPositionDelta(object);
         const props = { angle, height, width, top: top - delta.x * delta.width, left: left - delta.y * delta.width, absolutePositioned: true };
 
         if (!clipPath) {
           clipPath = createInstance(fabric.Rect, props);
-          object.set({ clipPath });
+          object.clipPath = clipPath;
         }
 
         timeline.add(
@@ -317,6 +295,51 @@ export class CanvasAnimations {
           break;
         }
 
+        case "block": {
+          break;
+        }
+
+        case "merge": {
+          let index = 0;
+          const text = this._ungroupAnimatedText(object, "word");
+          object._objects.map((line, outer) => {
+            if (FabricUtils.isGroupElement(line)) {
+              const multiplier = outer % 2 ? -1 : 1;
+              const words = [...line._objects].reverse();
+              const delta = FabricUtils.calculateAnimationPositionDelta(line);
+              words.map((word) => {
+                const target = { top: word.top!, left: word.left!, opacity: word.opacity! };
+                const state = { top: target.top + delta.x * this._merge, left: target.left + delta.y * this._merge * multiplier, opacity: 0 };
+                word.set(Object.assign({}, state));
+                timeline.add(
+                  {
+                    targets: state,
+                    opacity: target.opacity,
+                    duration: entry.duration / (text.length - 1),
+                    easing: modifyAnimationEasing(entry.easing, entry.duration),
+                    update: () => word.set({ top: state.top, left: state.left, opacity: state.opacity }),
+                  },
+                  offset + (entry.duration / (text.length + 1)) * index,
+                );
+                timeline.add(
+                  {
+                    targets: state,
+                    top: target.top,
+                    left: target.left,
+                    duration: entry.duration,
+                    easing: modifyAnimationEasing(entry.easing, entry.duration),
+                    update: () => word.set({ top: state.top, left: state.left }),
+                  },
+                  offset,
+                );
+                index += 1;
+              });
+            }
+          });
+
+          break;
+        }
+
         case "burst": {
           text.map((element, index) => {
             const target = { scaleY: element.scaleY, scaleX: element.scaleX, top: element.top!, left: element.left! };
@@ -347,7 +370,7 @@ export class CanvasAnimations {
         case "clarify": {
           text.map((element) => {
             const target = { opacity: 1, blur: 0 };
-            const state = { opacity: 0, blur: 10 };
+            const state = { opacity: 0, blur: this._blur };
             const seed = random(0, Math.min(500, entry.duration - 250));
             element.set(Object.assign({}, state));
             timeline.add(
@@ -395,17 +418,18 @@ export class CanvasAnimations {
         }
 
         case "ascend": {
-          const delta = FabricUtils.calculateAnimationPositionDelta(object);
           object._objects.map((line) => {
-            if (!line.clipPath) {
-              const top = object.top! + line.top! + object.height! / 2;
-              const left = object.left! + line.left! + object.width! / 2;
-              line.clipPath = createInstance(fabric.Rect, { angle, top, left, height: line.height, width: line.width, absolutePositioned: true });
+            if (!line.clipPath && FabricUtils.isGroupElement(line)) {
+              const matrix = line.calcTransformMatrix();
+              const clipPath = createInstance(fabric.Rect, { left: matrix[4] - line.width! / 2, top: matrix[5] - line.height! / 2, height: line.height, width: line.width, absolutePositioned: true });
+              clipPath.rotate(object.angle!);
+              line.clipPath = clipPath;
             }
           });
           text.map((element, index) => {
+            const delta = FabricUtils.calculateAnimationPositionDelta(element);
             const target = { top: element.top!, left: element.left! };
-            const state = { top: target.top + delta.y * element.height! * element.scaleY!, left: target.left - delta.x * element.height! * element.scaleX! };
+            const state = { top: target.top + delta.y * delta.height!, left: target.left - delta.x * delta.height! };
             element.set(Object.assign({}, state));
             timeline.add(
               {

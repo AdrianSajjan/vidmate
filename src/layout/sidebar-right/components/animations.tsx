@@ -71,7 +71,7 @@ function _Animations({ animations: list, selected, type }: AnimationProps) {
 
   return (
     <div className="flex flex-col px-1">
-      <AnimationControls selected={selected} type={type} />
+      <AnimationControls selected={selected} type={type} animations={list} />
       <div className="pt-7 flex flex-col gap-7">
         {animations.map((animation) => (
           <div className="flex flex-col gap-4" key={animation.title}>
@@ -107,10 +107,12 @@ function _AnimationItem({ animation, selected, className, ...props }: AnimationI
 interface AnimationControlsProps {
   selected: fabric.Object;
   type: "in" | "out" | "scene";
+  animations: EditorAnimation[];
 }
 
-function _AnimationControls({ selected, type }: AnimationControlsProps) {
+function _AnimationControls({ selected, type, animations }: AnimationControlsProps) {
   const controls = useAnimationControls(selected, type);
+  const animation = animations.find((animation) => animation.value === selected.anim?.[type].name);
 
   const text = selected.anim?.[type].text || "letter";
   const easing = selected.anim?.[type].easing || "linear";
@@ -121,12 +123,12 @@ function _AnimationControls({ selected, type }: AnimationControlsProps) {
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between gap-6">
-        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={duration} onChange={controls.changeDuration} disabled={disabled} type="number" step={0.1} className="text-xs h-8 w-40" />
+        <Label className={cn("text-xs shrink-0", disabled || animation?.disabled?.duration ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
+        <Input value={duration} onChange={controls.changeDuration} disabled={disabled || animation?.disabled?.duration} type="number" step={0.1} className="text-xs h-8 w-40" />
       </div>
       <div className="flex items-center justify-between gap-6 mt-3">
-        <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Easing</Label>
-        <Select value={easing} onValueChange={controls.changeEasing} disabled={disabled}>
+        <Label className={cn("text-xs shrink-0", disabled || animation?.disabled?.easing ? "opacity-50" : "opacity-100")}>Easing</Label>
+        <Select value={easing} onValueChange={controls.changeEasing} disabled={disabled || animation?.disabled?.easing}>
           <SelectTrigger className="h-8 text-xs w-40">
             <SelectValue />
           </SelectTrigger>
@@ -141,8 +143,8 @@ function _AnimationControls({ selected, type }: AnimationControlsProps) {
       </div>
       {FabricUtils.isTextboxElement(selected) ? (
         <div className="flex items-center justify-between gap-6 mt-3">
-          <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Text Animate</Label>
-          <Select value={text} onValueChange={controls.changeTextAnimate} disabled={disabled}>
+          <Label className={cn("text-xs shrink-0", disabled || animation?.disabled?.text ? "opacity-50" : "opacity-100")}>Text Animate</Label>
+          <Select value={text} onValueChange={controls.changeTextAnimate} disabled={disabled || animation?.disabled?.text}>
             <SelectTrigger className="h-8 text-xs w-40">
               <SelectValue />
             </SelectTrigger>

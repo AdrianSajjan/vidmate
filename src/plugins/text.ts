@@ -72,16 +72,16 @@ export class CanvasText {
     const rect = createInstance(fabric.Rect, Object.assign({ height: textbox.height! * textbox.scaleY!, width: textbox.width! * textbox.scaleX!, visible: false, objectCaching: false }, exclude));
     const group = createInstance(fabric.Group, [...lines, rect], Object.assign({ type: "animated-text", name: "animated_" + textbox.name, meta: textbox.meta, anim: textbox.anim, objectCaching: false }, exclude));
 
-    for (const word of lines) {
+    for (const line of lines) {
       switch (textbox.textAlign) {
         case "left":
-          word.setPositionByOrigin(createInstance(fabric.Point, rect.left!, word.getCenterPoint().y), "left", "center");
+          line.setPositionByOrigin(createInstance(fabric.Point, rect.left!, line.getCenterPoint().y), "left", "center");
           break;
         case "center":
-          word.setPositionByOrigin(createInstance(fabric.Point, rect.getCenterPoint().x, word.getCenterPoint().y), "center", "center");
+          line.setPositionByOrigin(createInstance(fabric.Point, rect.getCenterPoint().x, line.getCenterPoint().y), "center", "center");
           break;
         case "right":
-          word.setPositionByOrigin(createInstance(fabric.Point, rect.left! + rect.width!, word.getCenterPoint().y), "right", "center");
+          line.setPositionByOrigin(createInstance(fabric.Point, rect.left! + rect.width!, line.getCenterPoint().y), "right", "center");
           break;
       }
     }
