@@ -95,14 +95,12 @@ function _EditorElementControlsBase() {
       <div className="flex items-center p-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className={cn("gap-1.5 rounded-sm h-7 px-2 transition-none",
-              selected.meta?.label ? "bg-violet-600 text-white hover:bg-violet-700 hover:text-white" : "bg-transparent"
-            )}>
+            <Button variant="ghost" size="sm" className={cn("gap-1.5 rounded-sm h-7 px-2 transition-none", selected.meta?.label ? "bg-violet-600 text-white hover:bg-violet-700 hover:text-white" : "bg-transparent")}>
               <LinkIcon size={14} />
               <span>Placeholder</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="center" sideOffset={6}>
             {placeholders.map((placeholder) => (
               <DropdownMenuCheckboxItem
                 className="text-xs"
