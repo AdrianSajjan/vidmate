@@ -81,6 +81,12 @@ export const entry: EditorAnimation[] = [
     duration: 250,
   },
   {
+    value: "merge",
+    label: "Merge",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    duration: 300,
+  },
+  {
     value: "pop",
     label: "Pop",
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
@@ -191,6 +197,30 @@ export const exit: EditorAnimation[] = [
     preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
     duration: 250,
     easing: "easeOutSine",
+  },
+  {
+    value: "pan-left",
+    label: "Pan Left",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    duration: 250,
+  },
+  {
+    value: "pan-right",
+    label: "Pan Right",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    duration: 250,
+  },
+  {
+    value: "wipe",
+    label: "Wipe",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    duration: 250,
+  },
+  {
+    value: "baseline",
+    label: "Baseline",
+    preview: "https://static.canva.com/web/images/490a466560cd4cb74e3b498b7758c6ab.png",
+    duration: 250,
   },
 ];
 

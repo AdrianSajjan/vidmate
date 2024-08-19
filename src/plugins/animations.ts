@@ -213,6 +213,29 @@ export class CanvasAnimations {
         break;
       }
 
+      case "merge": {
+        if (mask) return;
+
+        const props = { angle, height, width, top: top + height * scaleY, left: left + width * scaleX, absolutePositioned: true };
+
+        if (!object.clipPath) {
+          object.clipPath = createInstance(fabric.Rect, props);
+          object.set({ clipPath: object.clipPath });
+        }
+
+        timeline.add(
+          {
+            targets: object.clipPath,
+            left: [props.left, left],
+            top: [props.top, top],
+            duration: entry.duration,
+            easing: modifyAnimationEasing(entry.easing, entry.duration),
+          },
+          offset,
+        );
+        break;
+      }
+
       case "pop": {
         timeline.add(
           {
@@ -405,7 +428,7 @@ export class CanvasAnimations {
   private _exit(object: fabric.Object, timeline: anime.AnimeTimelineInstance, exit: AnimationTimeline["in"], state: AnimationState, _mask?: boolean, preview?: boolean) {
     if (!exit) return;
 
-    const { left, top, height, width, scaleX, scaleY } = state;
+    const { left, top, height, width, angle, scaleX, scaleY } = state;
     const offset = preview ? 0 : object.meta!.offset + object.meta!.duration - exit.duration - this._exitOffset;
 
     switch (exit.name) {
@@ -484,6 +507,72 @@ export class CanvasAnimations {
             targets: object,
             scaleY: [scaleY, 1 / height],
             top: [top, top + (height * scaleY) / 2],
+            duration: exit.duration,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
+          },
+          offset,
+        );
+        break;
+      }
+
+      case "pan-left": {
+        timeline.add(
+          {
+            targets: object,
+            left: [left, left - Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER)],
+            duration: exit.duration,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
+          },
+          offset,
+        );
+        break;
+      }
+
+      case "pan-right": {
+        timeline.add(
+          {
+            targets: object,
+            left: [left, left + Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER)],
+            duration: exit.duration,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
+          },
+          offset,
+        );
+        break;
+      }
+
+      case "wipe": {
+        let clipPath = object.clipPath;
+        const delta = FabricUtils.calculateAnimationPositionDelta(object);
+        const props = { angle, height, width, top: top - delta.x * delta.width, left: left + delta.y * delta.width, absolutePositioned: true };
+
+        if (!clipPath) {
+          clipPath = createInstance(fabric.Rect, props);
+          object.set({ clipPath });
+        }
+
+        timeline.add(
+          {
+            targets: clipPath,
+            left: [left, props.left],
+            top: [props.top, top],
+            duration: exit.duration,
+            easing: modifyAnimationEasing(exit.easing, exit.duration),
+          },
+          offset,
+        );
+        break;
+      }
+
+      case "baseline": {
+        const delta = FabricUtils.calculateAnimationPositionDelta(object);
+        if (!object.clipPath) object.clipPath = createInstance(fabric.Rect, { angle, height, width, top, left, absolutePositioned: true });
+
+        timeline.add(
+          {
+            targets: object,
+            top: [top, top - delta.y * delta.height],
+            left: [left - delta.x * delta.height, left],
             duration: exit.duration,
             easing: modifyAnimationEasing(exit.easing, exit.duration),
           },
