@@ -1,0 +1,22 @@
+{
+  "name": "cli",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "convert:template": "bun run scripts/template.ts",
+    "convert:shape": "bun run scripts/shape.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "form-data": "^4.0.0",
+    "htmlparser2": "^9.1.0",
+    "nanoid": "^5.0.7",
+    "sharp": "^0.33.5",
+    "undici": "^6.19.7"
+  }
+}

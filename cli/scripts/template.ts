@@ -1,9 +1,9 @@
-import type * as fabric from "../canvas.d.ts";
+import { openAsBlob } from "node:fs";
+import * as path from "node:path";
+import * as fs from "node:fs/promises";
 
-import * as path from "path";
-import * as fs from "fs/promises";
 import sharp from "sharp";
-
+import { fetch, FormData, File } from "undici";
 import { Parser } from "htmlparser2";
 import { customAlphabet } from "nanoid";
 
@@ -47,8 +47,8 @@ interface EditorAudioElement {
 }
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
-const maxHeight = 2000;
-const maxWidth = 2000;
+const maxHeight = 1080;
+const maxWidth = 1080;
 
 const dataMapping = {
   name: "a",
@@ -399,47 +399,47 @@ function extractTextContent(element) {
 }
 
 async function resizeImage(url: string) {
-  const temp = path.join(__dirname, "..", "assets", nanoid() + ".png");
-  const output = path.join(__dirname, "..", "assets", nanoid() + ".png");
+  const id = nanoid();
+
+  const input = path.join(__dirname, "..", "assets", id + "_input" + ".png");
+  const output = path.join(__dirname, "..", "assets", id + "_output" + ".png");
 
   try {
     const response = await fetch(url).then((response) => response.arrayBuffer());
-    await fs.writeFile(temp, new Uint8Array(response));
+    await fs.writeFile(input, new Uint8Array(response));
 
-    const metadata = await sharp(temp).metadata();
+    const metadata = await sharp(input).metadata();
     const imageWidth = metadata.width;
     const imageHeight = metadata.height;
 
-    if (!imageWidth || !imageHeight) return { url, width: imageWidth || maxWidth, height: imageHeight || maxHeight };
+    if (!imageWidth || !imageHeight) {
+      console.warn("Error: No image metadata found");
+      return { url, width: imageWidth || maxWidth, height: imageHeight || maxHeight };
+    }
 
     if (imageWidth > maxWidth || imageHeight > maxHeight) {
-      const aspectRatio = imageWidth / imageHeight;
-      let width: number, height: number;
+      const resized = await sharp(input).resize(maxWidth, maxHeight, { fit: "inside" }).toFile(output);
+      const blob = await openAsBlob(output, { type: "image/png" });
 
-      if (imageWidth > maxWidth) {
-        width = maxWidth;
-        height = Math.round(maxWidth / aspectRatio);
-      } else {
-        height = maxHeight;
-        width = Math.round(maxHeight * aspectRatio);
-      }
+      const body = new FormData();
+      body.append("template_file", blob, id + ".png");
 
-      await sharp(temp).resize(width, height).toFile(output);
+      const response = await fetch("https://qa.zocket.com/engine/ads/api/v1/upload_template_S3", { method: "POST", body: body });
+      if (response.status !== 200) throw new Error("Error: Failed to upload downscaled image");
+
+      const uploaded: any = await response.json();
       console.log("Image downscaled successfully");
-      return { url: output, width, height };
+      return { url: uploaded.url, width: resized.width, height: resized.height };
     } else {
-      console.log("Image dimensions are within the specified limits; no downscaling needed.");
+      console.warn("Image dimensions are within the specified limits; no downscaling needed.");
       return { url, width: imageWidth, height: imageHeight };
     }
-  } catch (error) {
-    console.log("Error processing image:", error);
+  } catch (error: any) {
+    console.error("Error downscaling image:", error.message);
     return { url, width: maxWidth, height: maxHeight };
   } finally {
-    try {
-      await fs.unlink(temp);
-    } catch (error) {
-      console.error("Error cleaning up temporary file:", error);
-    }
+    await fs.unlink(input).catch((error) => console.error("Error cleaning up temporary input file:", error.message));
+    await fs.unlink(output).catch((error) => console.error("Error cleaning up temporary output file:", error.message));
   }
 }
 
@@ -555,7 +555,10 @@ async function convertLayers(template) {
   const width = Math.round(template.layers.ROOT.props.boxSize.width) || 1080;
   const height = Math.round(template.layers.ROOT.props.boxSize.height) || 1080;
 
-  if (height !== 1080 || width !== 1080) return null;
+  if (height !== 1080 || width !== 1080) {
+    console.warn("Template dimensions are not 1080x1080. Skipping conversion.");
+    return null;
+  }
 
   const scene = { version: "5.3.0", objects: [] as fabric.Object[], background: "#F0F0F0" };
   const data = { height: height, width: width, fill: fill, audios: [], scene: "" };
@@ -583,12 +586,12 @@ async function convertPages(template: any) {
   const result: EditorTemplatePage[] = [];
   if (Array.isArray(unpacked)) {
     for (let index = 0; index < unpacked.length; index++) {
-      console.log("Coverting Template:", index + 1);
+      console.log("Coverting Page:", index + 1);
       const page = await convertPage(unpacked[index], template.thumbnails[index]);
       if (page) result.push(page);
     }
   } else {
-    console.log("Coverting Template:", 1);
+    console.log("Coverting Page:", 1);
     const page = await convertPage(unpacked, template.img);
     if (page) result.push(page);
   }
@@ -596,20 +599,23 @@ async function convertPages(template: any) {
 }
 
 async function templateConverter() {
-  console.log(process.argv);
-  // try {
-  //   const buffer = await fs.readFile(path.resolve(__dirname, process.argv[2]));
-  //   const json = JSON.parse(String(buffer));
-  //   const result: EditorTemplate[] = [];
-  //   for (const template of json) {
-  //     const pages = await convertPages(template);
-  //     result.push({ id: nanoid(), name: template.desc, pages: pages.filter(Boolean) });
-  //   }
-  //   fs.writeFile(path.resolve(__dirname, "..", "database", process.argv[2]), JSON.stringify(result, undefined, 2), "utf-8");
-  // } catch (error) {
-  //   console.log("---ERROR----");
-  //   console.log(error);
-  // }
+  try {
+    const buffer = await fs.readFile(path.resolve(__dirname, "..", "json", "templates.json"));
+    const json = JSON.parse(String(buffer));
+    const length = Math.min(json.length, 5);
+    const result: EditorTemplate[] = [];
+    for (let index = 0; index < length; index++) {
+      console.log("Converting Template:", index + 1);
+      const template = json[index];
+      const pages = await convertPages(template);
+      result.push({ id: nanoid(), name: template.desc, pages: pages.filter(Boolean) });
+      console.log("Progress", ((index + 1) / length) * 100 + "%");
+    }
+    fs.writeFile(path.resolve(__dirname, "..", "database", "templates.json"), JSON.stringify(result, undefined, 2), "utf-8");
+  } catch (error) {
+    console.log("---ERROR----");
+    console.log(error);
+  }
 }
 
 templateConverter();
