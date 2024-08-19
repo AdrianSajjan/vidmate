@@ -24,6 +24,7 @@ import { EditorFont } from "@/constants/fonts";
 import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
+
 export class Canvas {
   id: string;
   name: string;
@@ -455,6 +456,7 @@ export class Canvas {
     if (!object || !object.meta) return;
     object.meta.placeholder = !!label;
     object.meta.label = label || undefined;
+    this.instance.fire("object:modified", { target: object });
   }
 
   onMarkActiveObjectAsPlaceholder(label: string | false) {
