@@ -1,16 +1,54 @@
-// @ts-nocheck
+import type * as fabric from "../canvas.d.ts";
 
-import path from "path";
-import fs from "fs/promises";
-import probe from "probe-image-size";
+import * as path from "path";
+import * as fs from "fs/promises";
+import sharp from "sharp";
 
 import { Parser } from "htmlparser2";
-import { fileURLToPath } from "url";
 import { customAlphabet } from "nanoid";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const __nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
+type ElementStyles = Record<string, any>;
+
+interface EditorTemplate {
+  id: string;
+  name: string;
+  pages: EditorTemplatePage[];
+}
+
+interface EditorTemplatePageData {
+  scene: string;
+  audios: Omit<EditorAudioElement, "buffer" | "source">[];
+  fill: string;
+  width: number;
+  height: number;
+}
+
+interface EditorTemplatePage {
+  id: string;
+  name: string;
+  thumbnail: string;
+  duration: number;
+  data: EditorTemplatePageData;
+}
+
+interface EditorAudioElement {
+  id: string;
+  url: string;
+  name: string;
+  buffer: AudioBuffer;
+  source: AudioBufferSourceNode;
+  volume: number;
+  muted: boolean;
+  duration: number;
+  offset: number;
+  playing: boolean;
+  trim: number;
+  timeline: number;
+}
+
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz");
+const maxHeight = 2000;
+const maxWidth = 2000;
 
 const dataMapping = {
   name: "a",
@@ -271,13 +309,13 @@ function createTextbox(text, props, meta) {
 }
 
 function elementID(prefix) {
-  return prefix.toLowerCase() + "_" + __nanoid(4);
+  return prefix.toLowerCase() + "_" + nanoid(4);
 }
 
 function unpack(packed) {
   if (!packed) return packed;
   if (Array.isArray(packed)) {
-    const unpackedArray = [];
+    const unpackedArray: any[] = [];
     for (let i = 0; i < packed.length; i++) {
       unpackedArray.push(unpack(packed[i]));
     }
@@ -296,8 +334,8 @@ function unpack(packed) {
   return packed;
 }
 
-function parseStyles(styles) {
-  const style = {};
+function parseStyles(styles: string) {
+  const style: ElementStyles = {};
   const rules = styles
     .split(";")
     .map((rule) => rule.trim())
@@ -342,7 +380,7 @@ function parseFonts(fonts) {
 }
 
 function extractTextContent(element) {
-  let styles = [];
+  let styles: Array<ElementStyles> = [];
   let text = "";
   const parser = new Parser({
     onopentag(_, attrs) {
@@ -360,19 +398,64 @@ function extractTextContent(element) {
   return { text, styles };
 }
 
+async function resizeImage(url: string) {
+  const temp = path.join(__dirname, "..", "assets", nanoid() + ".png");
+  const output = path.join(__dirname, "..", "assets", nanoid() + ".png");
+
+  try {
+    const response = await fetch(url).then((response) => response.arrayBuffer());
+    await fs.writeFile(temp, new Uint8Array(response));
+
+    const metadata = await sharp(temp).metadata();
+    const imageWidth = metadata.width;
+    const imageHeight = metadata.height;
+
+    if (!imageWidth || !imageHeight) return { url, width: imageWidth || maxWidth, height: imageHeight || maxHeight };
+
+    if (imageWidth > maxWidth || imageHeight > maxHeight) {
+      const aspectRatio = imageWidth / imageHeight;
+      let width: number, height: number;
+
+      if (imageWidth > maxWidth) {
+        width = maxWidth;
+        height = Math.round(maxWidth / aspectRatio);
+      } else {
+        height = maxHeight;
+        width = Math.round(maxHeight * aspectRatio);
+      }
+
+      await sharp(temp).resize(width, height).toFile(output);
+      console.log("Image downscaled successfully");
+      return { url: output, width, height };
+    } else {
+      console.log("Image dimensions are within the specified limits; no downscaling needed.");
+      return { url, width: imageWidth, height: imageHeight };
+    }
+  } catch (error) {
+    console.log("Error processing image:", error);
+    return { url, width: maxWidth, height: maxHeight };
+  } finally {
+    try {
+      await fs.unlink(temp);
+    } catch (error) {
+      console.error("Error cleaning up temporary file:", error);
+    }
+  }
+}
+
 async function convertLayer(layer) {
   switch (layer.type.resolvedName) {
     case "ImageLayer": {
-      const dimensions = await probe(layer.props.image.url);
-      const image = createImage(layer.props.image.url, {
+      const { height, width, url } = await resizeImage(layer.props.image.url);
+      const image = createImage(url, {
         top: layer.props.position.y,
         left: layer.props.position.x,
-        height: dimensions.height,
-        width: dimensions.width,
+        height: height,
+        width: width,
         opacity: layer.props.transparency,
         angle: layer.props.rotate,
-        scaleX: layer.props.image.boxSize.width / dimensions.width,
-        scaleY: layer.props.image.boxSize.height / dimensions.height,
+        scaleX: layer.props.image.boxSize.width / width!,
+        scaleY: layer.props.image.boxSize.height / height!,
       });
       return image;
     }
@@ -420,7 +503,7 @@ async function convertLayer(layer) {
     }
     case "FrameLayer": {
       let frame = null;
-      const dimensions = await probe(layer.props.image.url);
+      const { height, url, width } = await resizeImage(layer.props.image.url);
       if (layer.props.border) {
         frame = createPath(layer.props.clipPath, {
           strokeWidth: layer.props.border.weight,
@@ -441,7 +524,6 @@ async function convertLayer(layer) {
         scaleY: layer.props.scale,
         height: layer.props.boxSize.height,
         width: layer.props.boxSize.width,
-        opacity: layer.props.transparency,
         angle: layer.props.rotate,
         top: layer.props.position.y,
         left: layer.props.position.x,
@@ -452,15 +534,15 @@ async function convertLayer(layer) {
         selectable: false,
         evented: false,
       });
-      const image = createImage(layer.props.image.url, {
+      const image = createImage(url, {
         top: layer.props.position.y,
         left: layer.props.position.x,
-        height: dimensions.height,
-        width: dimensions.width,
+        height: height,
+        width: width,
         opacity: layer.props.transparency,
         angle: layer.props.rotate,
-        scaleX: layer.props.boxSize.width / dimensions.width,
-        scaleY: layer.props.boxSize.height / dimensions.height,
+        scaleX: layer.props.boxSize.width / width,
+        scaleY: layer.props.boxSize.height / height,
         clipPath: clipPath,
       });
       return [frame, image].filter(Boolean);
@@ -469,18 +551,22 @@ async function convertLayer(layer) {
 }
 
 async function convertLayers(template) {
-  const height = Math.round(template.layers.ROOT.props.boxSize.height) || 1080;
-  const width = Math.round(template.layers.ROOT.props.boxSize.width) || 1080;
   const fill = template.layers.ROOT.props.color || "#FFFFFF";
+  const width = Math.round(template.layers.ROOT.props.boxSize.width) || 1080;
+  const height = Math.round(template.layers.ROOT.props.boxSize.height) || 1080;
+
   if (height !== 1080 || width !== 1080) return null;
-  const scene = { version: "5.3.0", objects: [], background: "#F0F0F0" };
+
+  const scene = { version: "5.3.0", objects: [] as fabric.Object[], background: "#F0F0F0" };
   const data = { height: height, width: width, fill: fill, audios: [], scene: "" };
+
   for (const [key, layer] of Object.entries(template.layers)) {
     const converted = await convertLayer(layer);
     if (key === "ROOT" || !converted) continue;
     if (Array.isArray(converted)) scene.objects.push(...converted);
     else scene.objects.push(converted);
   }
+
   data.scene = JSON.stringify(scene);
   return data;
 }
@@ -488,38 +574,42 @@ async function convertLayers(template) {
 async function convertPage(layers, thumbnail) {
   const data = await convertLayers(layers);
   if (!data) return null;
-  return { id: __nanoid(), name: "Untitled Page", thumbnail: thumbnail.url, duration: 10000, data: data };
+  const result: EditorTemplatePage = { id: nanoid(), name: "Untitled Page", thumbnail: thumbnail.url, duration: 10000, data: data };
+  return result;
 }
 
-async function convertPages(template) {
+async function convertPages(template: any) {
   const unpacked = unpack(JSON.parse(template.data));
+  const result: EditorTemplatePage[] = [];
   if (Array.isArray(unpacked)) {
-    const result = [];
     for (let index = 0; index < unpacked.length; index++) {
+      console.log("Coverting Template:", index + 1);
       const page = await convertPage(unpacked[index], template.thumbnails[index]);
-      result.push(page);
+      if (page) result.push(page);
     }
-    return result;
   } else {
-    const page = await convertPage(unpacked, template.thumbnails[0]);
-    return Array(page);
+    console.log("Coverting Template:", 1);
+    const page = await convertPage(unpacked, template.img);
+    if (page) result.push(page);
   }
+  return result;
 }
 
 async function templateConverter() {
-  try {
-    const buffer = await fs.readFile(path.resolve(__dirname, process.argv[2]));
-    const json = JSON.parse(buffer);
-    const result = [];
-    for (const template of json) {
-      const pages = await convertPages(template);
-      result.push({ id: __nanoid(), name: template.desc, pages: pages.filter(Boolean) });
-    }
-    fs.writeFile(path.resolve(__dirname, "converted-" + process.argv[2]), JSON.stringify(result, undefined, 2), "utf-8");
-  } catch (error) {
-    console.log("---ERROR----");
-    console.log(error);
-  }
+  console.log(process.argv);
+  // try {
+  //   const buffer = await fs.readFile(path.resolve(__dirname, process.argv[2]));
+  //   const json = JSON.parse(String(buffer));
+  //   const result: EditorTemplate[] = [];
+  //   for (const template of json) {
+  //     const pages = await convertPages(template);
+  //     result.push({ id: nanoid(), name: template.desc, pages: pages.filter(Boolean) });
+  //   }
+  //   fs.writeFile(path.resolve(__dirname, "..", "database", process.argv[2]), JSON.stringify(result, undefined, 2), "utf-8");
+  // } catch (error) {
+  //   console.log("---ERROR----");
+  //   console.log(error);
+  // }
 }
 
 templateConverter();
