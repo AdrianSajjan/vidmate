@@ -603,7 +603,7 @@ async function templateConverter() {
   try {
     const buffer = await fs.readFile(path.resolve(__dirname, "..", "json", "templates.json"));
     const json = JSON.parse(String(buffer));
-    const length = Math.min(json.length, 5);
+    const length = Math.min(json.length, Number.MAX_SAFE_INTEGER);
     const result: EditorTemplate[] = [];
     for (let index = 0; index < length; index++) {
       console.log("Converting Template:", index + 1);
