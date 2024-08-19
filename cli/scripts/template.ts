@@ -577,22 +577,23 @@ async function convertLayers(template) {
 async function convertPage(layers, thumbnail) {
   const data = await convertLayers(layers);
   if (!data) return null;
-  const result: EditorTemplatePage = { id: nanoid(), name: "Untitled Page", thumbnail: thumbnail.url, duration: 10000, data: data };
+  const result: EditorTemplatePage = { id: nanoid(), name: "Untitled Page", thumbnail: thumbnail, duration: 10000, data: data };
   return result;
 }
 
 async function convertPages(template: any) {
   const unpacked = unpack(JSON.parse(template.data));
   const result: EditorTemplatePage[] = [];
+  const thumbnail = template.thumbnails.find((thumbnail) => thumbnail.aspectRatio === "square")?.url || template.img;
   if (Array.isArray(unpacked)) {
     for (let index = 0; index < unpacked.length; index++) {
       console.log("Coverting Page:", index + 1);
-      const page = await convertPage(unpacked[index], template.thumbnails[index]);
+      const page = await convertPage(unpacked[index], thumbnail);
       if (page) result.push(page);
     }
   } else {
     console.log("Coverting Page:", 1);
-    const page = await convertPage(unpacked, template.img);
+    const page = await convertPage(unpacked, thumbnail);
     if (page) result.push(page);
   }
   return result;
