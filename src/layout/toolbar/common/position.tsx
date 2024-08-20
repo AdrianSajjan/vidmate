@@ -4,22 +4,7 @@ import { observer } from "mobx-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useEditorContext } from "@/context/editor";
-
-const move = [
-  { label: "Bring to Front", value: "top" },
-  { label: "Bring Forwards", value: "up" },
-  { label: "Send to Back", value: "bottom" },
-  { label: "Send Backwards", value: "down" },
-] as const;
-
-const align = [
-  { label: "Left", value: "left" },
-  { label: "Center", value: "center" },
-  { label: "Right", value: "right" },
-  { label: "Top", value: "top" },
-  { label: "Middle", value: "middle" },
-  { label: "Bottom", value: "bottom" },
-] as const;
+import { align, move } from "@/constants/editor";
 
 function _ToolbarPositionOption() {
   const editor = useEditorContext();

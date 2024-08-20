@@ -5,7 +5,6 @@ import { Separator } from "@/components/ui/separator";
 import { ToolbarFillOption } from "../common/fill";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
-import { ToolbarPositionOption } from "../common/position";
 import { ToolbarOpacityOption } from "../common/opacity";
 
 function _ShapeToolbar() {
@@ -16,10 +15,8 @@ function _ShapeToolbar() {
       <ToolbarStrokeOption />
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarOpacityOption />
-      <Separator orientation="vertical" className="h-8 ml-auto mr-4" />
+      <Separator orientation="vertical" className="h-8 mr-4" />
       <ToolbarTimelineOption />
-      <Separator orientation="vertical" className="h-8 mx-4" />
-      <ToolbarPositionOption />
     </div>
   );
 }

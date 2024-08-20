@@ -83,3 +83,49 @@ export const placeholders = [
     value: "description-text",
   },
 ];
+
+export const move = [
+  {
+    label: "Bring to Front",
+    value: "top",
+  },
+  {
+    label: "Bring Forwards",
+    value: "up",
+  },
+  {
+    label: "Send to Back",
+    value: "bottom",
+  },
+  {
+    label: "Send Backwards",
+    value: "down",
+  },
+] as const;
+
+export const align = [
+  {
+    label: "Left",
+    value: "left",
+  },
+  {
+    label: "Center",
+    value: "center",
+  },
+  {
+    label: "Right",
+    value: "right",
+  },
+  {
+    label: "Top",
+    value: "top",
+  },
+  {
+    label: "Middle",
+    value: "middle",
+  },
+  {
+    label: "Bottom",
+    value: "bottom",
+  },
+] as const;

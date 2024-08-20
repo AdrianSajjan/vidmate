@@ -2,13 +2,13 @@ import { clamp } from "lodash";
 import { motion } from "framer-motion";
 import { observer } from "mobx-react";
 import { useMemo } from "react";
-import { CheckIcon, CopyPlusIcon, GroupIcon, LinkIcon, PencilIcon, RepeatIcon, SparklesIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, CopyPlusIcon, GroupIcon, LinkIcon, PencilIcon, RepeatIcon, SendToBackIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useEditorContext } from "@/context/editor";
 import { FabricUtils } from "@/fabric/utils";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { placeholders } from "@/constants/editor";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { align, move, placeholders } from "@/constants/editor";
 import { cn } from "@/lib/utils";
 
 const MENU_OFFSET_Y = 60;
@@ -63,7 +63,7 @@ function _EditorElementControlsBase() {
         </div>
       ) : null}
       {selected.type === "textbox" || selected.type === "image" ? (
-        <div className="flex items-center p-1">
+        <div className="hidden items-center p-1">
           <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.setActiveSidebarRight("ai")}>
             <SparklesIcon size={14} />
             <span>AI Magic</span>
@@ -93,7 +93,7 @@ function _EditorElementControlsBase() {
         </div>
       ) : null}
       <div className="flex items-center p-1">
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className={cn("gap-1.5 rounded-sm h-7 px-2 transition-none", selected.meta?.label ? "bg-violet-600 text-white hover:bg-violet-700 hover:text-white" : "bg-transparent")}>
               <LinkIcon size={14} />
@@ -121,6 +121,34 @@ function _EditorElementControlsBase() {
         <Button size="icon" variant="ghost" className="rounded-sm h-7 w-7" onClick={() => editor.canvas.onDeleteActiveObject()}>
           <Trash2Icon size={14} />
         </Button>
+      </div>
+      <div className="flex items-center gap-1 p-1">
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" variant="ghost" className="rounded-sm h-7 w-7">
+              <SendToBackIcon size={14} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="min-w-40" align="end" sideOffset={6} alignOffset={-4}>
+            <DropdownMenuLabel className="text-xs">Move</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              {move.map(({ label, value }) => (
+                <DropdownMenuItem key={value} onClick={() => editor.canvas.alignment.changeActiveObjectLayer(value)} className="text-xs">
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs">Align to Page</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              {align.map(({ label, value }) => (
+                <DropdownMenuItem key={value} onClick={() => editor.canvas.alignment.alignActiveObjecToPage(value)} className="text-xs">
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </motion.div>
   );

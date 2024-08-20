@@ -7,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useEditorContext } from "@/context/editor";
 
-import { ToolbarPositionOption } from "../common/position";
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
 import { ToolbarOpacityOption } from "../common/opacity";
@@ -28,7 +27,7 @@ function _ImageToolbar() {
       <ToolbarStrokeOption />
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarOpacityOption />
-      <Separator orientation="vertical" className="h-8 ml-auto mr-4" />
+      <Separator orientation="vertical" className="h-8 mr-4" />
       <div className="flex items-center gap-4">
         <Button
           onClick={() => editor.setActiveSidebarRight(editor.sidebarRight === "filters" ? null : "filters")}
@@ -51,8 +50,6 @@ function _ImageToolbar() {
       </div>
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarTimelineOption />
-      <Separator orientation="vertical" className="h-8 mx-4" />
-      <ToolbarPositionOption />
     </div>
   );
 }

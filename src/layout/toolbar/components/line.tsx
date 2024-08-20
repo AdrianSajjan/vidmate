@@ -4,7 +4,6 @@ import { Separator } from "@/components/ui/separator";
 
 import { ToolbarStrokeOption } from "../common/stroke";
 import { ToolbarTimelineOption } from "../common/timeline";
-import { ToolbarPositionOption } from "../common/position";
 import { ToolbarOpacityOption } from "../common/opacity";
 
 function _LineToolbar() {
@@ -13,10 +12,8 @@ function _LineToolbar() {
       <ToolbarStrokeOption />
       <Separator orientation="vertical" className="h-8 mx-4" />
       <ToolbarOpacityOption />
-      <Separator orientation="vertical" className="h-8 ml-auto mr-4" />
+      <Separator orientation="vertical" className="h-8 mr-4" />
       <ToolbarTimelineOption />
-      <Separator orientation="vertical" className="h-8 mx-4" />
-      <ToolbarPositionOption />
     </div>
   );
 }
