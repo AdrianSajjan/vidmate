@@ -137,6 +137,7 @@ export class CanvasTimeline {
     this.playing = false;
     this.canvas.fire("timeline:stop");
     this._timeline!.pause();
+    this.animations.deactivate();
     this._resetTimeline();
   }
 
@@ -147,6 +148,7 @@ export class CanvasTimeline {
 
   destroy() {
     this.playing = false;
+    this.animations.deactivate();
     this.canvas.fire("timeline:stop");
     if (this._timeline) {
       this._timeline.pause();

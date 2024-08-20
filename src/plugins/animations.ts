@@ -296,6 +296,46 @@ export class CanvasAnimations {
         }
 
         case "block": {
+          const overlay = createInstance(fabric.Rect, { left, top, angle, height: height * scaleY, width: width * scaleX, scaleY: 1, scaleX: 1 / (width * scaleX), opacity: 0, excludeFromTimeline: true });
+          this.canvas.add(overlay).requestRenderAll();
+          this._extras.push(overlay);
+          object.set({ opacity: 0 });
+          timeline.add(
+            {
+              targets: overlay,
+              opacity: 1,
+              duration: 1,
+            },
+            offset,
+          );
+          timeline.add(
+            {
+              targets: overlay,
+              scaleX: 1,
+              duration: entry.duration * 0.5,
+              easing: modifyAnimationEasing(entry.easing, entry.duration),
+            },
+            offset,
+          );
+          timeline.add(
+            {
+              targets: overlay,
+              scaleX: 1 / (width * scaleX),
+              left: left + width * scaleX,
+              duration: entry.duration * 0.5,
+              easing: modifyAnimationEasing(entry.easing, entry.duration),
+              begin: () => object.set({ opacity: 1 }),
+            },
+            offset + entry.duration * 0.5,
+          );
+          timeline.add(
+            {
+              targets: overlay,
+              opacity: 0,
+              duration: 1,
+            },
+            offset + entry.duration,
+          );
           break;
         }
 
@@ -750,14 +790,18 @@ export class CanvasAnimations {
     }
   }
 
+  deactivate() {
+    this.canvas.remove(...this._extras);
+    this._extras = [];
+  }
+
   dispose(object = this._active) {
     this._timeline?.pause();
     anime.remove(this._timeline);
 
-    this.canvas.remove(...this._extras);
+    this.deactivate();
     this._canvas.onToggleControls(true);
 
-    this._extras = [];
     this._active = null;
     this._timeline = null;
 
