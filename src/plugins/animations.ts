@@ -114,11 +114,11 @@ export class CanvasAnimations {
     return { ...state };
   }
 
-  private _entry(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], state: AnimationState, mask?: boolean, preview?: boolean) {
+  private _entry(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], state: AnimationState, meta: Record<string, any>, mask?: boolean, preview?: boolean) {
     if (!entry) return;
 
     const { left, top, height, width, opacity, angle, scaleX, scaleY } = state;
-    const offset = preview ? 0 : object.meta!.offset + this._entryOffset;
+    const offset = preview ? 0 : meta.offset + this._entryOffset;
 
     switch (entry.name) {
       case "fade": {
@@ -490,11 +490,11 @@ export class CanvasAnimations {
     }
   }
 
-  private _exit(object: fabric.Object, timeline: anime.AnimeTimelineInstance, exit: AnimationTimeline["in"], state: AnimationState, _mask?: boolean, preview?: boolean) {
+  private _exit(object: fabric.Object, timeline: anime.AnimeTimelineInstance, exit: AnimationTimeline["in"], state: AnimationState, meta: Record<string, any>, _mask?: boolean, preview?: boolean) {
     if (!exit) return;
 
     const { left, top, height, width, angle, scaleX, scaleY } = state;
-    const offset = preview ? 0 : object.meta!.offset + object.meta!.duration - exit.duration - this._exitOffset;
+    const offset = preview ? 0 : meta.offset + meta.duration - exit.duration - this._exitOffset;
 
     switch (exit.name) {
       case "fade": {
@@ -648,14 +648,24 @@ export class CanvasAnimations {
     }
   }
 
-  private _scene(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"], state: AnimationState, mask?: boolean, preview?: boolean) {
+  private _scene(
+    object: fabric.Object,
+    timeline: anime.AnimeTimelineInstance,
+    entry: AnimationTimeline["in"],
+    exit: AnimationTimeline["out"],
+    scene: AnimationTimeline["scene"],
+    state: AnimationState,
+    meta: Record<string, any>,
+    mask?: boolean,
+    preview?: boolean,
+  ) {
     if (!scene) return;
 
     const { scaleX, scaleY } = state;
     const animation = scene.duration || 1000;
 
-    const duration = preview ? 5000 : object.meta!.duration - (entry.name === "none" ? 0 : entry.duration + this._entryOffset) - (exit.name === "none" ? 0 : exit.duration + this._exitOffset);
-    const offset = preview ? 0 : object.meta!.offset + (entry.name === "none" ? 0 : entry.duration + this._entryOffset);
+    const duration = preview ? 5000 : meta.duration - (entry.name === "none" ? 0 : entry.duration + this._entryOffset) - (exit.name === "none" ? 0 : exit.duration + this._exitOffset);
+    const offset = preview ? 0 : meta.offset + (entry.name === "none" ? 0 : entry.duration + this._entryOffset);
 
     switch (scene.name) {
       case "rotate": {
@@ -738,26 +748,26 @@ export class CanvasAnimations {
     }
   }
 
-  private _preview(element: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline, mask?: boolean) {
+  private _preview(element: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline, meta: Record<string, any>, mask?: boolean) {
     const state = this._save(element);
     switch (type) {
       case "in":
-        this._entry(element, this._timeline!, animation["in"], state, mask, true);
+        this._entry(element, this._timeline!, animation["in"], state, meta, mask, true);
         break;
       case "out":
-        this._exit(element, this._timeline!, animation["out"], state, mask, true);
+        this._exit(element, this._timeline!, animation["out"], state, meta, mask, true);
         break;
       case "scene":
-        this._scene(element, this._timeline!, animation["in"], animation["out"], animation["scene"], state, mask, true);
+        this._scene(element, this._timeline!, animation["in"], animation["out"], animation["scene"], state, meta, mask, true);
         break;
     }
   }
 
-  private _initialize(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"], mask?: boolean) {
+  private _initialize(object: fabric.Object, timeline: anime.AnimeTimelineInstance, entry: AnimationTimeline["in"], exit: AnimationTimeline["out"], scene: AnimationTimeline["scene"], meta: Record<string, any>, mask?: boolean) {
     const state = this._save(object);
-    this._entry(object, timeline, entry, state, mask);
-    this._exit(object, timeline, exit, state, mask);
-    this._scene(object, timeline, entry, exit, scene, state, mask);
+    this._entry(object, timeline, entry, state, meta, mask);
+    this._exit(object, timeline, exit, state, meta, mask);
+    this._scene(object, timeline, entry, exit, scene, state, meta, mask);
   }
 
   preview(object: fabric.Object, type: "in" | "out" | "scene", animation: AnimationTimeline) {
@@ -770,8 +780,8 @@ export class CanvasAnimations {
     this._active = object;
     this._timeline = anime.timeline({ update: this._update.bind(this), complete: this._complete.bind(this, element), endDelay: 2000, loop: true });
 
-    if (element.clipPath) this._preview(element.clipPath, type, animation, true);
-    this._preview(element, type, animation);
+    if (element.clipPath) this._preview(element.clipPath, type, animation, element.meta!, true);
+    this._preview(element, type, animation, element.meta!);
 
     this._timeline.play();
     element.on("deselected", this.dispose.bind(this, element));
@@ -783,10 +793,10 @@ export class CanvasAnimations {
       if (object.excludeFromTimeline) continue;
       if (FabricUtils.isTextboxElement(object)) {
         const textbox = this.text.animate(object, canvas);
-        this._initialize(textbox, timeline, textbox.anim!.in, textbox.anim!.out, textbox.anim!.scene);
+        this._initialize(textbox, timeline, textbox.anim!.in, textbox.anim!.out, textbox.anim!.scene, textbox.meta!);
       } else {
-        if (object.clipPath) this._initialize(object.clipPath, timeline, object.anim!.in, object.anim!.out, object.anim!.scene, true);
-        this._initialize(object, timeline, object.anim!.in, object.anim!.out, object.anim!.scene);
+        if (object.clipPath) this._initialize(object.clipPath, timeline, object.anim!.in, object.anim!.out, object.anim!.scene, object.meta!, true);
+        this._initialize(object, timeline, object.anim!.in, object.anim!.out, object.anim!.scene, object.meta!);
       }
     }
   }

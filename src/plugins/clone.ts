@@ -36,8 +36,6 @@ export class CanvasClone {
     const meta = cloneDeep(this._clipboard.meta);
     const anim = cloneDeepWith(this._clipboard.anim, this._resolver);
 
-    console.log(anim);
-
     const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => this._clipboard!.clone(resolve, propertiesToInclude));
     clone.set({ name: name, top: clone.top! + 10, left: clone.left! + 10, meta: meta, anim: anim, clipPath: undefined });
 
