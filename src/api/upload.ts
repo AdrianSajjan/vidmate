@@ -16,7 +16,7 @@ async function upload(file: File | Blob, name: string): Promise<string> {
   return response.data.url;
 }
 
-export async function uploadAssetToS3(file: File, type: "image" | "video" | "audio"): Promise<UploadAsset> {
+export async function uploadAssetToS3(file: File, type: "image" | "video" | "audio" | "thumbnail"): Promise<UploadAsset> {
   const id = nanoid();
   const thumbname = id + ".png";
   const filename = id + file.name.split(".").pop();
@@ -40,6 +40,11 @@ export async function uploadAssetToS3(file: File, type: "image" | "video" | "aud
         extractAudioWaveformFromAudioFile(file).then((waveform) => upload(waveform.thumbnail, thumbname).then((thumbnail) => ({ thumbnail, duration: waveform.duration }))),
       ]);
       return { source, duration, thumbnail, name: file.name };
+    }
+
+    case "thumbnail": {
+      const thumbnail = await upload(file, thumbname);
+      return { source: thumbnail, thumbnail: thumbnail, name: file.name };
     }
 
     default:

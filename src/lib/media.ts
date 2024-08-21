@@ -26,6 +26,10 @@ export function checkForAudioInVideo(source: string) {
   });
 }
 
+export function convertBlobToFile(blob: Blob, name: string) {
+  return createInstance(File, [blob], name, { type: blob.type, lastModified: Date.now() });
+}
+
 export function extractAudioDurationFromSource(source: string) {
   return createPromise<number>((resolve, reject) => {
     const audio = createInstance(Audio);

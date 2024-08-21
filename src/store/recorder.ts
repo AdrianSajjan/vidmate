@@ -7,8 +7,9 @@ import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise, createUint8Array, wait } from "@/lib/utils";
 import { Editor } from "@/store/editor";
 import { propertiesToInclude } from "@/fabric/constants";
-import { dataURLToUInt8Array } from "@/lib/media";
+import { convertBlobToFile, dataURLToUInt8Array } from "@/lib/media";
 import { fetchExtensionByCodec } from "@/constants/recorder";
+import { uploadAssetToS3 } from "@/api/upload";
 
 export class Recorder {
   private _editor: Editor;
@@ -146,10 +147,13 @@ export class Recorder {
     FabricUtils.applyTransformationsAfterLoad(this.instance);
     this.instance.renderAll();
 
-    const base64 = this.instance.toDataURL({ format: "image/png" });
+    const blob: Blob = yield createPromise((resolve) => this.instance.getElement().toBlob((blob) => resolve(blob), "image/png"));
+    const source: string = yield uploadAssetToS3(convertBlobToFile(blob, this._editor.canvas.id + ".png"), "thumbnail")
+      .then((response) => response.thumbnail)
+      .catch(() => this.instance.toDataURL({ format: "image/png" }));
     this.instance.clear();
 
-    return base64;
+    return source;
   }
 
   *start() {
