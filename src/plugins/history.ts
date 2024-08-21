@@ -75,6 +75,7 @@ export class CanvasHistory {
   }
 
   *undo() {
+    if (!this.canUndo) return;
     this.status = "pending";
     const current = this._undo.pop()!;
     const history = this._undo.pop();
@@ -87,6 +88,7 @@ export class CanvasHistory {
   }
 
   *redo() {
+    if (!this.canRedo) return;
     this.status = "pending";
     const history = this._redo.pop();
     if (history) {
