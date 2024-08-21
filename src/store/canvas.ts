@@ -24,6 +24,7 @@ import { EditorFont } from "@/constants/fonts";
 import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
+import { CanvasHotkeys } from "@/plugins/hotkeys";
 
 export class Canvas {
   id: string;
@@ -45,6 +46,7 @@ export class Canvas {
   clipper!: CanvasClipMask;
   trimmer!: CanvasTrimmer;
 
+  hotkeys!: CanvasHotkeys;
   history!: CanvasHistory;
   template!: CanvasTemplate;
   selection!: CanvasSelection;
@@ -154,6 +156,7 @@ export class Canvas {
     this.clipper = createInstance(CanvasClipMask, this);
     this.cropper = createInstance(CanvasCropper, this);
     this.trimmer = createInstance(CanvasTrimmer, this);
+    this.hotkeys = createInstance(CanvasHotkeys, this);
 
     this.text = createInstance(CanvasText, this);
     this.chart = createInstance(CanvasChart, this);
