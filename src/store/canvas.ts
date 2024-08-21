@@ -195,50 +195,6 @@ export class Canvas {
     this.instance.discardActiveObject().requestRenderAll();
   }
 
-  *onCloneObject(object?: fabric.Object) {
-    if (!object) return;
-
-    const name = FabricUtils.elementID(object.name!.split("_").at(0) || "clone");
-    const meta = structuredClone(object.meta);
-    const anim = structuredClone(object.anim);
-
-    const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone(resolve, propertiesToInclude));
-    clone.set({ name: name, top: clone.top!, left: clone.left!, meta: meta, anim: anim, clipPath: undefined }).setCoords();
-
-    if (object.clipPath) {
-      this.history.active = false;
-
-      const clipPath: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clipPath!.clone(resolve, propertiesToInclude));
-      clipPath.set({ name: FabricUtils.elementID(clipPath.name!.split("_").at(0) || "clone") });
-
-      FabricUtils.bindObjectTransformToParent(clone, [clipPath]);
-      const handler = () => FabricUtils.updateObjectTransformToParent(clone, [{ object: clipPath }]);
-
-      clone.on("moving", handler);
-      clone.on("scaling", handler);
-      clone.on("rotating", handler);
-      clone.set({ clipPath }).setCoords();
-
-      this.instance.add(clipPath, clone);
-      this.instance.setActiveObject(clone).requestRenderAll();
-      this.history.active = true;
-
-      this.instance.fire("object:modified", { target: clone });
-      this.instance.fire("clip:added", { target: clone });
-    } else {
-      this.instance.add(clone);
-      this.instance.setActiveObject(clone).requestRenderAll();
-    }
-
-    return clone;
-  }
-
-  *onCloneActiveObject() {
-    const object = this.instance.getActiveObject();
-    const clone: fabric.Object = yield this.onCloneObject(object!);
-    return clone;
-  }
-
   onAddText(text: string, font: EditorFont, fontSize: number, fontWeight: number) {
     const dimensions = FabricUtils.measureTextDimensions(text, font.family, fontSize, fontWeight);
     const options = { name: FabricUtils.elementID("text"), objectCaching: false, fontFamily: font.family, fontWeight, fontSize, width: Math.min(dimensions.width, this.workspace.width), textAlign: "center" };

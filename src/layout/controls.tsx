@@ -115,7 +115,7 @@ function _EditorElementControlsBase() {
         </DropdownMenu>
       </div>
       <div className="flex items-center gap-1 p-1">
-        <Button size="icon" variant="ghost" className="rounded-sm h-7 w-7" onClick={() => editor.canvas.onCloneActiveObject()} disabled={selected.meta?.thumbnail}>
+        <Button size="icon" variant="ghost" className="rounded-sm h-7 w-7" onClick={() => editor.canvas.cloner.clone()} disabled={selected.meta?.thumbnail}>
           <CopyPlusIcon size={14} />
         </Button>
         <Button size="icon" variant="ghost" className="rounded-sm h-7 w-7" onClick={() => editor.canvas.onDeleteActiveObject()}>

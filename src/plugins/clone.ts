@@ -2,6 +2,7 @@ import { propertiesToInclude } from "@/fabric/constants";
 import { FabricUtils } from "@/fabric/utils";
 import { createPromise } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
+import { cloneDeep, cloneDeepWith } from "lodash";
 import { makeAutoObservable } from "mobx";
 
 export class CanvasClone {
@@ -14,37 +15,36 @@ export class CanvasClone {
     makeAutoObservable(this);
   }
 
-  *copy() {
-    const object = this._canvas.instance.getActiveObject();
-    if (!object) return;
+  _resolver(_: unknown, key: string | number | undefined) {
+    switch (key) {
+      case "clipPath":
+        return null;
+      case "filters":
+        return null;
+    }
+  }
 
-    const name = FabricUtils.elementID(object!.name!.split("_").at(0) || "clone");
-    const meta = structuredClone(object!.meta);
-    const anim = structuredClone(object!.anim);
-
-    const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object!.clone(resolve, propertiesToInclude));
-    clone.set({ name: name, top: clone.top!, left: clone.left!, meta: meta, anim: anim, clipPath: undefined }).setCoords();
-
-    this._clipboard = clone;
+  *copy(_object?: fabric.Object) {
+    const object = _object || this._canvas.instance.getActiveObject();
+    this._clipboard = object;
   }
 
   *paste() {
     if (!this._clipboard) return;
 
-    const object = this._clipboard;
-    if (!object) return;
+    const name = FabricUtils.elementID(this._clipboard.name!.split("_").at(0) || "clone");
+    const meta = cloneDeep(this._clipboard.meta);
+    const anim = cloneDeepWith(this._clipboard.anim, this._resolver);
 
-    const name = FabricUtils.elementID(object.name!.split("_").at(0) || "clone");
-    const meta = structuredClone(object.meta);
-    const anim = structuredClone(object.anim);
+    console.log(anim);
 
-    const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clone(resolve, propertiesToInclude));
-    clone.set({ name: name, top: clone.top! + 10, left: clone.left! + 10, meta: meta, anim: anim, clipPath: undefined }).setCoords();
+    const clone: fabric.Object = yield createPromise<fabric.Object>((resolve) => this._clipboard!.clone(resolve, propertiesToInclude));
+    clone.set({ name: name, top: clone.top! + 10, left: clone.left! + 10, meta: meta, anim: anim, clipPath: undefined });
 
-    if (object.clipPath) {
+    if (this._clipboard.clipPath) {
       this._canvas.history.active = false;
 
-      const clipPath: fabric.Object = yield createPromise<fabric.Object>((resolve) => object.clipPath!.clone(resolve, propertiesToInclude));
+      const clipPath: fabric.Object = yield createPromise<fabric.Object>((resolve) => this._clipboard!.clipPath!.clone(resolve, propertiesToInclude));
       clipPath.set({ name: FabricUtils.elementID(clipPath.name!.split("_").at(0) || "clone") });
 
       FabricUtils.bindObjectTransformToParent(clone, [clipPath]);
@@ -69,9 +69,9 @@ export class CanvasClone {
     this._clipboard = clone;
   }
 
-  clone() {
-    this.copy();
-    this.paste();
+  *clone(object?: fabric.Object) {
+    yield this.copy(object);
+    yield this.paste();
     this.destroy();
   }
 

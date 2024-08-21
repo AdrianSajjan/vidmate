@@ -71,7 +71,7 @@ export class CanvasTrimmer {
     if (!object) return;
     if (FabricUtils.isVideoElement(object)) {
       const video = this.canvas.getItemByName(object.name) as fabric.Video;
-      const clone: fabric.Video = yield this._canvas.onCloneObject(video);
+      const clone: fabric.Video = yield this._canvas.cloner.clone(video);
       return clone;
     }
   }
