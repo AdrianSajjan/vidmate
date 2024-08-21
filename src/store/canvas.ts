@@ -25,6 +25,7 @@ import { activityIndicator, propertiesToInclude, textLayoutProperties } from "@/
 import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { CanvasHotkeys } from "@/plugins/hotkeys";
+import { CanvasClone } from "@/plugins/clone";
 
 export class Canvas {
   id: string;
@@ -39,6 +40,7 @@ export class Canvas {
   timeline!: CanvasTimeline;
   animations!: CanvasAnimations;
   workspace!: CanvasWorkspace;
+  cloner!: CanvasClone;
 
   replacer!: CanvasReplace;
   effects!: CanvasEffects;
@@ -157,6 +159,7 @@ export class Canvas {
     this.cropper = createInstance(CanvasCropper, this);
     this.trimmer = createInstance(CanvasTrimmer, this);
     this.hotkeys = createInstance(CanvasHotkeys, this);
+    this.cloner = createInstance(CanvasClone, this);
 
     this.text = createInstance(CanvasText, this);
     this.chart = createInstance(CanvasChart, this);
