@@ -296,7 +296,8 @@ export class CanvasAnimations {
         }
 
         case "block": {
-          const overlay = createInstance(fabric.Rect, { left, top, angle, height: height * scaleY, width: width * scaleX, scaleY: 1, scaleX: 1 / (width * scaleX), opacity: 0, excludeFromTimeline: true });
+          const fill = this._ungroupAnimatedText(object, "letter").at(0)?.fill;
+          const overlay = createInstance(fabric.Rect, { left, top, angle, fill, height: height * scaleY, width: width * scaleX, scaleY: 1, scaleX: 1 / (width * scaleX), opacity: 0, excludeFromTimeline: true });
           this.canvas.add(overlay).requestRenderAll();
           this._extras.push(overlay);
           object.set({ opacity: 0 });
