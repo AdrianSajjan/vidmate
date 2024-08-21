@@ -1,3 +1,5 @@
+import { defaultSpringConfig } from "@/constants/animations";
+
 export function modifyAnimationEasing(easing?: string, _?: number) {
   switch (easing) {
     case "spring":
@@ -7,19 +9,18 @@ export function modifyAnimationEasing(easing?: string, _?: number) {
   }
 }
 
-interface SpringConfig {
-  mass?: number;
-  stiffness?: number;
-  damping?: number;
-  velocity?: number;
+export function calculateSpringAnimationDuration({ damping, mass, stiffness } = defaultSpringConfig) {
+  const epsilon = 0.01;
+  const omega0 = Math.sqrt(stiffness / mass);
+
+  const zeta = damping / (2 * Math.sqrt(stiffness * mass));
+  const timeToSettle = -Math.log(epsilon) / (zeta * omega0);
+
+  const durationInMilliseconds = timeToSettle * 1000;
+  return durationInMilliseconds;
 }
 
-interface SpringSimlutationPoint {
-  time: number;
-  position: number;
-}
-
-export function visualizeSpringAnimation({ damping = 10, mass = 1, stiffness = 100, velocity: speed = 0 }: SpringConfig, height = 250, width = 500) {
+export function visualizeSpringAnimation({ damping, mass, stiffness, velocity: speed } = defaultSpringConfig, height = 256, width = 640) {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -27,7 +28,7 @@ export function visualizeSpringAnimation({ damping = 10, mass = 1, stiffness = 1
   const initialDisplacement = 1;
   const timeStep = 0.01;
   const totalTime = 2;
-  const points: SpringSimlutationPoint[] = [];
+  const points: Array<{ time: number; position: number }> = [];
 
   let velocity = speed;
   let position = initialDisplacement;

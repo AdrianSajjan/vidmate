@@ -20,6 +20,13 @@ export interface EditorEasing {
   value: string;
 }
 
+export const defaultSpringConfig = {
+  damping: 10,
+  mass: 1,
+  stiffness: 100,
+  velocity: 0,
+};
+
 export const entry: EditorAnimation[] = [
   {
     value: "none",
