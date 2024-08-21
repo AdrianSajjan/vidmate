@@ -21,10 +21,8 @@ export class CanvasHotkeys {
           break;
         case "z":
           if (event.ctrlKey || event.metaKey) {
-            this._canvas.history.undo();
-          }
-          if (event.metaKey && event.shiftKey) {
-            this._canvas.history.redo();
+            if (event.metaKey && event.shiftKey) this._canvas.history.redo();
+            else this._canvas.history.undo();
           }
           break;
         case "y":
