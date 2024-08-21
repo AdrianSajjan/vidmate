@@ -14,9 +14,8 @@ export class CanvasHotkeys {
     runInAction(() => {
       switch (event.key) {
         case "Delete":
-          this._canvas.onDeleteActiveObject();
-          break;
         case "Backspace":
+          if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA" || document.activeElement?.tagName === "SELECT") return;
           this._canvas.onDeleteActiveObject();
           break;
         case "z":

@@ -1,12 +1,17 @@
-import { XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { HTMLAttributes } from "react";
+import { upperFirst } from "lodash";
+
+import { XIcon } from "lucide-react";
+import { CaretSortIcon } from "@radix-ui/react-icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
 
 import { useEditorContext } from "@/context/editor";
 import { usePreviewAnimation } from "@/hooks/use-preview-animation";
@@ -16,7 +21,7 @@ import { useAnimationList } from "@/layout/sidebar-right/hooks/use-animations";
 import { cn } from "@/lib/utils";
 import { EditorAnimation, easings, entry, exit, scene } from "@/constants/animations";
 import { FabricUtils } from "@/fabric/utils";
-import { upperFirst } from "lodash";
+import { visualizeSpringAnimation } from "@/lib/animations";
 
 function _AnimationSidebar() {
   const editor = useEditorContext();
@@ -123,10 +128,6 @@ function _AnimationControls({ selected, type, animations }: AnimationControlsPro
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between gap-6">
-        <Label className={cn("text-xs shrink-0", disabled || animation?.disabled?.duration ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
-        <Input value={duration} onChange={controls.changeDuration} disabled={disabled || animation?.disabled?.duration} type="number" step={0.1} className="text-xs h-8 w-40" />
-      </div>
-      <div className="flex items-center justify-between gap-6 mt-3">
         <Label className={cn("text-xs shrink-0", disabled || animation?.disabled?.easing ? "opacity-50" : "opacity-100")}>Easing</Label>
         <Select value={easing} onValueChange={controls.changeEasing} disabled={disabled || animation?.disabled?.easing}>
           <SelectTrigger className="h-8 text-xs w-40">
@@ -141,10 +142,53 @@ function _AnimationControls({ selected, type, animations }: AnimationControlsPro
           </SelectContent>
         </Select>
       </div>
+      {easing !== "spring" ? (
+        <div className="flex items-center justify-between gap-6 mt-3">
+          <Label className={cn("text-xs shrink-0", disabled || animation?.disabled?.duration ? "opacity-50" : "opacity-100")}>Duration (s)</Label>
+          <Input value={duration} onChange={controls.changeDuration} disabled={disabled || animation?.disabled?.duration} type="number" step={0.1} className="text-xs h-8 w-40" />
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-6 mt-3">
+          <Label className={cn("text-xs shrink-0", disabled ? "opacity-50" : "opacity-100")}>Physics</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="outline" className="h-8 w-40 justify-between items-center">
+                <img src={visualizeSpringAnimation({}, 256, 640)} className="h-8 w-auto -scale-y-100" />
+                <CaretSortIcon className="w-4 h-4 opacity-50 shrink-0" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="w-64 flex flex-col" align="end">
+              <div className="bg-transparent-pattern rounded-sm overflow-hidden">
+                <img src={visualizeSpringAnimation({}, 256, 640)} className="h-full w-auto -scale-y-100" />
+              </div>
+              <Label className="text-xs font-medium mt-6">Mass</Label>
+              <div className="flex items-center justify-between gap-4">
+                <Slider min={1} max={100} />
+                <Input step={0.25} type="number" className="h-8 w-20 text-xs" />
+              </div>
+              <Label className="text-xs font-medium mt-4">Stiffness</Label>
+              <div className="flex items-center justify-between gap-4">
+                <Slider min={0} max={100} />
+                <Input step={0.25} type="number" className="h-8 w-20 text-xs" />
+              </div>
+              <Label className="text-xs font-medium mt-4">Damping</Label>
+              <div className="flex items-center justify-between gap-4">
+                <Slider min={0} max={100} />
+                <Input step={0.25} type="number" className="h-8 w-20 text-xs" />
+              </div>
+              <Label className="text-xs font-medium mt-4">Velocity</Label>
+              <div className="flex items-center justify-between gap-4">
+                <Slider min={0} max={100} />
+                <Input step={0.25} type="number" className="h-8 w-20 text-xs" />
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
       {FabricUtils.isTextboxElement(selected) ? (
         <div className="flex items-center justify-between gap-6 mt-3">
           <Label className={cn("text-xs shrink-0", disabled || animation?.disabled?.text ? "opacity-50" : "opacity-100")}>Text Animate</Label>
-          <Select value={text} onValueChange={controls.changeTextAnimate} disabled={disabled || animation?.disabled?.text}>
+          <Select value={text} onValueChange={controls.changeTextAnimate} disabled={disabled || animation?.disabled?.text || animation?.type !== "textbox"}>
             <SelectTrigger className="h-8 text-xs w-40">
               <SelectValue />
             </SelectTrigger>

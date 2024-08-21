@@ -1,20 +1,62 @@
-export function modifyAnimationEasing(easing?: string, _duration?: number) {
+export function modifyAnimationEasing(easing?: string, _?: number) {
   switch (easing) {
-    // case "easeOutElastic":
-    //   return "easeOutElastic";
-    // case "spring":
-    //   const { damping, mass, stiffness } = calculateSpringParameters(duration);
-    //   return `spring(${mass},${stiffness},${damping},0)`;
+    case "spring":
+      return `spring`;
     default:
       return easing || "linear";
   }
 }
 
-export function calculateSpringParameters(totalDuration = 250, numOscillations = 2, dampingRatio = 0.1) {
-  const T = totalDuration / numOscillations;
-  const omega = (2 * Math.PI) / T;
-  const mass = 1;
-  const stiffness = omega ** 2 * mass;
-  const damping = 2 * dampingRatio * Math.sqrt(stiffness * mass);
-  return { mass, stiffness, damping } as const;
+interface SpringConfig {
+  mass?: number;
+  stiffness?: number;
+  damping?: number;
+  velocity?: number;
+}
+
+interface SpringSimlutationPoint {
+  time: number;
+  position: number;
+}
+
+export function visualizeSpringAnimation({ damping = 10, mass = 1, stiffness = 100, velocity: speed = 0 }: SpringConfig, height = 250, width = 500) {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const initialDisplacement = 1;
+  const timeStep = 0.01;
+  const totalTime = 2;
+  const points: SpringSimlutationPoint[] = [];
+
+  let velocity = speed;
+  let position = initialDisplacement;
+
+  for (let t = 0; t <= totalTime; t += timeStep) {
+    const acceleration = (-stiffness * position - damping * velocity) / mass;
+    velocity += acceleration * timeStep;
+    position += velocity * timeStep;
+    points.push({ time: t, position });
+  }
+
+  const ctx = canvas.getContext("2d")!;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.beginPath();
+
+  const scaleX = canvas.width / totalTime;
+  const max = Math.max(...points.map((p) => Math.abs(p.position)));
+  const scaleY = canvas.height / (2 * max);
+
+  points.forEach((point) => {
+    const x = point.time * scaleX;
+    const y = canvas.height / 2 - point.position * scaleY;
+    ctx.lineTo(x, y);
+  });
+
+  ctx.strokeStyle = "#2463EB";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  return canvas.toDataURL("image/png", 1);
 }

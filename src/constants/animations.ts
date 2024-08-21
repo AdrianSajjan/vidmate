@@ -108,8 +108,13 @@ export const entry: EditorAnimation[] = [
     label: "Block",
     preview: "https://static.canva.com/web/images/e4c91419da2c6ab8f7fb326928c7dde4.png",
     duration: 1500,
+    easing: "easeOutSine",
     fixed: {
       duration: true,
+      easing: true,
+    },
+    disabled: {
+      text: true,
     },
   },
   {
