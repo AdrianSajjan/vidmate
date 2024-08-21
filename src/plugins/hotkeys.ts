@@ -16,24 +16,28 @@ export class CanvasHotkeys {
         case "Delete":
           this._canvas.onDeleteActiveObject();
           break;
+        case "Backspace":
+          this._canvas.onDeleteActiveObject();
+          break;
         case "z":
           if (event.ctrlKey || event.metaKey) {
-            // TODO: Implement undo functionality
+            if (event.metaKey && event.shiftKey) this._canvas.history.redo();
+            else this._canvas.history.undo();
           }
           break;
         case "y":
           if (event.ctrlKey || event.metaKey) {
-            // TODO: Implement redo functionality
+            this._canvas.history.redo();
           }
           break;
         case "c":
           if (event.ctrlKey || event.metaKey) {
-            // TODO: Implement copy functionality
+            this._canvas.cloner.copy();
           }
           break;
         case "v":
           if (event.ctrlKey || event.metaKey) {
-            // TODO: Implement paste functionality
+            this._canvas.cloner.paste();
           }
           break;
       }
@@ -41,7 +45,7 @@ export class CanvasHotkeys {
   }
 
   private _initializeEvents() {
-    window.addEventListener("keydown", this._keyDownEvent);
+    window.addEventListener("keydown", this._keyDownEvent.bind(this));
   }
 
   destroy() {
