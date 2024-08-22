@@ -74,4 +74,13 @@ export interface EditorReplaceAudio {
   type: "audio";
 }
 
+export interface EditorProduct {
+  name: string;
+  description: string;
+  price: number;
+  images: string[];
+}
+
 export type EditorReplace = EditorReplaceVideo | EditorReplaceImage | EditorReplaceAudio | null;
+
+export type EditorPlaceholder = "main-image" | "brand-image" | "cta-text" | "headline-text" | "description-text";

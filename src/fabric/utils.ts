@@ -1,6 +1,7 @@
 import { EditorFont } from "@/constants/fonts";
 import { createInstance, createPromise } from "@/lib/utils";
-import { EditorAudioElement } from "@/types/editor";
+import { EditorAdapter } from "@/store/editor";
+import { EditorAudioElement, EditorPlaceholder } from "@/types/editor";
 import { fabric } from "fabric";
 import { omit } from "lodash";
 import { customAlphabet } from "nanoid";
@@ -197,6 +198,32 @@ export abstract class FabricUtils {
         object.on("moving", handler);
         object.on("scaling", handler);
         object.on("rotating", handler);
+      }
+    }
+  }
+
+  static applyAdapterModificationsAfterLoad(canvas: fabric.Canvas | fabric.StaticCanvas, adapter?: EditorAdapter) {
+    if (!adapter) return;
+    for (const object of canvas._objects) {
+      if (!object.meta || !object.meta.placeholder) continue;
+      const label = object.meta.lavel as EditorPlaceholder;
+      console.log(adapter);
+      switch (label) {
+        case "main-image": {
+          break;
+        }
+        case "brand-image": {
+          break;
+        }
+        case "cta-text": {
+          break;
+        }
+        case "headline-text": {
+          break;
+        }
+        case "description-text": {
+          break;
+        }
       }
     }
   }

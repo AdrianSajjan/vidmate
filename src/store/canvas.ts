@@ -27,11 +27,13 @@ import { createInstance, createPromise } from "@/lib/utils";
 import { CanvasHotkeys } from "@/plugins/hotkeys";
 import { CanvasClone } from "@/plugins/clone";
 import { defaultSpringConfig } from "@/constants/animations";
+import { Editor } from "@/store/editor";
 
 export class Canvas {
   id: string;
   name: string;
 
+  editor: Editor;
   artboard!: fabric.Rect;
   instance!: fabric.Canvas;
 
@@ -58,13 +60,15 @@ export class Canvas {
   controls: boolean;
   elements: fabric.Object[];
 
-  constructor() {
+  constructor(editor: Editor) {
     this.id = nanoid();
     this.name = "Untitled Page";
+
     this.elements = [];
     this.controls = true;
-    this.template = createInstance(CanvasTemplate, this);
 
+    this.editor = editor;
+    this.template = createInstance(CanvasTemplate, this);
     makeAutoObservable(this);
   }
 

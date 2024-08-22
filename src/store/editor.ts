@@ -1,20 +1,28 @@
+import { nanoid } from "nanoid";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL } from "@ffmpeg/util";
 import { makeAutoObservable } from "mobx";
 
 import { Canvas } from "@/store/canvas";
+import { Prompt } from "@/store/prompt";
 import { Recorder } from "@/store/recorder";
 
 import { convertBufferToWaveBlob } from "@/lib/media";
 import { createInstance } from "@/lib/utils";
-import { EditorAudioElement, EditorTemplate, EditorTemplatePage } from "@/types/editor";
 import { FabricUtils } from "@/fabric/utils";
 import { propertiesToInclude } from "@/fabric/constants";
-import { nanoid } from "nanoid";
-import { Prompt } from "./prompt";
+import { EditorAudioElement, EditorProduct, EditorTemplate, EditorTemplatePage } from "@/types/editor";
 
 export type ExportMode = "video" | "both";
+export type EditorMode = "creator" | "adapter";
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
+
+export interface EditorAdapter {
+  product: EditorProduct;
+  descriptions: string[];
+  headlines: string[];
+  cta: string[];
+}
 
 export interface EditorProgress {
   capture: number;
@@ -33,6 +41,7 @@ export enum ExportProgress {
 export class Editor {
   id: string;
   name: string;
+  mode: EditorMode;
 
   page: number;
   pages: Canvas[];
@@ -44,16 +53,17 @@ export class Editor {
 
   blob?: Blob;
   frame?: string;
+  adapter?: EditorAdapter;
 
   file: string;
   fps: string;
   codec: string;
-  exports: ExportMode;
 
   saving: boolean;
   preview: boolean;
-  progress: EditorProgress;
 
+  exports: ExportMode;
+  progress: EditorProgress;
   prompter: Prompt;
   recorder: Recorder;
 
@@ -64,25 +74,26 @@ export class Editor {
   constructor() {
     this.page = 0;
     this.id = nanoid();
+
+    this.mode = "adapter";
     this.name = "Untitled Template";
     this.status = "uninitialized";
 
-    this.pages = [createInstance(Canvas)];
+    this.pages = [createInstance(Canvas, this)];
     this.prompter = createInstance(Prompt, this);
     this.recorder = createInstance(Recorder, this);
     this.controller = createInstance(AbortController);
 
     this.saving = false;
     this.preview = false;
+    this.exporting = ExportProgress.None;
+    this.ffmpeg = createInstance(FFmpeg);
     this.progress = { capture: 0, compile: 0 };
 
     this.file = "";
     this.fps = "30";
     this.codec = "H.264";
     this.exports = "both";
-
-    this.exporting = ExportProgress.None;
-    this.ffmpeg = createInstance(FFmpeg);
 
     this.sidebarLeft = null;
     this.sidebarRight = null;
@@ -106,7 +117,9 @@ export class Editor {
     }
   }
 
-  *initialize() {
+  *initialize(mode: EditorMode, adapter?: EditorAdapter) {
+    this.mode = mode;
+    this.adapter = adapter;
     this.status = "pending";
     try {
       yield this.ffmpeg.load({
@@ -127,8 +140,8 @@ export class Editor {
     const audios = this.canvas.audio.elements.filter((audio) => !audio.muted && !!audio.volume);
     const videos = this.canvas.instance._objects.filter(FabricUtils.isVideoElement) as fabric.Video[];
     const tracks: EditorAudioElement[] = yield this.canvas.audio.extract(videos, { ffmpeg: this.ffmpeg, signal: this.controller.signal });
-    const combined = ([] as EditorAudioElement[]).concat(audios, tracks);
 
+    const combined = ([] as EditorAudioElement[]).concat(audios, tracks);
     if (!combined.length) return null;
 
     const sampleRate = combined[0].buffer.sampleRate;
@@ -192,7 +205,7 @@ export class Editor {
         for (let index = 0; index < template.pages.length; index++) {
           const page = template.pages[index];
           const initialized = !!this.pages[index];
-          if (!initialized) this.pages[index] = createInstance(Canvas);
+          if (!initialized) this.pages[index] = createInstance(Canvas, this);
           this.pages[index].template.set(page);
           if (initialized) this.pages[index].template.load();
         }
@@ -205,7 +218,7 @@ export class Editor {
           const offset = index + this.page;
           const page = template.pages[index];
           const initialized = !!this.pages[offset];
-          if (!initialized) this.pages[offset] = createInstance(Canvas);
+          if (!initialized) this.pages[offset] = createInstance(Canvas, this);
           this.pages[offset].template.set(page);
           if (initialized) this.pages[offset].template.load();
         }
@@ -246,7 +259,7 @@ export class Editor {
   }
 
   addPage() {
-    this.pages.push(createInstance(Canvas));
+    this.pages.push(createInstance(Canvas, this));
   }
 
   deleteActivePage() {

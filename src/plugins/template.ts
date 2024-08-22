@@ -20,6 +20,10 @@ export class CanvasTemplate {
     return this._canvas.instance;
   }
 
+  private get editor() {
+    return this._canvas.editor;
+  }
+
   private get artboard() {
     return this._canvas.artboard;
   }
@@ -65,6 +69,7 @@ export class CanvasTemplate {
             this.workspace.changeFill(this.page!.data.fill || "#FFFFFF");
             this.workspace.resizeArtboard({ height: this.page!.data.height || 1080, width: this.page!.data.width || 1080 });
             FabricUtils.applyTransformationsAfterLoad(this.canvas);
+            if (this.editor.mode === "adapter") FabricUtils.applyAdapterModificationsAfterLoad(this.canvas, this.editor.adapter);
             this.history.clear();
             this.timeline.initialize(this.page!.duration || 5000);
             this.canvas.renderAll();

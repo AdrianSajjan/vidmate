@@ -82,7 +82,7 @@ export const placeholders = [
     label: "Description Text",
     value: "description-text",
   },
-];
+] as const;
 
 export const move = [
   {

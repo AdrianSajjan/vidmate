@@ -36,7 +36,7 @@ function _Editor() {
   const editor = useEditorContext();
 
   useEffect(() => {
-    editor.initialize();
+    editor.initialize("creator");
   }, []);
 
   switch (editor.status) {
