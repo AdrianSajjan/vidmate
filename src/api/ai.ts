@@ -1,4 +1,5 @@
 import { api } from "@/config/api";
+import { useMutation } from "@tanstack/react-query";
 
 const baseQuery = "/customer/ads/api/v1";
 
@@ -20,12 +21,36 @@ export async function generateHeadline(body: AdContentProps) {
   return res.data.data;
 }
 
+export const useGenerateHeadline = () => {
+  const response = useMutation({
+    mutationKey: ["generateHeadline"],
+    mutationFn: generateHeadline,
+  });
+  return response;
+};
+
 export async function generateDescription(body: AdContentProps) {
   const res = await api.post<AdContentResponse>(`${baseQuery}/ad-contents`, body);
   return res.data.data;
 }
 
+export const useGenerateDescription = () => {
+  const response = useMutation({
+    mutationKey: ["generateDescription"],
+    mutationFn: generateDescription,
+  });
+  return response;
+};
+
 export async function generateCTA(body: AdContentProps) {
   const res = await api.post<AdContentResponse>(`${baseQuery}/ad-cta`, body);
   return res.data.data;
 }
+
+export const useGenerateCTA = () => {
+  const response = useMutation({
+    mutationKey: ["generateCTA"],
+    mutationFn: generateCTA,
+  });
+  return response;
+};
