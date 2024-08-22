@@ -53,4 +53,4 @@ export const useGenerateCTA = () => {
     mutationFn: generateCTA,
   });
   return response;
-};
+}; 
