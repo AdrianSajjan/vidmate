@@ -1,17 +1,19 @@
-import { EditorProduct } from "@/types/adapter";
+import { EditorBrand, EditorProduct } from "@/types/adapter";
 import { makeAutoObservable } from "mobx";
 
 type AdapterMode = "create" | "edit";
 
 interface AdapterProps {
   product?: EditorProduct;
+  brand?: EditorBrand;
   objective?: string;
   mode?: AdapterMode;
 }
 
 export class Adapter {
-  mode?: AdapterMode;
   objective?: string;
+  mode?: AdapterMode;
+  brand?: EditorBrand;
   product?: EditorProduct;
 
   constructor() {
@@ -20,6 +22,7 @@ export class Adapter {
 
   initialize(props: AdapterProps) {
     this.mode = props.mode;
+    this.brand = props.brand;
     this.product = props.product;
     this.objective = props.objective;
   }

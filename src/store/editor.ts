@@ -70,7 +70,7 @@ export class Editor {
     this.page = 0;
     this.id = nanoid();
 
-    this.mode = "adapter";
+    this.mode = "creator";
     this.name = "Untitled Template";
     this.status = "uninitialized";
 
@@ -115,10 +115,10 @@ export class Editor {
     }
   }
 
-  *initialize(mode: EditorMode) {
+  *initialize(mode?: EditorMode) {
+    if (mode) this.mode = mode;
+    this.status = "pending";
     try {
-      this.mode = mode;
-      this.status = "pending";
       yield this.ffmpeg.load({
         coreURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js", "text/javascript"),
         wasmURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm", "application/wasm"),
@@ -280,6 +280,20 @@ export class Editor {
       case "close":
         this.preview = false;
         if (this.exporting > 2) this.controller.abort({ message: "Export process cancelled by user" });
+        break;
+    }
+  }
+
+  onToggleMode(mode?: EditorMode) {
+    switch (mode) {
+      case "adapter":
+        this.mode = "adapter";
+        break;
+      case "creator":
+        this.mode = "creator";
+        break;
+      default:
+        this.mode = this.mode === "creator" ? "adapter" : "creator";
         break;
     }
   }

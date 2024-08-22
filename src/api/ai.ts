@@ -1,56 +1,46 @@
 import { api } from "@/config/api";
-import { useMutation } from "@tanstack/react-query";
+import { EditorProduct } from "@/types/adapter";
 
 const baseQuery = "/customer/ads/api/v1";
 
-interface AdContentProps {
-  description?: string;
+interface GenerateCTAParams {
+  description: string;
+  name: string;
   limit: number;
-  name?: string;
-  currency?: string;
-  objective?: string;
-  selling_price?: number;
+  currency: string;
+  objective: string;
+  selling_price: number;
 }
 
-interface AdContentResponse {
+interface GenerateContentParams {
+  description: string;
+  product_name: string;
+}
+
+interface GenerateContentResponse {
   data: string[];
 }
 
-export async function generateHeadline(body: AdContentProps) {
-  const res = await api.post<AdContentResponse>(`${baseQuery}/ad-headlines`, body);
+async function generateHeadline(product: EditorProduct, _objective: string) {
+  const body: GenerateContentParams = { description: product.description, product_name: product.name };
+  const res = await api.post<GenerateContentResponse>(`${baseQuery}/generate-headlines`, body);
   return res.data.data;
 }
 
-export const useGenerateHeadline = () => {
-  const response = useMutation({
-    mutationKey: ["generateHeadline"],
-    mutationFn: generateHeadline,
-  });
-  return response;
-};
-
-export async function generateDescription(body: AdContentProps) {
-  const res = await api.post<AdContentResponse>(`${baseQuery}/ad-contents`, body);
+async function generateDescription(product: EditorProduct, _objective: string) {
+  const body: GenerateContentParams = { description: product.description, product_name: product.name };
+  const res = await api.post<GenerateContentResponse>(`${baseQuery}/generate-subheadlines`, body);
   return res.data.data;
 }
 
-export const useGenerateDescription = () => {
-  const response = useMutation({
-    mutationKey: ["generateDescription"],
-    mutationFn: generateDescription,
-  });
-  return response;
-};
-
-export async function generateCTA(body: AdContentProps) {
-  const res = await api.post<AdContentResponse>(`${baseQuery}/ad-cta`, body);
+async function generateCTA(product: EditorProduct, objective: string) {
+  const body: GenerateCTAParams = { name: product.name, description: product.description, currency: product.currency, selling_price: product.selling_price, objective, limit: 5 };
+  const res = await api.post<GenerateContentResponse>(`${baseQuery}/ad-cta`, body);
   return res.data.data;
 }
 
-export const useGenerateCTA = () => {
-  const response = useMutation({
-    mutationKey: ["generateCTA"],
-    mutationFn: generateCTA,
-  });
-  return response;
-};
+generateHeadline.queryKey = "generate-headline";
+generateDescription.queryKey = "generate-description";
+generateCTA.queryKey = "generate-cta";
+
+export { generateHeadline, generateDescription, generateCTA };

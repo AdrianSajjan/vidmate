@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 import { createInstance } from "@/lib/utils";
-import { EditorProduct } from "@/types/adapter";
+import { EditorBrand, EditorProduct } from "@/types/adapter";
 import { EditorAudio, EditorMedia, EditorTemplate } from "@/types/editor";
 import { PromptSession } from "@/types/prompt";
 
@@ -70,6 +70,16 @@ export function useMockStore() {
   const store = useSyncExternalStore(mock.subscribe.bind(mock), mock.store.bind(mock));
   return store;
 }
+
+export const objective: string = "CTX";
+
+export const brand: EditorBrand = {
+  brand_name: "Zewar",
+  brand_logo: "https://d273i1jagfl543.cloudfront.net/testing/media/business/MI6ykjD-_Sxp6RqpodVvJ.png",
+  brand_description: "Zewar | Unique As You. Dime Free Jewellery at Unbeatable Price.",
+  primary_colors: ["#FFFDFC", "#050807", "#666666"],
+  secondary_colors: [],
+};
 
 export const product: EditorProduct = {
   id: 2398,

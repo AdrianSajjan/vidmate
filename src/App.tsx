@@ -19,7 +19,7 @@ import { EditorCanvas, EditorRecorder } from "@/components/editor";
 import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useIsTablet } from "@/hooks/use-media-query";
-import { product } from "@/constants/mock";
+import { product, objective, brand } from "@/constants/mock";
 
 export function App() {
   return (
@@ -36,9 +36,14 @@ function _Editor() {
   const editor = useEditorContext();
 
   useEffect(() => {
-    editor.initialize("creator");
-    editor.adapter.initialize({ product: product, objective: "CTX" });
+    if (editor.status !== "uninitialized") return;
+    editor.initialize();
   }, []);
+
+  useEffect(() => {
+    if (editor.mode === "creator") return;
+    editor.adapter.initialize({ product, objective, brand });
+  }, [editor.mode]);
 
   switch (editor.status) {
     case "pending":

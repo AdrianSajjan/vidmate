@@ -56,25 +56,38 @@ export class CanvasTemplate {
     return !(this.status === "completed" || this.status === "error") && !!this.page;
   }
 
+  private _complete() {
+    this.history.clear();
+    this.timeline.initialize(this.page!.duration || 5000);
+    this.canvas.renderAll();
+    this.status = "completed";
+  }
+
   private *_scene() {
     return createPromise<void>((resolve) => {
       FabricUtils.applyFontsBeforeLoad(JSON.parse(this.page!.data.scene).objects).then(() => {
         this.timeline.destroy();
         this.workspace.changeFill("#CCCCCC");
         this.workspace.resizeArtboard({ height: this.page!.data.height, width: this.page!.data.width });
+
         this.canvas.loadFromJSON(this.page!.data.scene, () => {
           runInAction(() => {
             this.canvas.insertAt(this.artboard, 0, false);
             this.canvas.clipPath = this.artboard;
+
             this.workspace.changeFill(this.page!.data.fill || "#FFFFFF");
             this.workspace.resizeArtboard({ height: this.page!.data.height || 1080, width: this.page!.data.width || 1080 });
             FabricUtils.applyTransformationsAfterLoad(this.canvas);
-            if (this.editor.mode === "adapter") FabricUtils.applyAdapterModificationsAfterLoad(this.canvas, this.editor.adapter);
-            this.history.clear();
-            this.timeline.initialize(this.page!.duration || 5000);
-            this.canvas.renderAll();
-            this.status = "completed";
-            resolve();
+
+            if (this.editor.mode === "adapter") {
+              FabricUtils.applyAdapterModificationsAfterLoad(this.canvas, this.editor.adapter).then(() => {
+                this._complete();
+                resolve();
+              });
+            } else {
+              this._complete();
+              resolve();
+            }
           });
         });
       });

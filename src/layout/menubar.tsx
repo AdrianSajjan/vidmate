@@ -3,9 +3,9 @@ import { useMutation } from "@tanstack/react-query";
 import { flowResult } from "mobx";
 import { toast } from "sonner";
 
-import { ChevronDownIcon, ChevronRightIcon, CloudUploadIcon, Columns2Icon, ImageIcon, MenuIcon, RedoIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, CloudUploadIcon, CogIcon, Columns2Icon, ImageIcon, MenuIcon, RedoIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ToggleTheme } from "@/components/ui/theme-toggle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
@@ -22,6 +22,7 @@ import { EditorTemplate } from "@/types/editor";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { maxZoom, minZoom } from "@/constants/editor";
 import { mock } from "@/constants/mock";
+import { EditorMode } from "@/store/editor";
 
 function _EditorMenubar() {
   const editor = useEditorContext();
@@ -164,6 +165,23 @@ function _EditorMenubar() {
           </Button>
         </div>
         <ToggleTheme />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="secondary" size="icon">
+              <CogIcon size={15} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-32">
+            <DropdownMenuRadioGroup value={editor.mode} onValueChange={(mode) => editor.onToggleMode(mode as EditorMode)}>
+              <DropdownMenuRadioItem className="text-xs" value="creator">
+                Creator
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem className="text-xs" value="adapter">
+                Adapter
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </section>
     </header>
   );

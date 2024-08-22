@@ -1,6 +1,6 @@
 import { createContext, useCallback, useEffect, useState } from "react";
 
-type Theme = "dark" | "light" | "system";
+export type Theme = "dark" | "light" | "system";
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -39,7 +39,7 @@ export function ThemeProvider({ children, defaultTheme = "system", storageKey = 
       localStorage.setItem(storageKey, theme);
       setTheme(theme);
     },
-    [storageKey]
+    [storageKey],
   );
 
   const value = {

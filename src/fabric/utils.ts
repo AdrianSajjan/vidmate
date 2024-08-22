@@ -1,11 +1,15 @@
-import { EditorFont } from "@/constants/fonts";
-import { createInstance, createPromise } from "@/lib/utils";
-import { EditorAdapter } from "@/store/editor";
-import { EditorAudioElement, EditorPlaceholder } from "@/types/editor";
+import WebFont from "webfontloader";
+
 import { fabric } from "fabric";
 import { omit } from "lodash";
 import { customAlphabet } from "nanoid";
-import WebFont from "webfontloader";
+
+import { generateCTA, generateDescription, generateHeadline } from "@/api/ai";
+import { queryClient } from "@/config/api";
+import { EditorFont } from "@/constants/fonts";
+import { createInstance, createPromise } from "@/lib/utils";
+import { Adapter } from "@/store/adapter";
+import { EditorAudioElement } from "@/types/editor";
 
 export interface TransformChildren {
   object: fabric.Object;
@@ -202,29 +206,62 @@ export abstract class FabricUtils {
     }
   }
 
-  static applyAdapterModificationsAfterLoad(canvas: fabric.Canvas | fabric.StaticCanvas, adapter?: EditorAdapter) {
-    if (!adapter) return;
-    for (const object of canvas._objects) {
-      if (!object.meta || !object.meta.placeholder) continue;
-      const label = object.meta.lavel as EditorPlaceholder;
-      console.log(adapter);
-      switch (label) {
-        case "main-image": {
-          break;
-        }
-        case "brand-image": {
-          break;
-        }
-        case "cta-text": {
-          break;
-        }
-        case "headline-text": {
-          break;
-        }
-        case "description-text": {
-          break;
-        }
-      }
+  static async applyAdapterModificationsAfterLoad(canvas: fabric.Canvas | fabric.StaticCanvas, { product, objective, brand }: Adapter) {
+    if (brand) {
+      console.log("---BRANDS---");
+      const elements = canvas._objects.filter((object) => object.meta?.label === "brand-image" && this.isImageElement(object)) as fabric.Image[];
+      console.log(elements);
+      const promises = elements.map((element) => {
+        return createPromise<void>((resolve, reject) => {
+          fabric.util.loadImage(brand.brand_logo, (image) => {
+            if (!image) return reject();
+            element.setElement(image).setCoords();
+            resolve();
+          });
+        });
+      });
+      await Promise.allSettled(promises);
+    }
+
+    if (!product) return;
+
+    if (product.images.length) {
+      console.log("---PRODUCTS---");
+      const elements = canvas._objects.filter((object) => object.meta?.label === "main-image" && this.isImageElement(object)) as fabric.Image[];
+      console.log(elements);
+      const promises = elements.map((element, index) => {
+        return createPromise<void>((resolve, reject) => {
+          fabric.util.loadImage(product.images[index % product.images.length].url, (image) => {
+            if (!image) return reject();
+            element.setElement(image).setCoords();
+            resolve();
+          });
+        });
+      });
+      await Promise.allSettled(promises);
+    }
+
+    if (!objective) return;
+
+    const [headlines, descriptions, ctas] = await Promise.allSettled([
+      queryClient.ensureQueryData({ queryKey: [generateHeadline.queryKey], queryFn: () => generateHeadline(product, objective) }),
+      queryClient.ensureQueryData({ queryKey: [generateDescription.queryKey], queryFn: () => generateDescription(product, objective) }),
+      queryClient.ensureQueryData({ queryKey: [generateCTA.queryKey], queryFn: () => generateCTA(product, objective) }),
+    ]);
+
+    if (ctas.status === "fulfilled") {
+      const elements = canvas._objects.filter((object) => object.meta?.label === "cta-text" && this.isTextboxElement(object)) as fabric.Textbox[];
+      elements.map((element, index) => element.set({ text: ctas.value[index % ctas.value.length] }));
+    }
+
+    if (headlines.status === "fulfilled") {
+      const elements = canvas._objects.filter((object) => object.meta?.label === "headline-text" && this.isTextboxElement(object)) as fabric.Textbox[];
+      elements.map((element, index) => element.set({ text: headlines.value[index % headlines.value.length] }));
+    }
+
+    if (descriptions.status === "fulfilled") {
+      const elements = canvas._objects.filter((object) => object.meta?.label === "description-text" && this.isTextboxElement(object)) as fabric.Textbox[];
+      elements.map((element, index) => element.set({ text: descriptions.value[index % descriptions.value.length] }));
     }
   }
 

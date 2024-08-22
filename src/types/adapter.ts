@@ -14,3 +14,11 @@ export interface EditorProductImage {
   id: number;
   url: string;
 }
+
+export interface EditorBrand {
+  brand_name: string;
+  brand_logo: string;
+  brand_description: string;
+  primary_colors: string[];
+  secondary_colors: string[];
+}
