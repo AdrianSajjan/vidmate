@@ -1,14 +1,31 @@
 import { api } from "@/config/api";
 
-interface HeadlineProps {}
+const baseQuery = "/customer/ads/api/v1";
 
-interface HeadlineResponse {}
-
-export async function generateHeadline(_: HeadlineProps) {
-  // api logic logic goes here
-  return {} as HeadlineResponse;
+interface AdContentProps {
+  description?: string;
+  limit: number;
+  name?: string;
+  currency?: string;
+  objective?: string;
+  selling_price?: number;
 }
 
-export async function generateDescription(_: HeadlineProps) {}
+interface AdContentResponse {
+  data: string[];
+}
 
-export async function generateCTA(_: HeadlineProps) {}
+export async function generateHeadline(body: AdContentProps) {
+  const res = await api.post<AdContentResponse>(`${baseQuery}/ad-headlines`, body);
+  return res.data.data;
+}
+
+export async function generateDescription(body: AdContentProps) {
+  const res = await api.post<AdContentResponse>(`${baseQuery}/ad-contents`, body);
+  return res.data.data;
+}
+
+export async function generateCTA(body: AdContentProps) {
+  const res = await api.post<AdContentResponse>(`${baseQuery}/ad-cta`, body);
+  return res.data.data;
+}
