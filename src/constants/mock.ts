@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from "react";
 
 import { createInstance } from "@/lib/utils";
+import { EditorProduct } from "@/types/adapter";
 import { EditorAudio, EditorMedia, EditorTemplate } from "@/types/editor";
 import { PromptSession } from "@/types/prompt";
-import { EditorAdapter } from "@/store/editor";
 
 const images: EditorMedia[] = [];
 const videos: EditorMedia[] = [];
@@ -71,14 +71,27 @@ export function useMockStore() {
   return store;
 }
 
-export const adapter: EditorAdapter = {
-  product: {
-    description: "",
-    name: "",
-    price: 0,
-    images: [],
-  },
-  cta: [],
-  descriptions: [],
-  headlines: [],
+export const product: EditorProduct = {
+  id: 2398,
+  business_id: 431,
+  name: "Satchel Bag",
+  currency: "INR",
+  description: "Designed in London,Our Gemma bag means business. This faux leather style has an on-trend croc effect and structured shape.",
+  tags: null,
+  selling_price: 1000,
+  site_url: "https://accessorizelondon.in/products/accessorize-london-womens-faux-leather-burgundy-gemma-croc-handheld-satchel-bag",
+  images: [
+    {
+      id: 2519,
+      url: "https://d273i1jagfl543.cloudfront.net/testing/media/product/f4BPonMWP9dV6sw-lLQcu.png",
+    },
+    {
+      id: 4092,
+      url: "https://d273i1jagfl543.cloudfront.net/testing/media/product/d94d72e7-47af-49c3-86b2-a9c3c8a8cca2",
+    },
+    {
+      id: 4093,
+      url: "https://d273i1jagfl543.cloudfront.net/testing/media/product/7ae5bbeb-9e00-44f1-a9f5-3c5bfa5a6a0b",
+    },
+  ],
 };

@@ -18,9 +18,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { EditorCanvas, EditorRecorder } from "@/components/editor";
 import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
 import { useIsTablet } from "@/hooks/use-media-query";
-import { adapter } from "@/constants/mock";
+import { product } from "@/constants/mock";
 
 export function App() {
   return (
@@ -37,7 +36,8 @@ function _Editor() {
   const editor = useEditorContext();
 
   useEffect(() => {
-    editor.initialize("creator", adapter);
+    editor.initialize("creator");
+    editor.adapter.initialize({ product: product, objective: "CTX" });
   }, []);
 
   switch (editor.status) {

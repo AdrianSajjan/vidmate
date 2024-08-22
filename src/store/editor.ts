@@ -11,18 +11,12 @@ import { convertBufferToWaveBlob } from "@/lib/media";
 import { createInstance } from "@/lib/utils";
 import { FabricUtils } from "@/fabric/utils";
 import { propertiesToInclude } from "@/fabric/constants";
-import { EditorAudioElement, EditorProduct, EditorTemplate, EditorTemplatePage } from "@/types/editor";
+import { EditorAudioElement, EditorTemplate, EditorTemplatePage } from "@/types/editor";
+import { Adapter } from "@/store/adapter";
 
 export type ExportMode = "video" | "both";
 export type EditorMode = "creator" | "adapter";
 export type EditorStatus = "uninitialized" | "pending" | "complete" | "error";
-
-export interface EditorAdapter {
-  product: EditorProduct;
-  descriptions: string[];
-  headlines: string[];
-  cta: string[];
-}
 
 export interface EditorProgress {
   capture: number;
@@ -53,7 +47,6 @@ export class Editor {
 
   blob?: Blob;
   frame?: string;
-  adapter?: EditorAdapter;
 
   file: string;
   fps: string;
@@ -64,8 +57,10 @@ export class Editor {
 
   exports: ExportMode;
   progress: EditorProgress;
+
   prompter: Prompt;
   recorder: Recorder;
+  adapter: Adapter;
 
   ffmpeg: FFmpeg;
   exporting: ExportProgress;
@@ -80,12 +75,15 @@ export class Editor {
     this.status = "uninitialized";
 
     this.pages = [createInstance(Canvas, this)];
+    this.controller = createInstance(AbortController);
+
+    this.adapter = createInstance(Adapter);
     this.prompter = createInstance(Prompt, this);
     this.recorder = createInstance(Recorder, this);
-    this.controller = createInstance(AbortController);
 
     this.saving = false;
     this.preview = false;
+
     this.exporting = ExportProgress.None;
     this.ffmpeg = createInstance(FFmpeg);
     this.progress = { capture: 0, compile: 0 };
@@ -117,11 +115,10 @@ export class Editor {
     }
   }
 
-  *initialize(mode: EditorMode, adapter?: EditorAdapter) {
-    this.mode = mode;
-    this.adapter = adapter;
-    this.status = "pending";
+  *initialize(mode: EditorMode) {
     try {
+      this.mode = mode;
+      this.status = "pending";
       yield this.ffmpeg.load({
         coreURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js", "text/javascript"),
         wasmURL: yield toBlobURL("https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm", "application/wasm"),
