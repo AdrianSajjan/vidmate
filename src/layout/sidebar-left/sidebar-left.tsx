@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import { Fragment, useMemo } from "react";
-import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon, LineChartIcon, TerminalSquareIcon } from "lucide-react";
+import { Grid2X2Icon, ImageIcon, LayersIcon, MusicIcon, ScalingIcon, TypeIcon, UploadIcon, VideoIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
@@ -73,11 +73,6 @@ function _EditorSidebarLeft() {
         value: "audios",
       },
       {
-        icon: LineChartIcon,
-        label: "Charts",
-        value: "charts",
-      },
-      {
         icon: UploadIcon,
         label: "Uploads",
         value: "uploads",
@@ -87,11 +82,16 @@ function _EditorSidebarLeft() {
         label: "Formats",
         value: "formats",
       },
-      {
-        icon: TerminalSquareIcon,
-        label: "Prompt",
-        value: "prompt",
-      },
+      // {
+      //   icon: LineChartIcon,
+      //   label: "Charts",
+      //   value: "charts",
+      // },
+      // {
+      //   icon: TerminalSquareIcon,
+      //   label: "Prompt",
+      //   value: "prompt",
+      // },
     ];
   }, []);
 

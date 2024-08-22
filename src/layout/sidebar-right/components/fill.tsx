@@ -1,9 +1,10 @@
 import { fabric } from "fabric";
 import { toJS } from "mobx";
-import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, PipetteIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { useMemo, useState } from "react";
 import { ColorResult, SketchPicker } from "react-color";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,11 +14,21 @@ import { darkHexCodes, lightHexCodes, pastelHexCodes } from "@/constants/editor"
 
 import { useEditorContext } from "@/context/editor";
 import { defaultFill, defaultGradient } from "@/fabric/constants";
-import { cn } from "@/lib/utils";
+import { cn, createInstance } from "@/lib/utils";
 import useMeasure from "react-use-measure";
 import { FabricUtils } from "@/fabric/utils";
 
-const picker = { default: { picker: { boxShadow: "none", padding: 0, width: "100%", background: "transparent", borderRadius: 0 } } };
+const picker = {
+  default: {
+    picker: {
+      boxShadow: "none",
+      padding: 0,
+      width: "100%",
+      background: "transparent",
+      borderRadius: 0,
+    },
+  },
+};
 
 function _FillSidebar() {
   const editor = useEditorContext();
@@ -125,6 +136,17 @@ function _FillSidebar() {
     }
   };
 
+  const onOpenEyeDropper = async () => {
+    if (!window.EyeDropper) return;
+    const eyeDropper = createInstance(window.EyeDropper);
+    try {
+      const result = await eyeDropper.open();
+      onSelectColorFromSwatch(result.sRGBHex);
+    } catch {
+      toast.error("Failed to pick color from page");
+    }
+  };
+
   const disabled = !selected || !selected.fill;
 
   return (
@@ -166,13 +188,18 @@ function _FillSidebar() {
           </Tabs>
         </div>
         <div className="px-4 flex flex-col divide-y">
-          {mode === "gradient" ? (
-            <div ref={ref}>
-              <GradientSlider key={selected.name} width={measure.width} colors={colors} coords={coords} selected={index} onSelect={setIndex} onChange={onChangeOffset} onRotate={onRotateGradient} />
-            </div>
-          ) : null}
-
-          <div className="pb-4">
+          <div className="pb-4 flex flex-col gap-4">
+            {mode === "gradient" ? (
+              <div ref={ref}>
+                <GradientSlider key={selected.name} width={measure.width} colors={colors} coords={coords} selected={index} onSelect={setIndex} onChange={onChangeOffset} onRotate={onRotateGradient} />
+              </div>
+            ) : null}
+            {window.EyeDropper ? (
+              <Button size="sm" variant="outline" className="gap-2 justify-between w-full shadow-none text-foreground/80" onClick={onOpenEyeDropper}>
+                <span>Pick color from page</span>
+                <PipetteIcon className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
             <SketchPicker color={color} onChange={onChangeColor} presetColors={[]} styles={picker} />
           </div>
           <div className="flex flex-col gap-4 py-5">
@@ -206,3 +233,25 @@ function _FillSidebar() {
 }
 
 export const FillSidebar = observer(_FillSidebar);
+
+declare global {
+  interface ColorSelectionOptions {
+    signal?: AbortSignal;
+  }
+
+  interface ColorSelectionResult {
+    sRGBHex: string;
+  }
+
+  interface EyeDropper {
+    open: (options?: ColorSelectionOptions) => Promise<ColorSelectionResult>;
+  }
+
+  interface EyeDropperConstructor {
+    new (): EyeDropper;
+  }
+
+  interface Window {
+    EyeDropper?: EyeDropperConstructor | undefined;
+  }
+}

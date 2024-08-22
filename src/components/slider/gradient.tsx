@@ -53,7 +53,7 @@ export function GradientSlider({ width: container, selected, colors, coords, onC
   };
 
   return (
-    <div className="pb-4 flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <div className="relative h-8">
         <div className="h-full border rounded-md relative" style={{ width: container, background: css }}></div>
         <div className="absolute h-full top-0 left-0" style={{ width }}>
