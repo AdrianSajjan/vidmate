@@ -1,4 +1,4 @@
-import { EditorAnimation } from "@/constants/animations";
+import { defaultSpringConfig, EditorAnimation } from "@/constants/animations";
 import { useEditorContext } from "@/context/editor";
 import { FabricUtils } from "@/fabric/utils";
 import { ChangeEventHandler } from "react";
@@ -28,6 +28,11 @@ export function useAnimationControls(selected: fabric.Object, type: "in" | "out"
 
   const changeEasing = (easing: string) => {
     editor.canvas.onChangeActiveObjectAnimationEasing(type, easing);
+    if (easing === "spring") editor.canvas.onChangeActiveObjectAnimationPhysics(type, selected.anim?.[type]?.config || defaultSpringConfig);
+  };
+
+  const changePhysics = (config: Partial<fabric.AnimationPhysics>) => {
+    editor.canvas.onChangeActiveObjectAnimationPhysics(type, config);
   };
 
   const changeTextAnimate = (animate: string) => {
@@ -38,6 +43,7 @@ export function useAnimationControls(selected: fabric.Object, type: "in" | "out"
     selectAnimation,
     changeDuration,
     changeEasing,
+    changePhysics,
     changeTextAnimate,
   };
 }

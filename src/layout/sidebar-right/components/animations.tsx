@@ -120,13 +120,16 @@ function _AnimationControls({ selected, type, animations }: AnimationControlsPro
   const animation = animations.find((animation) => animation.value === selected.anim?.[type].name);
 
   const spring = useMemo(() => {
-    return { graph: visualizeSpringAnimation(), duration: calculateSpringAnimationDuration() };
-  }, []);
+    const config = selected.anim?.[type].config || defaultSpringConfig;
+    return { graph: visualizeSpringAnimation(config), duration: calculateSpringAnimationDuration(config) };
+  }, [selected.anim?.[type].config]);
+  ``;
 
   const text = selected.anim?.[type].text || "letter";
   const easing = selected.anim?.[type].easing || "linear";
 
   const duration = (selected.anim?.[type].duration || 0) / 1000;
+  const physics = selected.anim?.[type].config || defaultSpringConfig;
   const disabled = !selected.anim?.[type].name || selected.anim?.[type].name === "none";
 
   return (
@@ -162,29 +165,57 @@ function _AnimationControls({ selected, type, animations }: AnimationControlsPro
               </Button>
             </PopoverTrigger>
             <PopoverContent onOpenAutoFocus={(event) => event.preventDefault()} className="w-64 flex flex-col" align="end">
-              <div className="bg-transparent-pattern rounded-sm overflow-hidden relative">
+              <div className="bg-transparent-pattern rounded-sm overflow-hidden relative p-2">
                 <span className="absolute bottom-2 right-2 text-center text-xxs w-fit font-medium">Approximate Duration: {(spring.duration / 1000).toFixed(2)} seconds</span>
                 <img src={spring.graph} className="h-full w-auto -scale-y-100" />
               </div>
               <Label className="text-xs font-medium mt-6">Mass</Label>
               <div className="flex items-center justify-between gap-4">
-                <Slider min={1} max={100} value={[defaultSpringConfig.mass]} />
-                <Input step={0.25} type="number" value={defaultSpringConfig.mass} readOnly className="h-8 w-20 text-xs" />
+                <Slider min={1} max={100} value={[physics.mass]} onValueChange={([mass]) => controls.changePhysics({ mass })} />
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={physics.mass}
+                  onChange={(event) => (+event.target.value < 1 || +event.target.value > 100 ? null : controls.changePhysics({ mass: +event.target.value }))}
+                  className="h-8 w-20 text-xs"
+                />
               </div>
               <Label className="text-xs font-medium mt-4">Stiffness</Label>
               <div className="flex items-center justify-between gap-4">
-                <Slider min={0} max={100} value={[defaultSpringConfig.stiffness]} />
-                <Input step={0.25} type="number" value={defaultSpringConfig.stiffness} readOnly className="h-8 w-20 text-xs" />
+                <Slider min={1} max={100} value={[physics.stiffness]} onValueChange={([stiffness]) => controls.changePhysics({ stiffness })} />
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={physics.stiffness}
+                  onChange={(event) => (+event.target.value < 1 || +event.target.value > 100 ? null : controls.changePhysics({ stiffness: +event.target.value }))}
+                  className="h-8 w-20 text-xs"
+                />
               </div>
               <Label className="text-xs font-medium mt-4">Damping</Label>
               <div className="flex items-center justify-between gap-4">
-                <Slider min={0} max={100} value={[defaultSpringConfig.damping]} />
-                <Input step={0.25} type="number" value={defaultSpringConfig.damping} readOnly className="h-8 w-20 text-xs" />
+                <Slider min={1} max={100} value={[physics.damping]} onValueChange={([damping]) => controls.changePhysics({ damping })} />
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={physics.damping}
+                  onChange={(event) => (+event.target.value < 1 || +event.target.value > 100 ? null : controls.changePhysics({ damping: +event.target.value }))}
+                  className="h-8 w-20 text-xs"
+                />
               </div>
               <Label className="text-xs font-medium mt-4">Velocity</Label>
               <div className="flex items-center justify-between gap-4">
-                <Slider min={0} max={100} value={[defaultSpringConfig.velocity]} />
-                <Input step={0.25} type="number" value={defaultSpringConfig.velocity} readOnly className="h-8 w-20 text-xs" />
+                <Slider min={0} max={100} value={[physics.velocity]} onValueChange={([velocity]) => controls.changePhysics({ velocity })} />
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={physics.velocity}
+                  onChange={(event) => (+event.target.value < 0 || +event.target.value > 100 ? null : controls.changePhysics({ velocity: +event.target.value }))}
+                  className="h-8 w-20 text-xs"
+                />
               </div>
             </PopoverContent>
           </Popover>

@@ -1,23 +1,29 @@
 import { defaultSpringConfig } from "@/constants/animations";
+import { clamp } from "lodash";
 
-export function modifyAnimationEasing(easing?: string, _?: number) {
+export function modifyAnimationEasing(easing?: string, config = defaultSpringConfig) {
   switch (easing) {
     case "spring":
-      return `spring`;
+      return `spring(${config.mass}, ${config.stiffness}, ${config.damping}, ${config.velocity})`;
     default:
       return easing || "linear";
   }
 }
 
 export function calculateSpringAnimationDuration({ damping, mass, stiffness } = defaultSpringConfig) {
-  const epsilon = 0.01;
-  const omega0 = Math.sqrt(stiffness / mass);
-
+  const w0 = Math.sqrt(stiffness / mass);
   const zeta = damping / (2 * Math.sqrt(stiffness * mass));
-  const timeToSettle = -Math.log(epsilon) / (zeta * omega0);
-
-  const durationInMilliseconds = timeToSettle * 1000;
-  return durationInMilliseconds;
+  if (zeta < 1) {
+    const duration = -Math.log(0.01) / (zeta * w0);
+    return duration * 1000;
+  }
+  if (zeta === 1) {
+    return (5 / w0) * 1000;
+  }
+  if (zeta > 1) {
+    return (5 / (zeta * w0)) * 1000;
+  }
+  return 0;
 }
 
 export function visualizeSpringAnimation({ damping, mass, stiffness, velocity: speed } = defaultSpringConfig, height = 256, width = 640) {
@@ -26,9 +32,12 @@ export function visualizeSpringAnimation({ damping, mass, stiffness, velocity: s
   canvas.height = height;
 
   const initialDisplacement = 1;
-  const timeStep = 0.01;
-  const totalTime = 2;
   const points: Array<{ time: number; position: number }> = [];
+  const timeStep = 0.01;
+
+  const duration = calculateSpringAnimationDuration({ damping, mass, stiffness, velocity: speed });
+  const seconds = (isFinite(duration) ? duration : 1000) / 1000;
+  const totalTime = clamp(Math.round(seconds), 2, 100);
 
   let velocity = speed;
   let position = initialDisplacement;
@@ -41,13 +50,13 @@ export function visualizeSpringAnimation({ damping, mass, stiffness, velocity: s
   }
 
   const ctx = canvas.getContext("2d")!;
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2);
 
   const scaleX = canvas.width / totalTime;
-  const max = Math.max(...points.map((p) => Math.abs(p.position)));
-  const scaleY = canvas.height / (2 * max);
+  const scaleY = canvas.height / 4;
 
   points.forEach((point) => {
     const x = point.time * scaleX;
@@ -57,6 +66,15 @@ export function visualizeSpringAnimation({ damping, mass, stiffness, velocity: s
 
   ctx.strokeStyle = "#2463EB";
   ctx.lineWidth = 5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2);
+  ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, canvas.height);
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 1;
   ctx.stroke();
 
   return canvas.toDataURL("image/png", 1);

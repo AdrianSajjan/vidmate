@@ -119,6 +119,7 @@ export class CanvasAnimations {
 
     const { left, top, height, width, opacity, angle, scaleX, scaleY } = state;
     const offset = preview ? 0 : meta.offset + this._entryOffset;
+    const easing = modifyAnimationEasing(entry.easing, entry.config);
 
     switch (entry.name) {
       case "fade": {
@@ -127,7 +128,7 @@ export class CanvasAnimations {
             targets: object,
             opacity: [0, opacity],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -141,7 +142,7 @@ export class CanvasAnimations {
             opacity: [0, opacity],
             left: [left - Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER), left],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -155,7 +156,7 @@ export class CanvasAnimations {
             opacity: [0, opacity],
             left: [left + Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER), left],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -168,7 +169,7 @@ export class CanvasAnimations {
             targets: object,
             left: [left - Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER), left],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -181,7 +182,7 @@ export class CanvasAnimations {
             targets: object,
             left: [left + Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER), left],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -195,7 +196,7 @@ export class CanvasAnimations {
             opacity: [0, opacity],
             top: [top + Math.min((height * scaleY) / 2, Number.MAX_SAFE_INTEGER), top],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -209,7 +210,7 @@ export class CanvasAnimations {
             opacity: [0, opacity],
             top: [top - Math.min((height * scaleY) / 2, Number.MAX_SAFE_INTEGER), top],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -223,7 +224,7 @@ export class CanvasAnimations {
             scaleY: [1 / height, scaleY],
             top: [top + (height * scaleY) / 2, top],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -246,7 +247,7 @@ export class CanvasAnimations {
             left: [props.left, left],
             top: [props.top, top],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -265,7 +266,7 @@ export class CanvasAnimations {
             top: [top + delta.y * delta.height, top],
             left: [left - delta.x * delta.height, left],
             duration: entry.duration,
-            easing: modifyAnimationEasing(entry.easing, entry.duration),
+            easing: easing,
           },
           offset,
         );
@@ -286,7 +287,7 @@ export class CanvasAnimations {
                 targets: state,
                 opacity: 1,
                 duration: entry.duration / text.length,
-                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                easing: easing,
                 update: () => element.set({ opacity: state.opacity }),
               },
               offset + (entry.duration / text.length) * index,
@@ -314,7 +315,7 @@ export class CanvasAnimations {
               targets: overlay,
               scaleX: 1,
               duration: entry.duration * 0.5,
-              easing: modifyAnimationEasing(entry.easing, entry.duration),
+              easing: easing,
             },
             offset,
           );
@@ -324,7 +325,7 @@ export class CanvasAnimations {
               scaleX: 1 / (width * scaleX),
               left: left + width * scaleX,
               duration: entry.duration * 0.5,
-              easing: modifyAnimationEasing(entry.easing, entry.duration),
+              easing: easing,
               begin: () => object.set({ opacity: 1 }),
             },
             offset + entry.duration * 0.5,
@@ -357,7 +358,7 @@ export class CanvasAnimations {
                     targets: state,
                     opacity: target.opacity,
                     duration: entry.duration / (text.length - 1),
-                    easing: modifyAnimationEasing(entry.easing, entry.duration),
+                    easing: easing,
                     update: () => word.set({ top: state.top, left: state.left, opacity: state.opacity }),
                   },
                   offset + (entry.duration / (text.length + 1)) * index,
@@ -368,7 +369,7 @@ export class CanvasAnimations {
                     top: target.top,
                     left: target.left,
                     duration: entry.duration,
-                    easing: modifyAnimationEasing(entry.easing, entry.duration),
+                    easing: easing,
                     update: () => word.set({ top: state.top, left: state.left }),
                   },
                   offset,
@@ -399,7 +400,7 @@ export class CanvasAnimations {
                 scaleX: target.scaleX,
                 scaleY: target.scaleY,
                 duration: entry.duration / text.length,
-                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                easing: easing,
                 update: () => element.set({ scaleX: state.scaleX, scaleY: state.scaleY, top: state.top, left: state.left }),
               },
               offset + (entry.duration / text.length) * index,
@@ -420,7 +421,7 @@ export class CanvasAnimations {
                 opacity: target.opacity,
                 blur: target.blur,
                 duration: entry.duration - seed,
-                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                easing: easing,
                 update: () => element.set({ opacity: state.opacity, blur: state.blur }),
               },
               offset + seed,
@@ -431,7 +432,7 @@ export class CanvasAnimations {
               targets: object,
               left: [left - 15, left],
               duration: entry.duration,
-              easing: modifyAnimationEasing(entry.easing, entry.duration),
+              easing: easing,
             },
             offset,
           );
@@ -449,7 +450,7 @@ export class CanvasAnimations {
                 top: target.top,
                 opacity: target.opacity,
                 duration: entry.duration,
-                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                easing: easing,
                 update: () => element.set({ top: state.top, opacity: state.opacity }),
               },
               offset + (entry.duration / text.length) * index,
@@ -478,7 +479,7 @@ export class CanvasAnimations {
                 top: target.top,
                 left: target.left,
                 duration: entry.duration / text.length,
-                easing: modifyAnimationEasing(entry.easing, entry.duration),
+                easing: easing,
                 update: () => element.set({ top: state.top, left: state.left }),
               },
               offset + (entry.duration / text.length) * index,
@@ -495,6 +496,7 @@ export class CanvasAnimations {
 
     const { left, top, height, width, angle, scaleX, scaleY } = state;
     const offset = preview ? 0 : meta.offset + meta.duration - exit.duration - this._exitOffset;
+    const easing = modifyAnimationEasing(exit.easing, exit.config);
 
     switch (exit.name) {
       case "fade": {
@@ -503,7 +505,7 @@ export class CanvasAnimations {
             targets: object,
             opacity: 0,
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -517,7 +519,7 @@ export class CanvasAnimations {
             opacity: 0,
             left: [left, left - Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -531,7 +533,7 @@ export class CanvasAnimations {
             opacity: 0,
             left: [left, left + Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -545,7 +547,7 @@ export class CanvasAnimations {
             opacity: 0,
             top: [top, top - Math.min((height * scaleY) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -559,7 +561,7 @@ export class CanvasAnimations {
             opacity: 0,
             top: [top, top + Math.min((height * scaleY) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -573,7 +575,7 @@ export class CanvasAnimations {
             scaleY: [scaleY, 1 / height],
             top: [top, top + (height * scaleY) / 2],
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -586,7 +588,7 @@ export class CanvasAnimations {
             targets: object,
             left: [left, left - Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -599,7 +601,7 @@ export class CanvasAnimations {
             targets: object,
             left: [left, left + Math.min((width * scaleX) / 2, Number.MAX_SAFE_INTEGER)],
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -622,7 +624,7 @@ export class CanvasAnimations {
             left: [left, props.left],
             top: [props.top, top],
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -639,7 +641,7 @@ export class CanvasAnimations {
             top: [top, top - delta.y * delta.height],
             left: [left - delta.x * delta.height, left],
             duration: exit.duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
           },
           offset,
         );
@@ -666,6 +668,7 @@ export class CanvasAnimations {
 
     const duration = preview ? 5000 : meta.duration - (entry.name === "none" ? 0 : entry.duration + this._entryOffset) - (exit.name === "none" ? 0 : exit.duration + this._exitOffset);
     const offset = preview ? 0 : meta.offset + (entry.name === "none" ? 0 : entry.duration + this._entryOffset);
+    const easing = modifyAnimationEasing(scene.easing, scene.config);
 
     switch (scene.name) {
       case "rotate": {
@@ -674,7 +677,7 @@ export class CanvasAnimations {
             targets: { angle: object.angle! },
             angle: object.angle! + 360 * Math.round(duration / animation),
             duration: duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
             update: (anim) => {
               const centerPoint = object.getCenterPoint();
               const constraint = object.translateToOriginPoint(centerPoint, "center", "center");
@@ -695,7 +698,7 @@ export class CanvasAnimations {
             scaleX: scaleX + this._zoom,
             scaleY: scaleY + this._zoom,
             duration: duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
             update: (anim) => {
               const centerPoint = object.getCenterPoint();
               const constraint = object.translateToOriginPoint(centerPoint, "center", "center");
@@ -717,7 +720,7 @@ export class CanvasAnimations {
             scaleX: scaleX - this._zoom,
             scaleY: scaleY - this._zoom,
             duration: duration,
-            easing: modifyAnimationEasing(exit.easing, exit.duration),
+            easing: easing,
             update: (anim) => {
               const centerPoint = object.getCenterPoint();
               const constraint = object.translateToOriginPoint(centerPoint, "center", "center");
@@ -738,7 +741,7 @@ export class CanvasAnimations {
               targets: object,
               duration: animation / 2,
               opacity: index % 2,
-              easing: modifyAnimationEasing(exit.easing, exit.duration),
+              easing: easing,
             },
             offset + (animation / 2) * index,
           );

@@ -26,6 +26,7 @@ import { FabricUtils } from "@/fabric/utils";
 import { createInstance, createPromise } from "@/lib/utils";
 import { CanvasHotkeys } from "@/plugins/hotkeys";
 import { CanvasClone } from "@/plugins/clone";
+import { defaultSpringConfig } from "@/constants/animations";
 
 export class Canvas {
   id: string;
@@ -481,15 +482,27 @@ export class Canvas {
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out" | "scene", easing: any) {
+  onChangeObjectAnimationEasing(object: fabric.Object, type: "in" | "out" | "scene", easing: string) {
     if (!object) return;
     object.anim![type].easing = easing;
     this.instance.fire("object:modified", { target: object }).requestRenderAll();
   }
 
-  onChangeActiveObjectAnimationEasing(type: "in" | "out" | "scene", easing: any) {
+  onChangeObjectAnimationPhysics(object: fabric.Object, type: "in" | "out" | "scene", config: Partial<fabric.AnimationPhysics>) {
+    if (!object) return;
+    const _config = object.anim![type].config || defaultSpringConfig;
+    object.anim![type].config = Object.assign({}, _config, config);
+    this.instance.fire("object:modified", { target: object }).requestRenderAll();
+  }
+
+  onChangeActiveObjectAnimationEasing(type: "in" | "out" | "scene", easing: string) {
     const selected = this.instance.getActiveObject();
     if (selected) this.onChangeObjectAnimationEasing(selected, type, easing);
+  }
+
+  onChangeActiveObjectAnimationPhysics(type: "in" | "out" | "scene", config: Partial<fabric.AnimationPhysics>) {
+    const selected = this.instance.getActiveObject();
+    if (selected) this.onChangeObjectAnimationPhysics(selected, type, config);
   }
 
   onChangeActiveObjectAnimationDuration(type: "in" | "out" | "scene", duration: number) {
