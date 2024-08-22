@@ -3,6 +3,7 @@ import { useSyncExternalStore } from "react";
 import { createInstance } from "@/lib/utils";
 import { EditorAudio, EditorMedia, EditorTemplate } from "@/types/editor";
 import { PromptSession } from "@/types/prompt";
+import { EditorAdapter } from "@/store/editor";
 
 const images: EditorMedia[] = [];
 const videos: EditorMedia[] = [];
@@ -69,3 +70,15 @@ export function useMockStore() {
   const store = useSyncExternalStore(mock.subscribe.bind(mock), mock.store.bind(mock));
   return store;
 }
+
+export const adapter: EditorAdapter = {
+  product: {
+    description: "",
+    name: "",
+    price: 0,
+    images: [],
+  },
+  cta: [],
+  descriptions: [],
+  headlines: [],
+};

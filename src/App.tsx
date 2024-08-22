@@ -19,7 +19,8 @@ import { EditorCanvas, EditorRecorder } from "@/components/editor";
 import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { useIsTablet } from "./hooks/use-media-query";
+import { useIsTablet } from "@/hooks/use-media-query";
+import { adapter } from "@/constants/mock";
 
 export function App() {
   return (
@@ -36,7 +37,7 @@ function _Editor() {
   const editor = useEditorContext();
 
   useEffect(() => {
-    editor.initialize("creator");
+    editor.initialize("creator", adapter);
   }, []);
 
   switch (editor.status) {
@@ -52,7 +53,7 @@ function _Editor() {
       );
 
     case "complete":
-      const position = isTablet ? "bottom-right" : ("top-center" as const);
+      const position = isTablet ? "bottom-right" : "top-center";
       return (
         <section className="h-[100dvh] overflow-hidden flex flex-col select-none">
           <EditorMenubar />
