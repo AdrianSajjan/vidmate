@@ -8,7 +8,7 @@ import { useAnimationControls } from "framer-motion";
 import { BoxIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, ImageIcon, MinusIcon, MusicIcon, RectangleHorizontalIcon, TriangleIcon, TypeIcon, VideoIcon } from "lucide-react";
 
 import { useEditorContext } from "@/context/editor";
-import { drawWavefromFromAudioBuffer } from "@/lib/media";
+import { drawWaveformFromAudioBuffer } from "@/lib/media";
 import { formatMediaDuration } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
@@ -204,10 +204,16 @@ function _TimelineAudioItem({ audio, trackWidth }: { audio: EditorAudioElement; 
     return editor.canvas.selection.active.id === audio.id;
   }, [editor.canvas.selection.active, audio]);
 
-  useEffect(() => {
-    drawWavefromFromAudioBuffer(audio.buffer, 40, width).then((blob) => setBackgroundURL(URL.createObjectURL(blob)));
-    return () => URL.revokeObjectURL(backgroundURL);
+  const drawWaveformFromAudio = useMemo(() => {
+    return debounce((audio: EditorAudioElement) => {
+      drawWaveformFromAudioBuffer(audio.buffer, 40, width, audio.trim, audio.trim + audio.timeline).then((blob) => setBackgroundURL(URL.createObjectURL(blob)));
+    }, 1000);
   }, []);
+
+  useEffect(() => {
+    drawWaveformFromAudio(audio);
+    return () => URL.revokeObjectURL(backgroundURL);
+  }, [audio]);
 
   useEffect(() => {
     if (editor.canvas.trimmer.active?.object.id === audio.id && !isSelected) editor.canvas.trimmer.exit();

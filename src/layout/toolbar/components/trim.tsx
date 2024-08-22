@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { useEditorContext } from "@/context/editor";
 import { cn } from "@/lib/utils";
 import { EditorAudioElement } from "@/types/editor";
-import { drawWavefromFromAudioBuffer } from "@/lib/media";
+import { drawWaveformFromAudioBuffer } from "@/lib/media";
 
 const handleWidth = 16;
 
@@ -138,7 +138,7 @@ function _TrimToolbarAudio() {
 
   useEffect(() => {
     if (!dimensions.width) return;
-    drawWavefromFromAudioBuffer(audio.buffer, 40, dimensions.width).then((blob) => setBackground(URL.createObjectURL(blob)));
+    drawWaveformFromAudioBuffer(audio.buffer, 40, dimensions.width).then((blob) => setBackground(URL.createObjectURL(blob)));
     return () => URL.revokeObjectURL(background);
   }, [dimensions]);
 

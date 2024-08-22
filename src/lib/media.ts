@@ -1,7 +1,7 @@
 import { createInstance, createPromise } from "@/lib/utils";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
-import { isString } from "lodash";
+import { clamp, isString } from "lodash";
 import { nanoid } from "nanoid";
 
 interface AudioWaveform {
@@ -104,7 +104,7 @@ export async function extractAudioWaveformFromAudioFile(file: File) {
     reader.addEventListener("load", async () => {
       const result = reader.result as ArrayBuffer;
       const buffer = await context.decodeAudioData(result);
-      const wavefrom = await drawWavefromFromAudioBuffer(buffer);
+      const wavefrom = await drawWaveformFromAudioBuffer(buffer);
       resolve({ thumbnail: wavefrom, duration: buffer.duration });
     });
     reader.addEventListener("error", () => {
@@ -114,21 +114,31 @@ export async function extractAudioWaveformFromAudioFile(file: File) {
   });
 }
 
-export async function drawWavefromFromAudioBuffer(buffer: AudioBuffer, height = 320, width = 320) {
+export async function drawWaveformFromAudioBuffer(buffer: AudioBuffer, height?: number, width?: number, from?: number, to?: number) {
   return createInstance(Promise<Blob>, (resolve, reject) => {
-    const raw = buffer.getChannelData(0);
+    const sampleRate = buffer.sampleRate;
+    const fromTime = clamp(from || 0, 0, buffer.duration);
+    const toTime = clamp(to || buffer.duration, 0, buffer.duration);
+
+    const startSample = Math.floor(fromTime * sampleRate);
+    const endSample = Math.floor(toTime * sampleRate);
+    const raw = buffer.getChannelData(0).subarray(startSample, endSample);
+
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d")!;
-    canvas.height = height;
-    canvas.width = width;
+    canvas.height = height || 256;
+    canvas.width = width || 256;
+
     const step = Math.ceil(raw.length / canvas.width);
     const amp = canvas.height / 2;
+
     for (let i = 0; i < canvas.width; i++) {
       const min = 1.0 - Math.max(...raw.subarray(i * step, (i + 1) * step));
       const max = 1.0 - Math.min(...raw.subarray(i * step, (i + 1) * step));
       context.fillStyle = "black";
       context.fillRect(i, min * amp, 1, (max - min) * amp);
     }
+
     canvas.toBlob((blob) => {
       if (!blob) return reject();
       resolve(blob);

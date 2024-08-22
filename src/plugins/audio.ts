@@ -11,6 +11,10 @@ import { toast } from "sonner";
 export class CanvasAudio {
   private _canvas: Canvas;
   private context: AudioContext;
+
+  private _gainEndOffset = 0;
+  private _gainStartOffset = 2;
+
   elements: EditorAudioElement[];
 
   constructor(canvas: Canvas) {
@@ -55,10 +59,12 @@ export class CanvasAudio {
       const source = this.context.createBufferSource();
 
       source.buffer = audio.buffer;
-      gain.gain.value = audio.volume;
-
       gain.connect(this.context.destination);
       source.connect(gain);
+
+      gain.gain.setValueAtTime(0, this.context.currentTime + audio.offset);
+      gain.gain.linearRampToValueAtTime(audio.volume, this.context.currentTime + audio.offset + Math.min(this._gainStartOffset, audio.timeline / 2));
+      gain.gain.linearRampToValueAtTime(0, this.context.currentTime + audio.offset + audio.timeline - this._gainEndOffset);
 
       audio.playing = true;
       audio.source = source;
@@ -76,11 +82,14 @@ export class CanvasAudio {
       const source = context.createBufferSource();
 
       source.buffer = audio.buffer;
-      gain.gain.value = audio.volume;
-      audio.source = source;
-
       gain.connect(context.destination);
       source.connect(gain);
+
+      gain.gain.setValueAtTime(0, context.currentTime + audio.offset);
+      gain.gain.linearRampToValueAtTime(audio.volume, context.currentTime + audio.offset + Math.min(this._gainStartOffset, audio.timeline / 2));
+      gain.gain.linearRampToValueAtTime(0, context.currentTime + audio.offset + audio.timeline - this._gainEndOffset);
+
+      audio.source = source;
       source.start(context.currentTime + audio.offset, audio.trim, audio.timeline);
     }
   }
