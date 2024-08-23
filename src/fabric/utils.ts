@@ -220,7 +220,7 @@ export abstract class FabricUtils {
               if (!image || !image.height || !image.width) {
                 reject();
               } else {
-                const props = this.calculateReplacementImageProps(element, image);
+                const props = this.calculateReplacementImageProps(element, image, true);
                 element.setElement(image);
                 element.set(props).setCoords();
                 resolve();
@@ -302,7 +302,7 @@ export abstract class FabricUtils {
     });
   }
 
-  static calculateReplacementImageProps(element: fabric.Image, image: HTMLImageElement) {
+  static calculateReplacementImageProps(element: fabric.Image, image: HTMLImageElement, skip?: boolean) {
     let scale = (element.getScaledWidth() / image.width + element.getScaledHeight() / image.height) / 2;
 
     if (image.width * scale < element.getScaledWidth()) {
@@ -315,11 +315,11 @@ export abstract class FabricUtils {
       scale += difference / image.height;
     }
 
-    const cropX = element.cropX;
-    const cropY = element.cropY;
+    const cropX = skip ? 0 : element.cropX;
+    const cropY = skip ? 0 : element.cropY;
 
-    const width = element.getScaledWidth() / scale;
-    const height = element.getScaledHeight() / scale;
+    const width = skip ? image.width : element.getScaledWidth() / scale;
+    const height = skip ? image.height : element.getScaledHeight() / scale;
 
     return { scaleX: scale, scaleY: scale, cropX, cropY, width, height };
   }
