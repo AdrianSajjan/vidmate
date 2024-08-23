@@ -208,9 +208,7 @@ export abstract class FabricUtils {
 
   static async applyAdapterModificationsAfterLoad(canvas: fabric.Canvas | fabric.StaticCanvas, { product, objective, brand }: Adapter) {
     if (brand) {
-      console.log("---BRANDS---");
       const elements = canvas._objects.filter((object) => object.meta?.label === "brand-image" && this.isImageElement(object)) as fabric.Image[];
-      console.log(elements);
       const promises = elements.map((element) => {
         return createPromise<void>((resolve, reject) => {
           fabric.util.loadImage(brand.brand_logo, (image) => {
@@ -226,9 +224,7 @@ export abstract class FabricUtils {
     if (!product) return;
 
     if (product.images.length) {
-      console.log("---PRODUCTS---");
       const elements = canvas._objects.filter((object) => object.meta?.label === "main-image" && this.isImageElement(object)) as fabric.Image[];
-      console.log(elements);
       const promises = elements.map((element, index) => {
         return createPromise<void>((resolve, reject) => {
           fabric.util.loadImage(product.images[index % product.images.length].url, (image) => {
