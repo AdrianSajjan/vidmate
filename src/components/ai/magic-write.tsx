@@ -1,12 +1,12 @@
 import { observer } from "mobx-react";
 import { RefreshCcwIcon } from "lucide-react";
+import { noop } from "lodash";
 
 import { useEditorContext } from "@/context/editor";
 import { AISelectPluginProps } from "@/layout/sidebar-right/components/ai";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGenerateCTASuggestions, useGenerateDescriptionSuggestions, useGenerateHeadlineSuggestions } from "@/api/ai";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { noop } from "lodash";
 
 type QueryFunction = typeof useGenerateCTASuggestions;
 
@@ -21,7 +21,9 @@ function _MagicWritePlugin({}: Omit<AISelectPluginProps, "plugin">) {
   const selected = editor.canvas.selection.active! as fabric.Textbox;
 
   const useMagicWrite = magicWriteMap[selected.meta!.label] || noop;
-  const query = useMagicWrite(editor.adapter.product!, editor.adapter.objective!, { enabled: !!editor.adapter.product && !!editor.adapter.objective });
+  const query = useMagicWrite(editor.adapter.product!, editor.adapter.objective!);
+
+  if (!query) return null;
 
   return (
     <div className="flex flex-col gap-3">

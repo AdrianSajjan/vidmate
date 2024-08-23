@@ -1,6 +1,6 @@
 import { api } from "@/config/api";
 import { EditorProduct } from "@/types/adapter";
-import { UndefinedInitialDataOptions, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 const baseQuery = "/customer/ads/api/v1";
 
@@ -40,28 +40,28 @@ async function generateCTA(product: EditorProduct, objective: string) {
   return res.data.data;
 }
 
-function useGenerateHeadlineSuggestions(product: EditorProduct, objective: string, options?: Omit<UndefinedInitialDataOptions<string[]>, "queryKey" | "queryFn">) {
+function useGenerateHeadlineSuggestions(product: EditorProduct, objective: string) {
   return useQuery({
     queryKey: [generateHeadline.name],
     queryFn: () => generateHeadline(product, objective),
-    ...options,
+    enabled: !!product && !!objective,
   });
 }
 
-function useGenerateDescriptionSuggestions(product: EditorProduct, objective: string, options?: Omit<UndefinedInitialDataOptions<string[]>, "queryKey" | "queryFn">) {
+function useGenerateDescriptionSuggestions(product: EditorProduct, objective: string) {
   return useQuery({
     queryKey: [generateDescription.name],
     queryFn: () => generateDescription(product, objective),
-    ...options,
+    enabled: !!product && !!objective,
   });
 }
 
-function useGenerateCTASuggestions(product: EditorProduct, objective: string, options?: Omit<UndefinedInitialDataOptions<string[]>, "queryKey" | "queryFn">) {
+function useGenerateCTASuggestions(product: EditorProduct, objective: string) {
   return useQuery({
     queryKey: [generateCTA.name],
     queryFn: () => generateCTA(product, objective),
-    ...options,
+    enabled: !!product && !!objective,
   });
 }
 
-export { generateHeadline, generateDescription, generateCTA, useGenerateHeadlineSuggestions, useGenerateDescriptionSuggestions, useGenerateCTASuggestions };
+export { generateCTA, generateDescription, generateHeadline, useGenerateCTASuggestions, useGenerateDescriptionSuggestions, useGenerateHeadlineSuggestions };
