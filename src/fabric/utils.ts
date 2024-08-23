@@ -217,9 +217,14 @@ export abstract class FabricUtils {
           fabric.util.loadImage(
             brand.brand_logo,
             (image) => {
-              if (!image) return reject();
-              element.setElement(image).setCoords();
-              resolve();
+              if (!image || !image.height || !image.width) {
+                reject();
+              } else {
+                const props = this.calculateReplacementImageProps(element, image);
+                element.setElement(image);
+                element.set(props).setCoords();
+                resolve();
+              }
             },
             null,
             "anonymous",
@@ -238,9 +243,14 @@ export abstract class FabricUtils {
           fabric.util.loadImage(
             product.images[index % product.images.length].url,
             (image) => {
-              if (!image) return reject();
-              element.setElement(image).setCoords();
-              resolve();
+              if (!image || !image.height || !image.width) {
+                reject();
+              } else {
+                const props = this.calculateReplacementImageProps(element, image);
+                element.setElement(image);
+                element.set(props).setCoords();
+                resolve();
+              }
             },
             null,
             "anonymous",
@@ -281,11 +291,37 @@ export abstract class FabricUtils {
         const styles = font.styles.map((style) => `${style.weight}`).join(",");
         return `${font.family}:${styles}`;
       });
-      WebFont.load({
-        google: { families: fonts },
-        active: resolve,
-      });
+      if (!fonts.length) {
+        resolve();
+      } else {
+        WebFont.load({
+          google: { families: fonts },
+          active: resolve,
+        });
+      }
     });
+  }
+
+  static calculateReplacementImageProps(element: fabric.Image, image: HTMLImageElement) {
+    let scale = (element.getScaledWidth() / image.width + element.getScaledHeight() / image.height) / 2;
+
+    if (image.width * scale < element.getScaledWidth()) {
+      const difference = element.getScaledWidth() - image.width * scale;
+      scale += difference / image.width;
+    }
+
+    if (image.height * scale < element.getScaledHeight()) {
+      const difference = element.getScaledHeight() - image.height * scale;
+      scale += difference / image.height;
+    }
+
+    const cropX = element.cropX;
+    const cropY = element.cropY;
+
+    const width = element.getScaledWidth() / scale;
+    const height = element.getScaledHeight() / scale;
+
+    return { scaleX: scale, scaleY: scale, cropX, cropY, width, height };
   }
 
   static convertGradient(angle: number) {

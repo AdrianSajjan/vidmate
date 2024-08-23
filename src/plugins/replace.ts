@@ -51,10 +51,10 @@ export class CanvasReplace {
           if (!element || !element.height || !element.width) {
             reject();
           } else {
+            const props = FabricUtils.calculateReplacementImageProps(image, element);
             image.setElement(element);
             image.meta!.replacing = false;
-            image.set({ scaleX: image.scaleX, scaleY: image.scaleY, left: image.left, top: image.top, angle: image.angle, cropX: image.cropX, cropY: image.cropY });
-
+            image.set(props);
             this.canvas.requestRenderAll();
             resolve(image);
           }
