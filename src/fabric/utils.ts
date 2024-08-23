@@ -88,7 +88,7 @@ export abstract class FabricUtils {
     const invertedTransform = fabric.util.invertTransform(parent.calcTransformMatrix());
     for (const child of children) {
       if (!child.meta) this.initializeMetaProperties(child);
-      child.meta!.relationship = fabric.util.multiplyTransformMatrices(invertedTransform, parent.calcTransformMatrix());
+      child.meta!.transformMatrix = fabric.util.multiplyTransformMatrices(invertedTransform, parent.calcTransformMatrix());
       child.meta!.originalScaleX = child.scaleX;
       child.meta!.originalScaleY = child.scaleY;
       child.meta!.initialParentScaleX = parent.scaleX;
@@ -98,9 +98,9 @@ export abstract class FabricUtils {
 
   static updateObjectTransformToParent(parent: fabric.Object, children: Array<TransformChildren>) {
     for (const child of children) {
-      if (!child.object.meta || !child.object.meta.relationship || !Array.isArray(child.object.meta.relationship)) continue;
+      if (!child.object.meta || !child.object.meta.transformMatrix || !Array.isArray(child.object.meta.transformMatrix)) continue;
 
-      const transform = fabric.util.multiplyTransformMatrices(parent.calcTransformMatrix(), child.object.meta.relationship);
+      const transform = fabric.util.multiplyTransformMatrices(parent.calcTransformMatrix(), child.object.meta.transformMatrix);
 
       let decompose: Record<string, number> = fabric.util.qrDecompose(transform);
       if (child.skip) decompose = omit(decompose, child.skip);
@@ -214,11 +214,16 @@ export abstract class FabricUtils {
       const elements = objects.filter((object) => object.meta?.label === "brand-image" && this.isImageElement(object)) as fabric.Image[];
       const promises = elements.map((element) => {
         return createPromise<void>((resolve, reject) => {
-          fabric.util.loadImage(brand.brand_logo, (image) => {
-            if (!image) return reject();
-            element.setElement(image).setCoords();
-            resolve();
-          });
+          fabric.util.loadImage(
+            brand.brand_logo,
+            (image) => {
+              if (!image) return reject();
+              element.setElement(image).setCoords();
+              resolve();
+            },
+            null,
+            "anonymous",
+          );
         });
       });
       await Promise.allSettled(promises);
@@ -230,11 +235,16 @@ export abstract class FabricUtils {
       const elements = objects.filter((object) => object.meta?.label === "main-image" && this.isImageElement(object)) as fabric.Image[];
       const promises = elements.map((element, index) => {
         return createPromise<void>((resolve, reject) => {
-          fabric.util.loadImage(product.images[index % product.images.length].url, (image) => {
-            if (!image) return reject();
-            element.setElement(image).setCoords();
-            resolve();
-          });
+          fabric.util.loadImage(
+            product.images[index % product.images.length].url,
+            (image) => {
+              if (!image) return reject();
+              element.setElement(image).setCoords();
+              resolve();
+            },
+            null,
+            "anonymous",
+          );
         });
       });
       await Promise.allSettled(promises);

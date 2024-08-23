@@ -29,12 +29,12 @@ function _ImageSidebar() {
     toast.promise(promise, { loading: `The images are being uploaded`, success: `The images have been successfully uploaded`, error: `Ran into an error while uploading the images` });
   };
 
-  const handleClick = (source: string) => (event: MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (source: string, preload: boolean) => (event: MouseEvent<HTMLButtonElement>) => {
     const thumbnail = event.currentTarget.querySelector("img");
     if (editor.canvas.replacer.active?.type === "image") {
       const promise = flowResult(editor.canvas.replacer.replace(source, true));
       toast.promise(promise, { loading: "The image is being replaced...", success: "The image has been replaced", error: "Ran into an error while replacing the image" });
-    } else if (!thumbnail || !isImageLoaded(thumbnail)) {
+    } else if (!preload || !thumbnail || !isImageLoaded(thumbnail)) {
       const promise = flowResult(editor.canvas.onAddImageFromSource(source));
       toast.promise(promise, { loading: "The image is being loaded...", success: "The image has been added to artboard", error: "Ran into an error while adding the image" });
     } else {
@@ -76,7 +76,7 @@ function _ImageSidebar() {
             <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
               {store.images.length ? (
                 store.images.map(({ source, thumbnail }) => (
-                  <button key={source} onClick={handleClick(source)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
+                  <button key={source} onClick={handleClick(source, true)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
                     <img src={thumbnail} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
                   </button>
                 ))
@@ -106,6 +106,50 @@ function _ImageSidebar() {
               </Fragment>
             </div>
           </div>
+          {editor.mode === "adapter" ? (
+            <Fragment>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-4">
+                  <h4 className="text-xs font-semibold line-clamp-1">Product Kit</h4>
+                </div>
+                <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
+                  {!editor.adapter.product || !editor.adapter.product.images.length ? (
+                    <Fragment>
+                      {Array.from({ length: 3 }, (_, index) => (
+                        <Skeleton key={index} className="h-16 flex-1 rounded-md" />
+                      ))}
+                      <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">No product kit found</span>
+                    </Fragment>
+                  ) : (
+                    editor.adapter.product.images.map((image) => (
+                      <button key={image.id} onClick={handleClick(image.url, false)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
+                        <img src={image.url} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-4">
+                  <h4 className="text-xs font-semibold line-clamp-1">Brand Kit</h4>
+                </div>
+                <div className="flex gap-2.5 items-center overflow-x-scroll scrollbar-hidden relative">
+                  {!editor.adapter.brand ? (
+                    <Fragment>
+                      {Array.from({ length: 3 }, (_, index) => (
+                        <Skeleton key={index} className="h-16 flex-1 rounded-md" />
+                      ))}
+                      <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">No brand kit found</span>
+                    </Fragment>
+                  ) : (
+                    <button onClick={handleClick(editor.adapter.brand.brand_logo, false)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
+                      <img src={editor.adapter.brand.brand_logo} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </Fragment>
+          ) : null}
         </div>
       </section>
     </div>
