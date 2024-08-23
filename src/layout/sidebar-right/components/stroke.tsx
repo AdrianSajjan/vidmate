@@ -1,13 +1,12 @@
 import { fabric } from "fabric";
-
-import { EyeIcon, EyeOffIcon, XIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, PipetteIcon, XIcon } from "lucide-react";
 import { observer } from "mobx-react";
 import { SketchPicker, ColorResult } from "react-color";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-
 import { useEditorContext } from "@/context/editor";
-import { cn } from "@/lib/utils";
+import { cn, createInstance } from "@/lib/utils";
 import { darkHexCodes, lightHexCodes, pastelHexCodes } from "@/constants/editor";
 
 const picker = { default: { picker: { boxShadow: "none", padding: 0, width: "100%", background: "transparent", borderRadius: 0 } } };
@@ -21,6 +20,17 @@ function _StrokeSidebar() {
     const color = fabric.Color.fromRgba(`rgba(${r},${g},${b},${a || 1})`);
     const hex = color.toHexa();
     editor.canvas.onChangeActiveObjectProperty("stroke", `#${hex}`);
+  };
+
+  const onOpenEyeDropper = async () => {
+    if (!window.EyeDropper) return;
+    const eyeDropper = createInstance(window.EyeDropper);
+    try {
+      const result = await eyeDropper.open();
+      editor.canvas.onChangeActiveObjectProperty("stroke", result.sRGBHex);
+    } catch {
+      toast.error("Failed to pick color from page");
+    }
   };
 
   const disabled = !selected || !selected.stroke;
@@ -39,7 +49,13 @@ function _StrokeSidebar() {
       </div>
       <section className="sidebar-container">
         <div className={cn("px-4 py-4 flex flex-col divide-y", !disabled ? "opacity-100 pointer-events-auto" : "opacity-50 pointer-events-none")}>
-          <div className="pb-4">
+          <div className="pb-4 flex flex-col gap-4">
+            {window.EyeDropper ? (
+              <Button size="sm" variant="outline" className="gap-2 justify-between w-full shadow-none text-foreground/80" onClick={onOpenEyeDropper}>
+                <span>Pick color from page</span>
+                <PipetteIcon className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
             <SketchPicker color={color} onChange={onColorChange} presetColors={[]} styles={picker} />
           </div>
           <div className="flex flex-col gap-4 py-5">

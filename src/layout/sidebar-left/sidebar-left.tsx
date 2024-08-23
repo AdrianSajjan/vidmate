@@ -129,7 +129,7 @@ function _EditorSidebarLeft() {
 
   return (
     <Fragment>
-      <aside className="w-20 bg-card/75 dark:bg-gray-900/30 flex flex-col items-center py-2 border-r border-r-border/50 gap-2 shrink-0">
+      <aside className="w-20 sidebar-wrapper scrollbar-hidden bg-card/75 dark:bg-gray-900/30 flex flex-col items-center py-2 border-r border-r-border/50 gap-2 shrink-0">
         {items.map(({ icon: Icon, label, value }) => {
           return (
             <Button
@@ -137,7 +137,7 @@ function _EditorSidebarLeft() {
               key={value}
               variant="ghost"
               aria-label={value}
-              className={cn("w-16 h-16 flex flex-col gap-2", editor.sidebarLeft === value ? "bg-card shadow-sm border hover:bg-card" : "bg-transparent hover:bg-accent")}
+              className={cn("w-16 h-16 flex flex-col gap-2 shrink-0", editor.sidebarLeft === value ? "bg-card shadow-sm border hover:bg-card" : "bg-transparent hover:bg-accent")}
               onClick={() => editor.setActiveSidebarLeft(editor.sidebarLeft === value ? null : value)}
             >
               <Icon size={20} strokeWidth={1.5} />

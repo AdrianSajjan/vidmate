@@ -202,6 +202,16 @@ function _FillSidebar() {
             ) : null}
             <SketchPicker color={color} onChange={onChangeColor} presetColors={[]} styles={picker} />
           </div>
+          {editor.mode === "creator" || !editor.adapter.brand ? null : (
+            <div className="flex flex-col gap-4 py-5">
+              <h4 className="text-xs font-semibold line-clamp-1">Brand Kit</h4>
+              <div className="grid grid-cols-8 gap-2.5">
+                {editor.adapter.brand.primary_colors.concat(editor.adapter.brand.secondary_colors).map((code) => (
+                  <button onClick={() => onSelectColorFromSwatch(code)} key={code} className="w-full aspect-square rounded border border-gray-400 transition-transform hover:scale-110" style={{ backgroundColor: code }} />
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-4 py-5">
             <h4 className="text-xs font-semibold line-clamp-1">Light Colors</h4>
             <div className="grid grid-cols-8 gap-2.5">

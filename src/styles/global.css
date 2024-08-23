@@ -108,6 +108,11 @@
     overflow-y: auto;
   }
 
+  .sidebar-wrapper {
+    height: calc(100dvh - 56px);
+    overflow-y: auto;
+  }
+
   .stepper-hidden::-webkit-outer-spin-button,
   .stepper-hidden::-webkit-inner-spin-button {
     -webkit-appearance: none;
