@@ -10,6 +10,7 @@ import { EditorFont } from "@/constants/fonts";
 import { createInstance, createPromise } from "@/lib/utils";
 import { Adapter } from "@/store/adapter";
 import { EditorAudioElement } from "@/types/editor";
+import { EditorMode } from "@/store/editor";
 
 export interface TransformChildren {
   object: fabric.Object;
@@ -206,9 +207,11 @@ export abstract class FabricUtils {
     }
   }
 
-  static async applyAdapterModificationsAfterLoad(canvas: fabric.Canvas | fabric.StaticCanvas, { product, objective, brand }: Adapter) {
+  static async applyModificationsAfterLoad(objects: fabric.Object[], { product, objective, brand }: Adapter, mode: EditorMode) {
+    if (mode === "creator") return;
+
     if (brand) {
-      const elements = canvas._objects.filter((object) => object.meta?.label === "brand-image" && this.isImageElement(object)) as fabric.Image[];
+      const elements = objects.filter((object) => object.meta?.label === "brand-image" && this.isImageElement(object)) as fabric.Image[];
       const promises = elements.map((element) => {
         return createPromise<void>((resolve, reject) => {
           fabric.util.loadImage(brand.brand_logo, (image) => {
@@ -224,7 +227,7 @@ export abstract class FabricUtils {
     if (!product) return;
 
     if (product.images.length) {
-      const elements = canvas._objects.filter((object) => object.meta?.label === "main-image" && this.isImageElement(object)) as fabric.Image[];
+      const elements = objects.filter((object) => object.meta?.label === "main-image" && this.isImageElement(object)) as fabric.Image[];
       const promises = elements.map((element, index) => {
         return createPromise<void>((resolve, reject) => {
           fabric.util.loadImage(product.images[index % product.images.length].url, (image) => {
@@ -246,17 +249,17 @@ export abstract class FabricUtils {
     ]);
 
     if (ctas.status === "fulfilled") {
-      const elements = canvas._objects.filter((object) => object.meta?.label === "cta-text" && this.isTextboxElement(object)) as fabric.Textbox[];
+      const elements = objects.filter((object) => object.meta?.label === "cta-text" && this.isTextboxElement(object)) as fabric.Textbox[];
       elements.map((element, index) => element.set({ text: ctas.value[index % ctas.value.length] }));
     }
 
     if (headlines.status === "fulfilled") {
-      const elements = canvas._objects.filter((object) => object.meta?.label === "headline-text" && this.isTextboxElement(object)) as fabric.Textbox[];
+      const elements = objects.filter((object) => object.meta?.label === "headline-text" && this.isTextboxElement(object)) as fabric.Textbox[];
       elements.map((element, index) => element.set({ text: headlines.value[index % headlines.value.length] }));
     }
 
     if (descriptions.status === "fulfilled") {
-      const elements = canvas._objects.filter((object) => object.meta?.label === "description-text" && this.isTextboxElement(object)) as fabric.Textbox[];
+      const elements = objects.filter((object) => object.meta?.label === "description-text" && this.isTextboxElement(object)) as fabric.Textbox[];
       elements.map((element, index) => element.set({ text: descriptions.value[index % descriptions.value.length] }));
     }
   }

@@ -1,8 +1,10 @@
+import { fabric } from "fabric";
+import { makeAutoObservable, runInAction } from "mobx";
+
 import { FabricUtils } from "@/fabric/utils";
 import { createPromise } from "@/lib/utils";
 import { Canvas } from "@/store/canvas";
 import { EditorTemplatePage } from "@/types/editor";
-import { makeAutoObservable, runInAction } from "mobx";
 
 export class CanvasTemplate {
   private _canvas: Canvas;
@@ -56,41 +58,41 @@ export class CanvasTemplate {
     return !(this.status === "completed" || this.status === "error") && !!this.page;
   }
 
-  private _complete() {
-    this.history.clear();
-    this.timeline.initialize(this.page!.duration || 5000);
-
-    this.canvas.renderAll();
-    this.status = "completed";
-  }
-
   private *_scene() {
+    this.canvas.clear();
+    this.timeline.destroy();
+
+    this.workspace.changeFill("#CCCCCC");
+    this.workspace.resizeArtboard({ height: this.page!.data.height, width: this.page!.data.width });
+
+    this.canvas.add(this.artboard);
+    this.canvas.clipPath = this.artboard;
+    const serialized = JSON.parse(this.page!.data.scene);
+
     return createPromise<void>((resolve) => {
-      FabricUtils.applyFontsBeforeLoad(JSON.parse(this.page!.data.scene).objects).then(() => {
-        this.timeline.destroy();
-        this.workspace.changeFill("#CCCCCC");
-        this.workspace.resizeArtboard({ height: this.page!.data.height, width: this.page!.data.width });
+      FabricUtils.applyFontsBeforeLoad(serialized.objects).then(() => {
+        fabric.util.enlivenObjects(
+          serialized.objects,
+          (objects: fabric.Object[]) => {
+            FabricUtils.applyModificationsAfterLoad(objects, this.editor.adapter, this.editor.mode).then(() => {
+              runInAction(() => {
+                this.canvas.add(...objects);
+                this.workspace.changeFill(this.page!.data.fill || "#FFFFFF");
+                this.workspace.resizeArtboard({ height: this.page!.data.height || 1080, width: this.page!.data.width || 1080 });
 
-        this.canvas.loadFromJSON(this.page!.data.scene, () => {
-          runInAction(() => {
-            this.canvas.insertAt(this.artboard, 0, false);
-            this.canvas.clipPath = this.artboard;
+                this.history.clear();
+                this.timeline.initialize(this.page!.duration || 5000);
 
-            this.workspace.changeFill(this.page!.data.fill || "#FFFFFF");
-            this.workspace.resizeArtboard({ height: this.page!.data.height || 1080, width: this.page!.data.width || 1080 });
-            FabricUtils.applyTransformationsAfterLoad(this.canvas);
+                FabricUtils.applyTransformationsAfterLoad(this.canvas);
+                this.canvas.renderAll();
+                this.status = "completed";
 
-            if (this.editor.mode === "adapter") {
-              FabricUtils.applyAdapterModificationsAfterLoad(this.canvas, this.editor.adapter).then(() => {
-                this._complete();
                 resolve();
               });
-            } else {
-              this._complete();
-              resolve();
-            }
-          });
-        });
+            });
+          },
+          "fabric",
+        );
       });
     });
   }
