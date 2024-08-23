@@ -59,6 +59,7 @@ export class CanvasTemplate {
   private _complete() {
     this.history.clear();
     this.timeline.initialize(this.page!.duration || 5000);
+
     this.canvas.renderAll();
     this.status = "completed";
   }
@@ -106,12 +107,15 @@ export class CanvasTemplate {
           this.status = "error";
           reject();
         } else {
+          this.audio.elements = [];
           this._canvas.elements = [];
+
           this._canvas.id = this.page.id;
           this._canvas.name = this.page.name;
-          this.audio.elements = [];
+
           this.cropper.active = null;
           this.selection.active = null;
+
           Promise.all([this.audio.initialize(this.page!.data.audios), this._scene()])
             .then(() => resolve())
             .catch(() => reject());

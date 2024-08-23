@@ -62,8 +62,8 @@ function _EditorElementControlsBase() {
           </Button>
         </div>
       ) : null}
-      {selected.type === "textbox" || selected.type === "image" ? (
-        <div className="hidden items-center p-1">
+      {(selected.type === "textbox" || selected.type === "image") && editor.mode === "adapter" ? (
+        <div className="flex items-center p-1">
           <Button size="sm" variant="ghost" className="gap-1.5 rounded-sm h-7 px-2" onClick={() => editor.setActiveSidebarRight("ai")}>
             <SparklesIcon size={14} />
             <span>AI Magic</span>
@@ -92,28 +92,30 @@ function _EditorElementControlsBase() {
           </Button>
         </div>
       ) : null}
-      <div className="flex items-center p-1">
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className={cn("gap-1.5 rounded-sm h-7 px-2 transition-none", selected.meta?.label ? "bg-violet-600 text-white hover:bg-violet-700 hover:text-white" : "bg-transparent")}>
-              <LinkIcon size={14} />
-              <span>Placeholder</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" sideOffset={6}>
-            {placeholders.map((placeholder) => (
-              <DropdownMenuCheckboxItem
-                className="text-xs"
-                key={placeholder.value}
-                checked={selected.meta?.label === placeholder.value}
-                onCheckedChange={(value) => editor.canvas.onMarkActiveObjectAsPlaceholder(!value ? false : placeholder.value)}
-              >
-                {placeholder.label}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {editor.mode === "creator" ? (
+        <div className="flex items-center p-1">
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className={cn("gap-1.5 rounded-sm h-7 px-2 transition-none", selected.meta?.label ? "bg-violet-600 text-white hover:bg-violet-700 hover:text-white" : "bg-transparent")}>
+                <LinkIcon size={14} />
+                <span>Placeholder</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" sideOffset={6}>
+              {placeholders.map((placeholder) => (
+                <DropdownMenuCheckboxItem
+                  className="text-xs"
+                  key={placeholder.value}
+                  checked={selected.meta?.label === placeholder.value}
+                  onCheckedChange={(value) => editor.canvas.onMarkActiveObjectAsPlaceholder(!value ? false : placeholder.value)}
+                >
+                  {placeholder.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : null}
       <div className="flex items-center gap-1 p-1">
         <Button size="icon" variant="ghost" className="rounded-sm h-7 w-7" onClick={() => editor.canvas.cloner.clone()} disabled={selected.meta?.thumbnail}>
           <CopyPlusIcon size={14} />

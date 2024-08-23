@@ -1,5 +1,6 @@
 import { api } from "@/config/api";
 import { EditorProduct } from "@/types/adapter";
+import { UndefinedInitialDataOptions, useQuery } from "@tanstack/react-query";
 
 const baseQuery = "/customer/ads/api/v1";
 
@@ -39,8 +40,28 @@ async function generateCTA(product: EditorProduct, objective: string) {
   return res.data.data;
 }
 
-generateHeadline.queryKey = "generate-headline";
-generateDescription.queryKey = "generate-description";
-generateCTA.queryKey = "generate-cta";
+function useGenerateHeadlineSuggestions(product: EditorProduct, objective: string, options?: Omit<UndefinedInitialDataOptions<string[]>, "queryKey" | "queryFn">) {
+  return useQuery({
+    queryKey: [generateHeadline.name],
+    queryFn: () => generateHeadline(product, objective),
+    ...options,
+  });
+}
 
-export { generateHeadline, generateDescription, generateCTA };
+function useGenerateDescriptionSuggestions(product: EditorProduct, objective: string, options?: Omit<UndefinedInitialDataOptions<string[]>, "queryKey" | "queryFn">) {
+  return useQuery({
+    queryKey: [generateDescription.name],
+    queryFn: () => generateDescription(product, objective),
+    ...options,
+  });
+}
+
+function useGenerateCTASuggestions(product: EditorProduct, objective: string, options?: Omit<UndefinedInitialDataOptions<string[]>, "queryKey" | "queryFn">) {
+  return useQuery({
+    queryKey: [generateCTA.name],
+    queryFn: () => generateCTA(product, objective),
+    ...options,
+  });
+}
+
+export { generateHeadline, generateDescription, generateCTA, useGenerateHeadlineSuggestions, useGenerateDescriptionSuggestions, useGenerateCTASuggestions };

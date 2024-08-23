@@ -244,9 +244,9 @@ export abstract class FabricUtils {
     if (!objective) return;
 
     const [headlines, descriptions, ctas] = await Promise.allSettled([
-      queryClient.ensureQueryData({ queryKey: [generateHeadline.queryKey], queryFn: () => generateHeadline(product, objective) }),
-      queryClient.ensureQueryData({ queryKey: [generateDescription.queryKey], queryFn: () => generateDescription(product, objective) }),
-      queryClient.ensureQueryData({ queryKey: [generateCTA.queryKey], queryFn: () => generateCTA(product, objective) }),
+      queryClient.ensureQueryData({ queryKey: [generateHeadline.name], queryFn: () => generateHeadline(product, objective) }),
+      queryClient.ensureQueryData({ queryKey: [generateDescription.name], queryFn: () => generateDescription(product, objective) }),
+      queryClient.ensureQueryData({ queryKey: [generateCTA.name], queryFn: () => generateCTA(product, objective) }),
     ]);
 
     if (ctas.status === "fulfilled") {
