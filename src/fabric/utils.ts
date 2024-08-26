@@ -11,6 +11,7 @@ import { createInstance, createPromise } from "@/lib/utils";
 import { Adapter } from "@/store/adapter";
 import { EditorAudioElement } from "@/types/editor";
 import { EditorMode } from "@/store/editor";
+import { formatSource } from "@/lib/media";
 
 export interface TransformChildren {
   object: fabric.Object;
@@ -215,7 +216,7 @@ export abstract class FabricUtils {
       const promises = elements.map((element) => {
         return createPromise<void>((resolve, reject) => {
           fabric.util.loadImage(
-            brand.brand_logo,
+            formatSource(brand.brand_logo),
             (image) => {
               if (!image || !image.height || !image.width) {
                 reject();
@@ -241,7 +242,7 @@ export abstract class FabricUtils {
       const promises = elements.map((element, index) => {
         return createPromise<void>((resolve, reject) => {
           fabric.util.loadImage(
-            product.images[index % product.images.length].url,
+            formatSource(product.images[index % product.images.length].url),
             (image) => {
               if (!image || !image.height || !image.width) {
                 reject();

@@ -1,5 +1,5 @@
 import { api } from "@/config/api";
-import { EditorProduct } from "@/types/adapter";
+import { EditorProduct } from "@/schema/adapter";
 import { useQuery } from "@tanstack/react-query";
 
 const baseQuery = "/customer/ads/api/v1";

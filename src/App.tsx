@@ -1,25 +1,26 @@
 import "@/fabric/initialize";
 import "@/config/transformers";
 
-import { useEffect } from "react";
 import { observer } from "mobx-react";
 
 import { EditorFAB } from "@/layout/fab";
 import { EditorFooter } from "@/layout/footer";
 import { EditorMenubar } from "@/layout/menubar";
 import { EditorToolbar } from "@/layout/toolbar";
+
 import { EditorSidebarLeft } from "@/layout/sidebar-left";
 import { EditorSidebarRight } from "@/layout/sidebar-right";
 import { EditorPreviewModal } from "@/layout/modals/preview";
 import { AIPromptModal } from "@/layout/modals/prompter";
 
-import { EditorProvider, useEditorContext } from "@/context/editor";
 import { Toaster } from "@/components/ui/sonner";
 import { EditorCanvas, EditorRecorder } from "@/components/editor";
 import { Spinner } from "@/components/ui/spinner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
+import { EditorProvider, useEditorContext } from "@/context/editor";
 import { useIsTablet } from "@/hooks/use-media-query";
-import { product, objective, brand } from "@/constants/mock";
+import { useInitializeEditor } from "@/hooks/use-initialize";
 
 export function App() {
   return (
@@ -35,15 +36,7 @@ function _Editor() {
   const isTablet = useIsTablet();
   const editor = useEditorContext();
 
-  useEffect(() => {
-    if (editor.status !== "uninitialized") return;
-    editor.initialize();
-  }, []);
-
-  useEffect(() => {
-    if (editor.mode === "creator") return;
-    editor.adapter.initialize({ product, objective, brand });
-  }, [editor.mode]);
+  useInitializeEditor();
 
   switch (editor.status) {
     case "pending":

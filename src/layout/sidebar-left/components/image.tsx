@@ -13,6 +13,7 @@ import { uploadAssetToS3 } from "@/api/upload";
 import { mock, useMockStore } from "@/constants/mock";
 import { useEditorContext } from "@/context/editor";
 import { isImageLoaded } from "@/lib/utils";
+import { formatSource } from "@/lib/media";
 
 function _ImageSidebar() {
   const store = useMockStore();
@@ -122,8 +123,8 @@ function _ImageSidebar() {
                     </Fragment>
                   ) : (
                     editor.adapter.product.images.map((image) => (
-                      <button key={image.id} onClick={handleClick(image.url, false)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
-                        <img src={image.url} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
+                      <button key={image.id} onClick={handleClick(formatSource(image.url), false)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
+                        <img src={formatSource(image.url)} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
                       </button>
                     ))
                   )}
@@ -142,8 +143,8 @@ function _ImageSidebar() {
                       <span className="text-xs font-semibold text-foreground/60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">No brand kit found</span>
                     </Fragment>
                   ) : (
-                    <button onClick={handleClick(editor.adapter.brand.brand_logo, false)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
-                      <img src={editor.adapter.brand.brand_logo} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
+                    <button onClick={handleClick(formatSource(editor.adapter.brand.brand_logo), false)} className="group shrink-0 h-16 w-16 border flex items-center justify-center overflow-hidden rounded-md shadow-sm">
+                      <img src={formatSource(editor.adapter.brand.brand_logo)} crossOrigin="anonymous" className="h-full w-full rounded-md transition-transform group-hover:scale-110 object-cover" />
                     </button>
                   )}
                 </div>

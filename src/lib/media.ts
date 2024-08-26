@@ -9,6 +9,11 @@ interface AudioWaveform {
   duration: number;
 }
 
+export function formatSource(source: string) {
+  if (source.includes("cloudfront.net")) return source + "?r=" + Math.random().toString(36).substring(7);
+  return source;
+}
+
 export function checkForAudioInVideo(source: string) {
   const video = document.createElement("video");
 

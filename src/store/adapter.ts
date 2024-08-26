@@ -1,7 +1,7 @@
-import { EditorBrand, EditorProduct } from "@/types/adapter";
+import { EditorBrand, EditorProduct } from "@/schema/adapter";
 import { makeAutoObservable } from "mobx";
 
-type AdapterMode = "create" | "edit";
+export type AdapterMode = "create" | "edit";
 
 interface AdapterProps {
   product?: EditorProduct;

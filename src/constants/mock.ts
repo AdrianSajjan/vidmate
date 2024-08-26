@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 import { createInstance } from "@/lib/utils";
-import { EditorBrand, EditorProduct } from "@/types/adapter";
+import { EditorBrand, EditorProduct } from "@/schema/adapter";
 import { EditorAudio, EditorMedia, EditorTemplate } from "@/types/editor";
 import { PromptSession } from "@/types/prompt";
 

@@ -311,4 +311,8 @@ export class Editor {
         break;
     }
   }
+
+  changeStatus(status: EditorStatus) {
+    this.status = status;
+  }
 }
